@@ -10,7 +10,8 @@
       "Read(//c/Users/mryik/AppData/Local/Temp/claude/C--Users-mryik-Works-Int-respondio-flow-chart-app/57058052-c1d5-4881-9d6d-b67501f1034c/tasks/**)",
       "Bash(break)",
       "mcp__plugin_playwright_playwright__browser_navigate",
-      "mcp__plugin_playwright_playwright__browser_close"
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(npm run *)"
     ]
   }
 }
