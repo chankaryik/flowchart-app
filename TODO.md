@@ -73,18 +73,18 @@ Goal: pure-TS modules with full unit-test coverage. No Vue, no Pinia.
 
 Goal: Pinia stores and TanStack Query layer with the exact config from CLAUDE.md §6.
 
-- [ ] **[src/queries/client.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\queries\client.ts)** — export a `QueryClient` configured **exactly** as CLAUDE.md §6 prescribes (`refetchOnWindowFocus: false`, `networkMode: 'always'`, `staleTime: Infinity`, `gcTime: 60 * 60 * 1000`). Wire into `main.ts`.
-- [ ] **[src/stores/flow.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\stores\flow.ts)** — Pinia store as the **live canvas truth**:
+- [x] **[src/queries/client.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\queries\client.ts)** — export a `QueryClient` configured **exactly** as CLAUDE.md §6 prescribes (`refetchOnWindowFocus: false`, `networkMode: 'always'`, `staleTime: Infinity`, `gcTime: 60 * 60 * 1000`). Wire into `main.ts`.
+- [x] **[src/stores/flow.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\stores\flow.ts)** — Pinia store as the **live canvas truth**:
   - State: `nodes: FlowNode[]`, `positions: Record<NodeId, { x: number; y: number }>` (Vue Flow needs positions; derive initial layout from parentId tree using a simple top-down layout in `lib/layout.ts` — see Phase 4), `selectedId: NodeId | null`, `draggingId: NodeId | null`.
   - Actions: `hydrate(nodes)`, `applyPatch(nodeId, patch)`, `addNode(node, position)`, `removeNode(nodeId)` (cascades children + connectors), `setPosition(nodeId, xy)`. Actions are pure mutations — TanStack `onMutate` calls them, components do **not** mutate directly (CLAUDE.md §8.3).
   - Getter: `getNodeById(id)`, `getChildren(parentId)`.
-- [ ] **[src/stores/history.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\stores\history.ts)** — command stack:
+- [x] **[src/stores/history.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\stores\history.ts)** — command stack:
   - `push(cmd: { undo: () => void; redo: () => void; label: string })`, `undo()`, `redo()`, `canUndo`, `canRedo`.
   - Cap depth at e.g. 100 entries to keep memory bounded.
-- [ ] **[src/queries/nodes.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\queries\nodes.ts)** — query + mutations:
+- [x] **[src/queries/nodes.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\queries\nodes.ts)** — query + mutations:
   - `useNodesQuery()` — `queryKey: ['nodes']`, `queryFn: loadNodes`, `onSuccess: store.hydrate`.
   - `useCreateNode()`, `useUpdateNode()`, `useDeleteNode()`, `useMoveNode()` — each follows the pattern `onMutate: optimistic Pinia patch + history.push`, `mutationFn: saveNodes(store.nodes)`, `onError: rollback via the history entry's undo`.
-- [ ] **Unit tests:** `stores/__tests__/flow.spec.ts`, `stores/__tests__/history.spec.ts`, `queries/__tests__/nodes.spec.ts` (mock `payload-adapter`).
+- [x] **Unit tests:** `stores/__tests__/flow.spec.ts`, `stores/__tests__/history.spec.ts`, `queries/__tests__/nodes.spec.ts` (mock `payload-adapter`).
 
 **Verify Phase 2:** unit tests green; manual smoke is N/A since nothing renders yet.
 
