@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mryik\\\\Works\\\\Int\\\\respondio\\\\flow-chart-app\" -Force)",
-      "Bash(Select-Object Name, PSIsContainer)"
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(npm install *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(npx shadcn-vue@latest init --yes 2>&1 | Out-String)",
+      "PowerShell(npm run *)",
+      "Read(//c/Users/mryik/AppData/Local/Temp/claude/C--Users-mryik-Works-Int-respondio-flow-chart-app/57058052-c1d5-4881-9d6d-b67501f1034c/tasks/**)",
+      "Bash(break)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_close"
     ]
   }
 }
