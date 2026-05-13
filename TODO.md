@@ -210,15 +210,15 @@ Goal: keyboard-driven undo/redo across all mutating operations.
 
 Goal: fully driveable from keyboard, including the shortcuts help dialog. Per CLAUDE.md §8.5.
 
-- [ ] **[src/composables/useNodeKeyboard.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\composables\useNodeKeyboard.ts)**:
-  - Tab cycles focus through nodes in graph order (use the layout's top-down + left-right order).
-  - Arrow keys move selection between graph-adjacent nodes (use `useNodeEdges` adjacency).
+- [x] **[src/composables/useNodeKeyboard.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\composables\useNodeKeyboard.ts)**:
+  - Tab cycles focus through nodes in graph order (layout-derived top-down + left-right via `computeTabOrder`).
+  - Arrow keys move focus between graph-adjacent nodes by position (axis-weighted closest-neighbor).
   - Enter on a focused node → router-push to `/node/:id`.
-  - Esc inside the drawer → `router.push('/')` (cancel edits with a confirm if dirty).
-  - `?` opens a shortcut help dialog (shadcn `Dialog` with a list of bindings rendered with `Kbd`).
+  - Esc closes the open drawer (Sheet also closes natively; composable mirrors for non-Sheet contexts).
+  - `?` opens the shortcut help dialog ([src/components/ShortcutHelpDialog.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\ShortcutHelpDialog.vue)).
   - **Skip `dateTimeConnector` nodes** in Tab and Arrow navigation (CLAUDE.md §8.1).
-- [ ] Each node component renders with `tabindex="0"` (except connectors with `tabindex="-1"`) and a visible focus ring (shadcn `ring-ring`).
-- [ ] Spec the composable's adjacency math; E2E covers the user-visible flow in Phase 12.
+- [x] Each editable node renders with `tabindex="0"` + `data-flow-node-id` + `focus-visible:ring-2 ring-ring`. Connectors keep `tabindex="-1"` and have no `data-flow-node-id`.
+- [x] Spec `useNodeKeyboard` adjacency math + integration (`src/composables/__tests__/useNodeKeyboard.spec.ts`); E2E user-visible flow lands in Phase 12.
 
 **Verify Phase 10:** with mouse hidden, navigate: Tab to a node → Enter opens drawer → Esc closes → Arrow keys to a sibling → Enter → ?` shows help.
 

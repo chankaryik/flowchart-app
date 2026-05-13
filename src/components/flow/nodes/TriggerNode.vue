@@ -23,8 +23,10 @@ const oncePerContact = computed(() => props.data.data.oncePerContact)
       <!-- Trigger is locked per Day-0 decision (TODO.md): exactly one trigger per
            flow, not deletable, never offered in Create Node. -->
       <Card
-        class="node-card w-[220px] gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm"
+        class="node-card w-[220px] gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         data-node-type="trigger"
+        :data-flow-node-id="id"
+        tabindex="0"
       >
         <CardHeader class="flex-row items-center gap-2 px-3 pt-3 pb-1">
           <Zap class="size-4 text-sky-700" aria-hidden="true" />

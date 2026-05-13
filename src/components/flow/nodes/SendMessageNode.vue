@@ -18,8 +18,10 @@ const attachments = computed(() => attachmentCount(props.data.data.payload))
   <Tooltip>
     <TooltipTrigger as-child>
       <Card
-        class="node-card w-[220px] gap-0 border-violet-300 bg-white py-0 shadow-sm"
+        class="node-card w-[220px] gap-0 border-violet-300 bg-white py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         data-node-type="sendMessage"
+        :data-flow-node-id="id"
+        tabindex="0"
       >
         <Handle type="target" :position="Position.Top" />
         <CardHeader class="items-center gap-1 px-3 pt-3 pb-1">

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query'
-import { RotateCcw } from 'lucide-vue-next'
+import { Keyboard, RotateCcw } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
 import CreateNodeDialog from '@/components/flow/CreateNodeDialog.vue'
 import FlowCanvas from '@/components/flow/FlowCanvas.vue'
+import ShortcutHelpDialog from '@/components/ShortcutHelpDialog.vue'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useFlowHistory } from '@/composables/useFlowHistory'
+import { useNodeKeyboard } from '@/composables/useNodeKeyboard'
 import { resetNodes } from '@/lib/payload-adapter'
 import { useNodesQuery } from '@/queries/nodes'
 import { NODES_QUERY_KEY } from '@/queries/client'
@@ -33,9 +35,15 @@ const queryClient = useQueryClient()
 const query = useNodesQuery()
 const createDialogOpen = ref(false)
 const resetConfirmOpen = ref(false)
+const helpOpen = ref(false)
 const resetting = ref(false)
 
 useFlowHistory()
+useNodeKeyboard({
+  onHelp: () => {
+    helpOpen.value = true
+  },
+})
 
 const drawerNodeId = computed(() => {
   const raw = route.params.id
@@ -107,6 +115,16 @@ async function onConfirmReset(): Promise<void> {
       <div class="flex items-center gap-2">
         <button
           type="button"
+          class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+          title="Keyboard shortcuts (?)"
+          aria-label="Show keyboard shortcuts"
+          data-testid="help-button"
+          @click="helpOpen = true"
+        >
+          <Keyboard class="size-3" />
+        </button>
+        <button
+          type="button"
           class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
           :disabled="query.isPending.value || query.isError.value || resetting"
           data-testid="reset-button"
@@ -132,6 +150,7 @@ async function onConfirmReset(): Promise<void> {
       <NodeDetailsDrawer />
     </main>
     <CreateNodeDialog v-model:open="createDialogOpen" />
+    <ShortcutHelpDialog v-model:open="helpOpen" />
 
     <AlertDialog :open="resetConfirmOpen" @update:open="(v) => (resetConfirmOpen = v)">
       <AlertDialogContent data-testid="reset-confirm">
