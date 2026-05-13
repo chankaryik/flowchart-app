@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Flow Chart" [level=1] [ref=e6]
+        - generic [ref=e7]: 7 nodes
+      - button "+ Create Node" [disabled] [ref=e8]
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e12]:
+          - generic:
+            - img
+            - img:
+              - group "Edge from 28c4b9 to b6a0c1"
+            - img:
+              - group "Edge from 1 to d09c08"
+            - img:
+              - group "Edge from d09c08 to 161f52" [ref=e13] [cursor=pointer]
+            - img:
+              - group "Edge from d09c08 to 28c4b9" [ref=e16] [cursor=pointer]
+            - img:
+              - group "Edge from 161f52 to b0653a"
+            - img:
+              - group "Edge from b6a0c1 to e879e4"
+        - img [ref=e19]
+        - img "Vue Flow mini map" [ref=e22]
+        - generic [ref=e24]:
+          - button [ref=e25] [cursor=pointer]:
+            - img [ref=e26]
+          - button [ref=e28] [cursor=pointer]:
+            - img [ref=e29]
+          - button [ref=e31] [cursor=pointer]:
+            - img [ref=e32]
+          - button [ref=e34] [cursor=pointer]:
+            - img [ref=e35]
+  - generic [ref=e38]:
+    - generic "Toggle devtools panel" [ref=e39] [cursor=pointer]:
+      - img [ref=e40]
+    - generic "Toggle Component Inspector" [ref=e45] [cursor=pointer]:
+      - img [ref=e46]

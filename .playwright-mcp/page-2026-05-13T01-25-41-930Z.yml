@@ -1,0 +1,69 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Flow Chart" [level=1] [ref=e6]
+        - generic [ref=e7]: 7 nodes
+      - button "+ Create Node" [disabled] [ref=e8]
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e12]:
+          - generic:
+            - img
+            - img:
+              - group "Edge from 28c4b9 to b6a0c1"
+            - img:
+              - group "Edge from 1 to d09c08"
+            - img:
+              - group "Edge from d09c08 to 161f52" [ref=e13] [cursor=pointer]
+            - img:
+              - group "Edge from d09c08 to 28c4b9" [ref=e16] [cursor=pointer]
+            - img:
+              - group "Edge from 161f52 to b0653a"
+            - img:
+              - group "Edge from b6a0c1 to e879e4"
+            - generic:
+              - group [ref=e19]:
+                - generic [ref=e20]:
+                  - paragraph [ref=e21]: Trigger
+                  - paragraph [ref=e22]: conversationOpened
+              - group [ref=e23]:
+                - generic [ref=e24]:
+                  - paragraph [ref=e25]: Send Message
+                  - paragraph [ref=e26]: Away Message
+              - group [ref=e27]:
+                - generic [ref=e28]:
+                  - paragraph [ref=e29]: Date / Time
+                  - paragraph [ref=e30]: Business Hours
+              - group [ref=e31]:
+                - generic [ref=e32]:
+                  - paragraph [ref=e33]: success
+                  - paragraph [ref=e34]: Success
+              - group [ref=e35]:
+                - generic [ref=e36]:
+                  - paragraph [ref=e37]: failure
+                  - paragraph [ref=e38]: Failure
+              - group [ref=e39]:
+                - generic [ref=e40]:
+                  - paragraph [ref=e41]: Send Message
+                  - paragraph [ref=e42]: Welcome Message
+              - group [ref=e43]:
+                - generic [ref=e44]:
+                  - paragraph [ref=e45]: Comment
+                  - paragraph [ref=e46]: "Add Comment #1"
+        - img [ref=e47]
+        - img "Vue Flow mini map" [ref=e50]
+        - generic [ref=e59]:
+          - button [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+          - button [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+          - button [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button [ref=e69] [cursor=pointer]:
+            - img [ref=e70]
+  - generic [ref=e73]:
+    - generic "Toggle devtools panel" [ref=e74] [cursor=pointer]:
+      - img [ref=e75]
+    - generic "Toggle Component Inspector" [ref=e80] [cursor=pointer]:
+      - img [ref=e81]

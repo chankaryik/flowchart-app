@@ -109,17 +109,17 @@ Goal: wire routes so `/` and `/node/:id` are reachable; drawer state derived fro
 
 Goal: app loads payload.json on mount and renders nodes + edges. No editing yet, but the full data path Pinia ← TanStack ← adapter is exercised.
 
-- [ ] **[src/lib/layout.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\lib\layout.ts)** — `computeLayout(nodes): Record<NodeId, { x: number; y: number }>`. Top-down tree using parentId; dateTimeConnector children of a dateTime laid out as sibling columns under the dateTime. Spec it.
-- [ ] **[src/composables/useNodeEdges.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\composables\useNodeEdges.ts)** — derived edges from the Pinia node list:
+- [x] **[src/lib/layout.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\lib\layout.ts)** — `computeLayout(nodes): Record<NodeId, { x: number; y: number }>`. Top-down tree using parentId; dateTimeConnector children of a dateTime laid out as sibling columns under the dateTime. Spec it.
+- [x] **[src/composables/useNodeEdges.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\composables\useNodeEdges.ts)** — derived edges from the Pinia node list:
   - One edge `parentId → id` for each non-trigger node.
   - The `dateTime.data.connectors[]` is informational; the actual visual edges come from each connector's own `parentId === dateTime.id`. (Double-check this against payload.json; both paths describe the same parent→child, so the parentId chain alone is sufficient.)
   - Edges use `type: 'smoothstep'`.
-- [ ] **[src/components/flow/FlowCanvas.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\FlowCanvas.vue)** — Vue Flow wrapper:
+- [x] **[src/components/flow/FlowCanvas.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\FlowCanvas.vue)** — Vue Flow wrapper:
   - Calls `useNodesQuery()` once for hydration trigger; reads `nodes` and `positions` from `useFlowStore()`.
   - `<VueFlow :nodes :edges :node-types>` with `Background`, `Controls`, `MiniMap` from the v1.48 extras packages.
   - `onNodesChange` updates Pinia `positions` (throttle in Phase 8).
   - Click on a node → `router.push('/node/' + id)` (skip for `dateTimeConnector` — CLAUDE.md §8.1).
-- [ ] **Register the five node-type components as stubs** (just render the node name in a card) so Vue Flow's `nodeTypes` map is complete: `TriggerNode`, `SendMessageNode`, `DateTimeNode`, `DateTimeConnectorNode`, `AddCommentNode`. Polish in Phase 5.
+- [x] **Register the five node-type components as stubs** (just render the node name in a card) so Vue Flow's `nodeTypes` map is complete: `TriggerNode`, `SendMessageNode`, `DateTimeNode`, `DateTimeConnectorNode`, `AddCommentNode`. Polish in Phase 5.
 
 **Verify Phase 4:** `npm run dev` shows the seed graph (1 trigger + dateTime with success/failure + two sendMessages + one addComment) wired with smoothstep edges. Refresh keeps the graph. Clicking a non-connector navigates to `/node/:id`. Clicking a connector does nothing.
 

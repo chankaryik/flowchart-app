@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import FlowCanvas from '@/components/flow/FlowCanvas.vue'
 import { useNodesQuery } from '@/queries/nodes'
 import { useFlowStore } from '@/stores/flow'
 
@@ -75,10 +76,7 @@ const drawerNode = computed(() => {
     </header>
 
     <main class="relative flex-1 overflow-hidden">
-      <!-- FlowCanvas mounts here in Phase 4. -->
-      <div class="flex h-full items-center justify-center text-sm text-slate-400">
-        Canvas placeholder — wired up in Phase 4
-      </div>
+      <FlowCanvas class="absolute inset-0" />
 
       <!-- NodeDetailsDrawer mounts here in Phase 6.
            For now we just acknowledge that a valid id was resolved. -->
