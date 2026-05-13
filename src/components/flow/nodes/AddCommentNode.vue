@@ -1,18 +1,50 @@
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core'
+import { StickyNote } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-import type { AddCommentNode } from '@/lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import type { AddCommentNode as AddCommentNodeShape } from '@/lib/types'
 
-defineProps<{ id: string; data: AddCommentNode }>()
+const props = defineProps<{ id: string; data: AddCommentNodeShape }>()
+
+const comment = computed(() => props.data.data.comment)
 </script>
 
 <template>
-  <div
-    class="w-[220px] rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm shadow-sm"
-  >
-    <Handle type="target" :position="Position.Top" />
-    <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-700">Comment</p>
-    <p class="font-medium text-amber-900">{{ data.name }}</p>
-    <Handle type="source" :position="Position.Bottom" />
-  </div>
+  <Tooltip>
+    <TooltipTrigger as-child>
+      <Card
+        class="node-card w-[220px] gap-0 border-amber-300 bg-amber-50 py-0 shadow-sm"
+        data-node-type="addComment"
+      >
+        <Handle type="target" :position="Position.Top" />
+        <CardHeader class="flex-row items-center gap-2 px-3 pt-3 pb-1">
+          <StickyNote class="size-4 text-amber-700" aria-hidden="true" />
+          <CardTitle class="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+            Comment
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="px-3 pb-3">
+          <p class="truncate text-sm font-medium text-amber-900">{{ data.name }}</p>
+          <p
+            v-if="comment.length > 0"
+            class="mt-1 line-clamp-2 text-[11px] text-amber-800/80"
+          >
+            {{ comment }}
+          </p>
+          <p v-else class="mt-1 text-[11px] italic text-amber-700/60">No comment yet</p>
+        </CardContent>
+        <Handle type="source" :position="Position.Bottom" />
+      </Card>
+    </TooltipTrigger>
+    <TooltipContent side="right" :side-offset="8" class="max-w-xs">
+      <div class="space-y-1">
+        <p class="font-medium">{{ data.name }}</p>
+        <p v-if="comment.length > 0" class="whitespace-pre-line">{{ comment }}</p>
+        <p v-else class="italic opacity-70">No comment yet</p>
+      </div>
+    </TooltipContent>
+  </Tooltip>
 </template>

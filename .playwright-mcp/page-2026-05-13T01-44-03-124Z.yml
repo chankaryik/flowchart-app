@@ -1,0 +1,95 @@
+- generic [active] [ref=e13]:
+  - generic [ref=e15]:
+    - banner [ref=e16]:
+      - generic [ref=e17]:
+        - heading "Flow Chart" [level=1] [ref=e18]
+        - generic [ref=e19]: 7 nodes
+      - button "+ Create Node" [disabled] [ref=e20]
+    - main [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e24]:
+          - generic:
+            - img
+            - img:
+              - group "Edge from 28c4b9 to b6a0c1" [ref=e25] [cursor=pointer]
+            - img:
+              - group "Edge from 1 to d09c08"
+            - img:
+              - group "Edge from d09c08 to 161f52" [ref=e28] [cursor=pointer]
+            - img:
+              - group "Edge from d09c08 to 28c4b9" [ref=e31] [cursor=pointer]
+            - img:
+              - group "Edge from 161f52 to b0653a" [ref=e34] [cursor=pointer]
+            - img:
+              - group "Edge from b6a0c1 to e879e4"
+            - generic:
+              - group [ref=e37]:
+                - generic [ref=e38]:
+                  - generic [ref=e39]:
+                    - img [ref=e40]
+                    - heading "Trigger" [level=3] [ref=e42]
+                  - generic [ref=e43]:
+                    - paragraph [ref=e44]: Conversation Opened
+                    - paragraph [ref=e45]: Every time
+              - group [ref=e46]:
+                - generic [ref=e47]:
+                  - generic [ref=e49]:
+                    - img [ref=e50]
+                    - heading "Send Message" [level=3] [ref=e52]
+                  - generic [ref=e53]:
+                    - paragraph [ref=e54]: Away Message
+                    - paragraph [ref=e55]: Sorry, we are currently away. We will respond as soon as possible.
+              - group [ref=e56]:
+                - generic [ref=e57]:
+                  - generic [ref=e58]:
+                    - generic [ref=e59]:
+                      - img [ref=e60]
+                      - heading "Date / Time" [level=3] [ref=e63]
+                    - generic [ref=e64]: Business Hours
+                  - generic [ref=e65]:
+                    - paragraph [ref=e66]: Business Hours
+                    - paragraph [ref=e67]: Daily 09:00–17:00 (UTC)
+              - group [ref=e68]:
+                - generic [ref=e69]:
+                  - img [ref=e70]
+                  - generic [ref=e73]: Success
+              - group [ref=e74]:
+                - generic [ref=e75]:
+                  - img [ref=e76]
+                  - generic [ref=e80]: Failure
+              - group [ref=e81]:
+                - generic [ref=e82]:
+                  - generic [ref=e83]:
+                    - generic [ref=e84]:
+                      - img [ref=e85]
+                      - heading "Send Message" [level=3] [ref=e87]
+                    - generic "1 attachment" [ref=e88]:
+                      - img [ref=e89]
+                      - text: "1"
+                  - generic [ref=e91]:
+                    - paragraph [ref=e92]: Welcome Message
+                    - paragraph [ref=e93]: Hello there welcome to the chat!
+              - group [ref=e94]:
+                - generic [ref=e95]:
+                  - generic [ref=e96]:
+                    - img [ref=e97]
+                    - heading "Comment" [level=3] [ref=e100]
+                  - generic [ref=e101]:
+                    - paragraph [ref=e102]: "Add Comment #1"
+                    - paragraph [ref=e103]: User message during off hours
+        - img [ref=e104]
+        - img "Vue Flow mini map" [ref=e107]
+        - generic [ref=e116]:
+          - button [ref=e117] [cursor=pointer]:
+            - img [ref=e118]
+          - button [ref=e120] [cursor=pointer]:
+            - img [ref=e121]
+          - button [ref=e123] [cursor=pointer]:
+            - img [ref=e124]
+          - button [ref=e126] [cursor=pointer]:
+            - img [ref=e127]
+  - generic [ref=e1]:
+    - generic "Toggle devtools panel" [ref=e2] [cursor=pointer]:
+      - img [ref=e3]
+    - generic "Toggle Component Inspector" [ref=e8] [cursor=pointer]:
+      - img [ref=e9]

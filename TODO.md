@@ -129,13 +129,13 @@ Goal: app loads payload.json on mount and renders nodes + edges. No editing yet,
 
 Goal: each node looks like its type and surfaces the right summary on the card.
 
-- [ ] **[src/components/flow/nodes/TriggerNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\TriggerNode.vue)** — trigger badge, shows `data.type` (e.g. "Conversation Opened") and `oncePerContact` indicator. No delete affordance (locked per Day-0 decision; add a WHY comment).
-- [ ] **[src/components/flow/nodes/SendMessageNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\SendMessageNode.vue)** — `name`, preview of first text payload (truncated), attachment count icon.
-- [ ] **[src/components/flow/nodes/DateTimeNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\DateTimeNode.vue)** — `name`, summary like "Mon–Fri 09:00–17:00 (UTC)", `action` badge.
-- [ ] **[src/components/flow/nodes/DateTimeConnectorNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\DateTimeConnectorNode.vue)** — `connectorType` pill (green Success / red Failure). **WHY-comment**: display-only per CLAUDE.md §8.1 — no click/keyboard handlers, no router push, no Create Node entry.
-- [ ] **[src/components/flow/nodes/AddCommentNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\AddCommentNode.vue)** — `name`, truncated comment preview.
-- [ ] Each node uses shadcn `Card` for the frame, shadcn `Tooltip` for full content on hover, and exposes Vue Flow `Handle`s on top/bottom (connectors only on top for incoming edges, etc.).
-- [ ] **Component specs** for each under `src/components/flow/nodes/__tests__/`: render with seeded props, assert visible content and handle positions, assert connector does NOT emit a click route push.
+- [x] **[src/components/flow/nodes/TriggerNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\TriggerNode.vue)** — trigger badge, shows `data.type` (e.g. "Conversation Opened") and `oncePerContact` indicator. No delete affordance (locked per Day-0 decision; add a WHY comment).
+- [x] **[src/components/flow/nodes/SendMessageNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\SendMessageNode.vue)** — `name`, preview of first text payload (truncated), attachment count icon.
+- [x] **[src/components/flow/nodes/DateTimeNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\DateTimeNode.vue)** — `name`, summary like "Mon–Fri 09:00–17:00 (UTC)", `action` badge.
+- [x] **[src/components/flow/nodes/DateTimeConnectorNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\DateTimeConnectorNode.vue)** — `connectorType` pill (green Success / red Failure). **WHY-comment**: display-only per CLAUDE.md §8.1 — no click/keyboard handlers, no router push, no Create Node entry.
+- [x] **[src/components/flow/nodes/AddCommentNode.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\nodes\AddCommentNode.vue)** — `name`, truncated comment preview.
+- [x] Each node uses shadcn `Card` for the frame, shadcn `Tooltip` for full content on hover, and exposes Vue Flow `Handle`s on top/bottom (connectors only on top for incoming edges, etc.).
+- [x] **Component specs** for each under `src/components/flow/nodes/__tests__/`: render with seeded props, assert visible content and handle positions, assert connector does NOT emit a click route push.
 
 **Verify Phase 5:** canvas now shows visually distinct nodes; tooltips work; manual smoke shows all five types.
 

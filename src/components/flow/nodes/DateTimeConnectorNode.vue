@@ -1,27 +1,36 @@
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core'
+import { CheckCircle2, XCircle } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-import type { DateTimeConnectorNode } from '@/lib/types'
+import type { DateTimeConnectorNode as DateTimeConnectorNodeShape } from '@/lib/types'
 
-// Display-only per CLAUDE.md §8.1 — no click handlers, no router push,
-// not exposed via Create Node, skipped by keyboard navigation.
-defineProps<{ id: string; data: DateTimeConnectorNode }>()
+// Display-only per CLAUDE.md §8.1. Do NOT wire click/keyboard handlers, do NOT
+// route to /node/<connector-id>, do NOT expose in Create Node. Skipped by
+// keyboard navigation (Phase 10). FlowCanvas already filters connector clicks
+// from router-push; FlowChartView's guard redirects /node/<connector-id> to /.
+const props = defineProps<{ id: string; data: DateTimeConnectorNodeShape }>()
+
+const isSuccess = computed(() => props.data.data.connectorType === 'success')
 </script>
 
 <template>
   <div
-    class="w-[220px] rounded-md border px-3 py-2 text-center text-sm shadow-sm"
+    class="connector-node inline-flex w-[140px] items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide shadow-sm"
     :class="
-      data.data.connectorType === 'success'
-        ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-        : 'border-rose-300 bg-rose-50 text-rose-900'
+      isSuccess
+        ? 'border-emerald-400 bg-emerald-100 text-emerald-800'
+        : 'border-rose-400 bg-rose-100 text-rose-800'
     "
+    data-node-type="dateTimeConnector"
+    :data-connector-type="data.data.connectorType"
+    aria-hidden="false"
+    tabindex="-1"
   >
     <Handle type="target" :position="Position.Top" />
-    <p class="text-[10px] font-semibold uppercase tracking-wide opacity-70">
-      {{ data.data.connectorType }}
-    </p>
-    <p class="font-medium">{{ data.name }}</p>
+    <CheckCircle2 v-if="isSuccess" class="size-3.5" aria-hidden="true" />
+    <XCircle v-else class="size-3.5" aria-hidden="true" />
+    <span>{{ isSuccess ? 'Success' : 'Failure' }}</span>
     <Handle type="source" :position="Position.Bottom" />
   </div>
 </template>

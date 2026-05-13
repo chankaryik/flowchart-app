@@ -1,5 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { TooltipProvider } from '@/components/ui/tooltip'
+</script>
 
 <template>
-  <RouterView />
+  <TooltipProvider :delay-duration="200">
+    <RouterView />
+  </TooltipProvider>
 </template>
