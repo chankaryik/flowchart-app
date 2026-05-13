@@ -7,7 +7,7 @@ You will create a Flow Chart app with the necessary functionality to create, edi
 You are required to use the following technologies:
 
 - Programming Language: JavaScript/ES6
-- Framework/Libraries: Vite, Vue 3, Pinia, Vue Router, Vue Flow, Tanstack Query (Vue), TailwindCSS, Shadcn Vue, TypeScript
+- Framework/Libraries: Vite, Vue 3, Pinia, Vue Router, Vue Flow, Tanstack Query (Vue), TailwindCSS, Shadcn Vue, TypeScript, VueUse, VeeValidate, Valibot
 - Testing: Vitest, Playwright
 
 # Features
