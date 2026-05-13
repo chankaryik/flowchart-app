@@ -1,0 +1,11 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Flow Chart" [level=1] [ref=e6]
+        - generic [ref=e7]: 7 nodes
+      - button "+ Create Node" [disabled] [ref=e8]
+    - main [ref=e9]:
+      - generic [ref=e10]: Canvas placeholder — wired up in Phase 4
+  - generic "Toggle devtools panel" [ref=e12] [cursor=pointer]:
+    - img [ref=e13]

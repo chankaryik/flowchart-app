@@ -94,12 +94,12 @@ Goal: Pinia stores and TanStack Query layer with the exact config from CLAUDE.md
 
 Goal: wire routes so `/` and `/node/:id` are reachable; drawer state derived from route, not component state.
 
-- [ ] **[src/router/index.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\router\index.ts)** — two routes:
+- [x] **[src/router/index.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\router\index.ts)** — two routes:
   - `/` → `FlowChartView`.
   - `/node/:id` → `FlowChartView` (drawer overlays the same view; route param drives drawer open state).
-- [ ] **Navigation guard** on `/node/:id`: if `id` is unknown or refers to a `dateTimeConnector`, redirect to `/` and flash a toast (toast plumbing comes in Phase 11; for now, just `console.warn` and redirect).
-- [ ] **[src/views/FlowChartView.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\views\FlowChartView.vue)** — page shell: header with title + Create Node button, `<FlowCanvas />`, `<NodeDetailsDrawer />` (drawer renders only when `route.params.id` is set).
-- [ ] **App.vue** keeps just `<RouterView />` plus a `<Toaster />` from shadcn and a global `<TooltipProvider />` if applicable.
+- [x] **Navigation guard** on `/node/:id`: if `id` is unknown or refers to a `dateTimeConnector`, redirect to `/` and flash a toast (toast plumbing comes in Phase 11; for now, just `console.warn` and redirect).
+- [x] **[src/views/FlowChartView.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\views\FlowChartView.vue)** — page shell: header with title + Create Node button, `<FlowCanvas />`, `<NodeDetailsDrawer />` (drawer renders only when `route.params.id` is set).
+- [x] **App.vue** keeps just `<RouterView />` plus a `<Toaster />` from shadcn and a global `<TooltipProvider />` if applicable.
 
 **Verify Phase 3:** navigating to `/` and `/node/anything` both render the (still empty) FlowChartView; invalid IDs redirect.
 

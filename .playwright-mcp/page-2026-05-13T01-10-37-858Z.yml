@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Flow Chart" [level=1] [ref=e6]
+        - generic [ref=e7]: 7 nodes
+      - button "+ Create Node" [disabled] [ref=e8]
+    - main [ref=e9]:
+      - generic [ref=e10]: Canvas placeholder — wired up in Phase 4
+      - complementary "Details for sendMessage" [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - paragraph [ref=e14]: sendMessage
+            - paragraph [ref=e15]: Away Message
+          - button "Close drawer" [ref=e16]: Close
+        - generic [ref=e17]:
+          - text: Editor placeholder — wired up in Phase 6 for node id
+          - code [ref=e18]: b6a0c1
+          - text: .
+  - generic [ref=e19]:
+    - generic "Toggle devtools panel" [ref=e20] [cursor=pointer]:
+      - img [ref=e21]
+    - generic "Toggle Component Inspector" [ref=e26] [cursor=pointer]:
+      - img [ref=e27]
