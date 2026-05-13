@@ -301,6 +301,210 @@ describe('useMoveNode', () => {
   })
 })
 
+describe('create → undo → redo cycle per editable type', () => {
+  it('handles a sendMessage round-trip', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate([trigger])
+    const { app, result: mutation } = withSetup(() => useCreateNode())
+
+    const node: SendMessageNode = {
+      id: 'sm-new',
+      parentId: 1,
+      type: 'sendMessage',
+      name: 'New Message',
+      data: { payload: [{ type: 'text', text: 'hello' }] },
+    }
+    await mutation.mutateAsync({ nodes: [node], position: { x: 10, y: 20 } })
+    expect(store.getNodeById('sm-new')).toBeDefined()
+    expect(store.positions['sm-new']).toEqual({ x: 10, y: 20 })
+
+    history.undo()
+    expect(store.getNodeById('sm-new')).toBeUndefined()
+
+    history.redo()
+    expect(getName(store.getNodeById('sm-new'))).toBe('New Message')
+    expect(store.positions['sm-new']).toEqual({ x: 10, y: 20 })
+
+    app.unmount()
+  })
+
+  it('handles an addComment round-trip', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate([trigger])
+    const { app, result: mutation } = withSetup(() => useCreateNode())
+
+    const node: AddCommentNode = {
+      id: 'ac-new',
+      parentId: 1,
+      type: 'addComment',
+      name: 'Memo',
+      data: { comment: 'note me' },
+    }
+    await mutation.mutateAsync({ nodes: [node], position: { x: 3, y: 4 } })
+    expect(getName(store.getNodeById('ac-new'))).toBe('Memo')
+
+    history.undo()
+    expect(store.getNodeById('ac-new')).toBeUndefined()
+
+    history.redo()
+    expect(getName(store.getNodeById('ac-new'))).toBe('Memo')
+    expect(store.positions['ac-new']).toEqual({ x: 3, y: 4 })
+
+    app.unmount()
+  })
+
+  it('handles a dateTime trio round-trip in a single history entry', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate([trigger])
+    const { app, result: mutation } = withSetup(() => useCreateNode())
+
+    const dt: DateTimeNode = {
+      id: 'dt-new',
+      parentId: 1,
+      type: 'dateTime',
+      name: 'Hours',
+      data: {
+        times: [{ day: 'mon', startTime: '09:00', endTime: '17:00' }],
+        connectors: ['dt-s', 'dt-f'],
+        timezone: 'UTC',
+        action: 'businessHours',
+      },
+    }
+    const ok: DateTimeConnectorNode = {
+      id: 'dt-s',
+      parentId: 'dt-new',
+      type: 'dateTimeConnector',
+      name: 'Success',
+      data: { connectorType: 'success' },
+    }
+    const no: DateTimeConnectorNode = {
+      id: 'dt-f',
+      parentId: 'dt-new',
+      type: 'dateTimeConnector',
+      name: 'Failure',
+      data: { connectorType: 'failure' },
+    }
+    await mutation.mutateAsync({
+      nodes: [dt, ok, no],
+      positions: {
+        'dt-new': { x: 0, y: 0 },
+        'dt-s': { x: -100, y: 100 },
+        'dt-f': { x: 100, y: 100 },
+      },
+    })
+    expect(store.getNodeById('dt-new')).toBeDefined()
+    expect(store.getNodeById('dt-s')).toBeDefined()
+    expect(store.getNodeById('dt-f')).toBeDefined()
+    expect(history.undoStack.length).toBe(1)
+
+    history.undo()
+    expect(store.getNodeById('dt-new')).toBeUndefined()
+    expect(store.getNodeById('dt-s')).toBeUndefined()
+    expect(store.getNodeById('dt-f')).toBeUndefined()
+
+    history.redo()
+    expect(store.getNodeById('dt-new')).toBeDefined()
+    expect(store.getNodeById('dt-s')).toBeDefined()
+    expect(store.getNodeById('dt-f')).toBeDefined()
+    expect(store.positions['dt-new']).toEqual({ x: 0, y: 0 })
+    expect(store.positions['dt-s']).toEqual({ x: -100, y: 100 })
+    expect(store.positions['dt-f']).toEqual({ x: 100, y: 100 })
+
+    app.unmount()
+  })
+})
+
+describe('undo / redo persistence', () => {
+  it('persists to saveNodes after undo of an update', async () => {
+    const { app, result: mutation } = withSetup(() => useUpdateNode())
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+
+    await mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> })
+    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+
+    history.undo()
+    expect(saveNodesMock).toHaveBeenCalledTimes(2)
+    const lastSaveCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
+    const lastSave = (lastSaveCall?.[0] ?? []) as FlowNode[]
+    expect(getName(lastSave.find((n) => n.id === 'msg'))).toBe('Welcome')
+
+    history.redo()
+    expect(saveNodesMock).toHaveBeenCalledTimes(3)
+    const afterRedoCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
+    const afterRedo = (afterRedoCall?.[0] ?? []) as FlowNode[]
+    expect(getName(afterRedo.find((n) => n.id === 'msg'))).toBe('Renamed')
+
+    app.unmount()
+  })
+
+  it('persists to saveNodes after undo of a delete', async () => {
+    const { app, result: mutation } = withSetup(() => useDeleteNode())
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+
+    await mutation.mutateAsync({ id: 'msg' })
+    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+
+    history.undo()
+    expect(saveNodesMock).toHaveBeenCalledTimes(2)
+    const restoredCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
+    const restored = (restoredCall?.[0] ?? []) as FlowNode[]
+    expect(restored.find((n) => n.id === 'msg')).toBeDefined()
+    expect(restored.find((n) => n.id === 'cmt')).toBeDefined()
+
+    app.unmount()
+  })
+
+  it('persists to saveNodes after undo of a create', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate([trigger])
+    const { app, result: mutation } = withSetup(() => useCreateNode())
+
+    const node: SendMessageNode = {
+      id: 'persist-1',
+      parentId: 1,
+      type: 'sendMessage',
+      name: 'X',
+      data: { payload: [] },
+    }
+    await mutation.mutateAsync({ nodes: [node], position: { x: 0, y: 0 } })
+    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+
+    history.undo()
+    expect(saveNodesMock).toHaveBeenCalledTimes(2)
+    const afterUndoCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
+    const afterUndo = (afterUndoCall?.[0] ?? []) as FlowNode[]
+    expect(afterUndo.find((n) => n.id === 'persist-1')).toBeUndefined()
+
+    app.unmount()
+  })
+
+  it('persists to saveNodes after undo of a move', async () => {
+    const { app, result: mutation } = withSetup(() => useMoveNode())
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+    store.setPosition('msg', { x: 10, y: 10 })
+
+    await mutation.mutateAsync({ id: 'msg', position: { x: 99, y: 99 } })
+    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+
+    history.undo()
+    expect(saveNodesMock).toHaveBeenCalledTimes(2)
+    // saveNodes only stores nodes, not positions — positions are layout state.
+    // What we're verifying is that saveNodes was called after undo at all.
+
+    app.unmount()
+  })
+})
+
 describe('mutation onError', () => {
   it('rolls back the optimistic patch when saveNodes rejects', async () => {
     saveNodesMock.mockRejectedValueOnce(new Error('disk full'))

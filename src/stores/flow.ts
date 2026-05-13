@@ -106,6 +106,10 @@ export const useFlowStore = defineStore('flow', () => {
     }
   }
 
+  function clearPositions(): void {
+    positions.value = {}
+  }
+
   function setSelection(id: NodeId | null): void {
     selectedId.value = id
   }
@@ -129,6 +133,7 @@ export const useFlowStore = defineStore('flow', () => {
     removeNodes,
     setPosition,
     setPositions,
+    clearPositions,
     setSelection,
     setDragging,
   }

@@ -1,19 +1,41 @@
 <script setup lang="ts">
+import { useQueryClient } from '@tanstack/vue-query'
+import { RotateCcw } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
 import CreateNodeDialog from '@/components/flow/CreateNodeDialog.vue'
 import FlowCanvas from '@/components/flow/FlowCanvas.vue'
-import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { useFlowHistory } from '@/composables/useFlowHistory'
+import { resetNodes } from '@/lib/payload-adapter'
 import { useNodesQuery } from '@/queries/nodes'
+import { NODES_QUERY_KEY } from '@/queries/client'
 import { useFlowStore } from '@/stores/flow'
+import { useHistoryStore } from '@/stores/history'
 
 const route = useRoute()
 const router = useRouter()
 const store = useFlowStore()
+const history = useHistoryStore()
+const queryClient = useQueryClient()
 
 const query = useNodesQuery()
 const createDialogOpen = ref(false)
+const resetConfirmOpen = ref(false)
+const resetting = ref(false)
+
+useFlowHistory()
 
 const drawerNodeId = computed(() => {
   const raw = route.params.id
@@ -47,6 +69,26 @@ watch(
   },
   { immediate: true },
 )
+
+async function onConfirmReset(): Promise<void> {
+  resetting.value = true
+  try {
+    const seed = await resetNodes()
+    store.hydrate(seed)
+    // Drop the layout cache so the watchEffect in FlowCanvas re-computes from
+    // the canonical tree — otherwise nodes the user dragged stay where they
+    // were instead of snapping back to the original layout.
+    store.clearPositions()
+    history.clear()
+    queryClient.setQueryData(NODES_QUERY_KEY, seed)
+    if (drawerNodeId.value != null) {
+      void router.push('/')
+    }
+  } finally {
+    resetting.value = false
+    resetConfirmOpen.value = false
+  }
+}
 </script>
 
 <template>
@@ -62,15 +104,27 @@ watch(
         </span>
         <span v-else class="text-xs text-slate-500">{{ store.nodes.length }} nodes</span>
       </div>
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
-        :disabled="query.isPending.value || query.isError.value"
-        data-testid="create-node-button"
-        @click="createDialogOpen = true"
-      >
-        + Create Node
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
+          :disabled="query.isPending.value || query.isError.value || resetting"
+          data-testid="reset-button"
+          @click="resetConfirmOpen = true"
+        >
+          <RotateCcw class="size-3" />
+          Reset
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
+          :disabled="query.isPending.value || query.isError.value"
+          data-testid="create-node-button"
+          @click="createDialogOpen = true"
+        >
+          + Create Node
+        </button>
+      </div>
     </header>
 
     <main class="relative flex-1 overflow-hidden">
@@ -78,5 +132,29 @@ watch(
       <NodeDetailsDrawer />
     </main>
     <CreateNodeDialog v-model:open="createDialogOpen" />
+
+    <AlertDialog :open="resetConfirmOpen" @update:open="(v) => (resetConfirmOpen = v)">
+      <AlertDialogContent data-testid="reset-confirm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reset the flow chart?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This discards every change you have made and restores the original payload.json.
+            Undo history is cleared and cannot be recovered.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel data-testid="reset-cancel" :disabled="resetting">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            data-testid="reset-confirm-action"
+            :disabled="resetting"
+            @click="onConfirmReset"
+          >
+            {{ resetting ? 'Resetting…' : 'Reset' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>

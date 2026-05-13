@@ -197,10 +197,10 @@ Goal: nodes can be deleted (with cascade) and dragged; drag pushes exactly one u
 
 Goal: keyboard-driven undo/redo across all mutating operations.
 
-- [ ] **[src/composables/useFlowHistory.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\composables\useFlowHistory.ts)** — global keydown listener on `Ctrl/Cmd+Z` → `history.undo()`, `Ctrl/Cmd+Shift+Z` (or `Ctrl+Y` on Windows) → `history.redo()`. Detect mac via `navigator.platform` / `navigator.userAgent`. Ignore when focus is inside a text input/textarea (let the browser handle in-field undo).
-- [ ] Mount the composable once in `FlowChartView.vue`.
-- [ ] Confirm every mutation pushes a history entry (create / update / delete / drag-end). Field-edit history is at **submit/blur granularity**, not per-keystroke.
-- [ ] Spec: full create → undo → redo cycle on each node type via the store directly (unit), then via the UI (E2E in Phase 12).
+- [x] **[src/composables/useFlowHistory.ts](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\composables\useFlowHistory.ts)** — global keydown listener on `Ctrl/Cmd+Z` → `history.undo()`, `Ctrl/Cmd+Shift+Z` (or `Ctrl+Y` on Windows) → `history.redo()`. Detect mac via `navigator.platform` / `navigator.userAgent`. Ignore when focus is inside a text input/textarea/contenteditable (let the browser handle in-field undo).
+- [x] Mount the composable once in `FlowChartView.vue`.
+- [x] Confirm every mutation pushes a history entry (create / update / delete / drag-end). Field-edit history is at **submit/blur granularity**, not per-keystroke.
+- [x] Spec: full create → undo → redo cycle on each node type via the store directly (unit), then via the UI (E2E in Phase 12).
 
 **Verify Phase 9:** Ctrl+Z reverses last operation across all surfaces; mac Cmd+Z works in browser dev; in-field undo still works inside textareas.
 

@@ -58,6 +58,20 @@ export function useNodesQuery() {
   return query
 }
 
+// Mutations write through the mutationFn; undo/redo run outside that lifecycle
+// and would otherwise leave localStorage holding the post-mutation state — a
+// refresh after an undo would restore what the user just reverted. Wrap each
+// history callback so the store change is persisted at the same boundary.
+function persistAfter(
+  store: ReturnType<typeof useFlowStore>,
+  fn: () => void,
+): () => void {
+  return () => {
+    fn()
+    void saveNodes([...store.nodes])
+  }
+}
+
 export function useCreateNode() {
   const store = useFlowStore()
   const history = useHistoryStore()
@@ -77,8 +91,8 @@ export function useCreateNode() {
       store.addNodes(snapshot, positionMap)
       history.push({
         label: vars.label ?? `Create ${primary.type}`,
-        undo: () => store.removeNodes(snapshot.map((n) => n.id)),
-        redo: () => store.addNodes(snapshot, positionMap),
+        undo: persistAfter(store, () => store.removeNodes(snapshot.map((n) => n.id))),
+        redo: persistAfter(store, () => store.addNodes(snapshot, positionMap)),
       })
     },
     onError: () => {
@@ -104,8 +118,8 @@ export function useUpdateNode() {
       const afterCopy = { ...afterSnap } as Record<string, unknown>
       history.push({
         label: vars.label ?? `Update ${before.type}`,
-        undo: () => store.applyPatch(vars.id, beforeSnap),
-        redo: () => store.applyPatch(vars.id, afterCopy),
+        undo: persistAfter(store, () => store.applyPatch(vars.id, beforeSnap)),
+        redo: persistAfter(store, () => store.applyPatch(vars.id, afterCopy)),
       })
     },
     onError: () => {
@@ -136,8 +150,8 @@ export function useDeleteNode() {
       const root = snapshotNodes[0]
       history.push({
         label: vars.label ?? `Delete ${root?.type ?? 'node'}`,
-        undo: () => store.addNodes(snapshotNodes, snapshotPositions),
-        redo: () => store.removeNodes(ids),
+        undo: persistAfter(store, () => store.addNodes(snapshotNodes, snapshotPositions)),
+        redo: persistAfter(store, () => store.removeNodes(ids)),
       })
     },
     onError: () => {
@@ -165,7 +179,7 @@ export function useMoveNode() {
       const node = store.getNodeById(vars.id)
       history.push({
         label: vars.label ?? `Move ${node?.type ?? 'node'}`,
-        undo: () => {
+        undo: persistAfter(store, () => {
           if (previous != null) {
             store.setPosition(vars.id, previous)
           } else {
@@ -174,13 +188,13 @@ export function useMoveNode() {
           for (const move of secondary) {
             store.setPosition(move.id, move.from)
           }
-        },
-        redo: () => {
+        }),
+        redo: persistAfter(store, () => {
           store.setPosition(vars.id, next)
           for (const move of secondary) {
             store.setPosition(move.id, move.to)
           }
-        },
+        }),
       })
     },
     onError: () => {
