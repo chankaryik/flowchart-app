@@ -10,6 +10,7 @@ import { useHistoryStore } from '@/stores/history'
 export type CreateNodeVars = {
   nodes: FlowNode[]
   position?: Position
+  positions?: Record<string, Position>
   label?: string
 }
 
@@ -56,8 +57,12 @@ export function useCreateNode() {
     onMutate: (vars: CreateNodeVars) => {
       const primary = vars.nodes[0]
       if (primary == null) return
-      const positionMap =
-        vars.position != null ? { [nodeKey(primary.id)]: vars.position } : undefined
+      let positionMap: Record<string, Position> | undefined
+      if (vars.positions != null) {
+        positionMap = vars.positions
+      } else if (vars.position != null) {
+        positionMap = { [nodeKey(primary.id)]: vars.position }
+      }
       const snapshot = vars.nodes.map((node) => ({ ...node }))
       store.addNodes(snapshot, positionMap)
       history.push({

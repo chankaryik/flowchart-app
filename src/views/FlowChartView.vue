@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CreateNodeDialog from '@/components/flow/CreateNodeDialog.vue'
 import FlowCanvas from '@/components/flow/FlowCanvas.vue'
 import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
 import { useNodesQuery } from '@/queries/nodes'
@@ -12,6 +13,7 @@ const router = useRouter()
 const store = useFlowStore()
 
 const query = useNodesQuery()
+const createDialogOpen = ref(false)
 
 const drawerNodeId = computed(() => {
   const raw = route.params.id
@@ -63,8 +65,9 @@ watch(
       <button
         type="button"
         class="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
-        disabled
-        title="Create Node (Phase 7)"
+        :disabled="query.isPending.value || query.isError.value"
+        data-testid="create-node-button"
+        @click="createDialogOpen = true"
       >
         + Create Node
       </button>
@@ -74,5 +77,6 @@ watch(
       <FlowCanvas class="absolute inset-0" />
       <NodeDetailsDrawer />
     </main>
+    <CreateNodeDialog v-model:open="createDialogOpen" />
   </div>
 </template>

@@ -162,13 +162,14 @@ Goal: opening `/node/:id` slides in a Sheet with the right editor; saves go thro
 
 Goal: a "Create Node" button on the canvas opens a dialog to add a new node attached to a chosen parent.
 
-- [ ] **[src/components/flow/CreateNodeDialog.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\CreateNodeDialog.vue)** — shadcn `Dialog`:
-  - Step 1: pick a type from `'sendMessage' | 'dateTime' | 'addComment'`. **Trigger and dateTimeConnector are NOT in the list** (Day-0 lock + CLAUDE.md §8.1).
-  - Step 2: pick a parent from the existing node list (filter out `dateTimeConnector` if connecting under them is forbidden — actually re-check: `sendMessage` in seed data has `parentId: '28c4b9'` which IS a connector, so connectors CAN be parents; allow them).
-  - Step 3: type-specific form using the same editors from Phase 6 (defaults from `createNode(type, parentId)`).
-  - On submit: `useCreateNode().mutate(newNode)`; Pinia optimistic insert; layout recomputes (Phase 4's layout). Navigate to `/node/<new-id>` so the user lands in the freshly opened drawer.
-- [ ] When the user picks `dateTime`, the mutation **also creates two `dateTimeConnector` children** (Success + Failure) under it automatically — payload.json seed shape requires this. Codify this in `node-factory.ts`'s `dateTime` branch (factory returns a `{ dateTime, connectors: [success, failure] }` shape that the mutation handles).
-- [ ] Component spec: type filter excludes trigger/connector; auto-generated connectors appear on dateTime creation.
+- [x] **[src/components/flow/CreateNodeDialog.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\flow\CreateNodeDialog.vue)** — shadcn `Dialog`:
+  - Step 1: pick a type from `'sendMessage' | 'dateTime' | 'addComment'`. Trigger and connector excluded.
+  - Step 2: pick a parent from any existing node (connectors allowed, per seed shape).
+  - Step 3: confirm/edit the name (defaults from type; full editing happens in the drawer post-create).
+  - On submit: `useCreateNode().mutate({ nodes, positions })`; Pinia optimistic insert with computed positions next to parent; navigate to `/node/<new-id>`.
+- [x] `dateTime` creation passes all three nodes (dateTime + success + failure) in one mutation — factory already returns the trio.
+- [x] `useCreateNode` extended with a `positions` map so multi-node creates can place each node.
+- [x] Component spec: type filter excludes trigger/connector; auto-generated connectors appear on dateTime creation; mutation called with correct nodes/positions; name validation blocks submit; Cancel closes.
 
 **Verify Phase 7:** click Create Node → add a sendMessage under the trigger → it appears on canvas wired with a smoothstep edge → drawer auto-opens for editing. Refresh persists it.
 
