@@ -3,6 +3,7 @@ import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import FlowCanvas from '@/components/flow/FlowCanvas.vue'
+import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
 import { useNodesQuery } from '@/queries/nodes'
 import { useFlowStore } from '@/stores/flow'
 
@@ -44,12 +45,6 @@ watch(
   },
   { immediate: true },
 )
-
-const drawerNode = computed(() => {
-  const id = drawerNodeId.value
-  if (id == null) return null
-  return store.getNodeById(id) ?? null
-})
 </script>
 
 <template>
@@ -77,36 +72,7 @@ const drawerNode = computed(() => {
 
     <main class="relative flex-1 overflow-hidden">
       <FlowCanvas class="absolute inset-0" />
-
-      <!-- NodeDetailsDrawer mounts here in Phase 6.
-           For now we just acknowledge that a valid id was resolved. -->
-      <aside
-        v-if="drawerNode"
-        class="absolute top-0 right-0 flex h-full w-96 flex-col border-l border-slate-200 bg-white shadow-xl"
-        :aria-label="`Details for ${drawerNode.type}`"
-      >
-        <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <div>
-            <p class="text-xs uppercase tracking-wide text-slate-400">{{ drawerNode.type }}</p>
-            <p class="text-sm font-medium">
-              {{ 'name' in drawerNode ? drawerNode.name : `#${drawerNode.id}` }}
-            </p>
-          </div>
-          <button
-            type="button"
-            class="rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100"
-            aria-label="Close drawer"
-            @click="router.push('/')"
-          >
-            Close
-          </button>
-        </div>
-        <div class="flex-1 overflow-auto px-4 py-3 text-sm text-slate-500">
-          Editor placeholder — wired up in Phase 6 for node id
-          <code class="font-mono text-slate-700">{{ drawerNode.id }}</code>
-          .
-        </div>
-      </aside>
+      <NodeDetailsDrawer />
     </main>
   </div>
 </template>

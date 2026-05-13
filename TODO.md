@@ -145,18 +145,14 @@ Goal: each node looks like its type and surfaces the right summary on the card.
 
 Goal: opening `/node/:id` slides in a Sheet with the right editor; saves go through TanStack mutations.
 
-- [ ] **Add shadcn components:** `sheet`, `dialog`, `input`, `textarea`, `label`, `select`, `button`, `card`, `tooltip`, `kbd`, `toast`, `calendar`.
-- [ ] **[src/components/drawer/NodeDetailsDrawer.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\NodeDetailsDrawer.vue)** — shadcn `Sheet`:
-  - `:open="!!route.params.id"`, `@update:open="(v) => v || router.push('/')"`.
-  - Reads node from Pinia via `getNodeById(route.params.id)`; passes to the type-specific editor.
-  - Header shows node name + type badge; footer has Save (disabled while invalid) + Delete (hidden for trigger).
-  - **Transition:** `transform: translateX(100%)` ↔ `translateX(0)` — never animate width. Spec this in CSS at the Sheet level; shadcn's default uses translate so this is mostly a "don't override it" rule.
-- [ ] **[src/components/drawer/SendMessageEditor.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\SendMessageEditor.vue)** — name input + payload editor (list of `text` / `attachment` rows with add/remove; URL validator on attachments).
-- [ ] **[src/components/drawer/AddCommentEditor.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\AddCommentEditor.vue)** — name input + textarea bound to `data.comment` with `validateComment`.
-- [ ] **[src/components/drawer/BusinessHoursEditor.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\BusinessHoursEditor.vue)** — list of `{ day, startTime, endTime }` rows; day select, two `<input type="time">`, add/remove row; surfaces `validateBusinessHours` errors at the row and form level. Timezone select + action select.
-- [ ] **Trigger editor**: read-only summary in the drawer (since it's not configurable via the dialog and not deletable; matches Day-0 lock). Or a minimal editor for `oncePerContact` + `data.type` — confirm with user during Phase 12 smoke if scope creep.
-- [ ] **Submit flow per editor:** validate on blur (per field) AND on submit (whole form); disable Save while invalid. On submit, call `useUpdateNode().mutate(patch)`; on success, navigate back to `/` and toast "Saved".
-- [ ] **Component specs** for each editor: validation triggers, submit-disabled behavior, mutation called with the right patch.
+- [x] **Add shadcn components:** `sheet`, `dialog`, `input`, `textarea`, `label`, `select`, `button` (card+tooltip already present from Phase 5). `kbd`/`toast`/`calendar` deferred — none needed yet.
+- [x] **[src/components/drawer/NodeDetailsDrawer.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\NodeDetailsDrawer.vue)** — shadcn `Sheet` routed by `route.params.id`; closes via `router.push('/')`. Header shows type badge + node name + ID. Delete deferred to Phase 8.
+- [x] **[src/components/drawer/SendMessageEditor.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\SendMessageEditor.vue)** — name input + payload editor (list of `text` / `attachment` rows with add/remove; URL validator on attachments).
+- [x] **[src/components/drawer/AddCommentEditor.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\AddCommentEditor.vue)** — name input + textarea bound to `data.comment` with `validateComment` + live char counter.
+- [x] **[src/components/drawer/BusinessHoursEditor.vue](C:\Users\mryik\Works\Int\respondio\flow-chart-app\src\components\drawer\BusinessHoursEditor.vue)** — schedule rows (day select + start/end `<input type="time">`), timezone select; action shown read-only (only one value in spec); `validateBusinessHours` surfaced at form level; patch preserves `connectors` + `action`.
+- [x] **Trigger editor**: read-only `TriggerDetails.vue` per Day-0 lock (confirmed Phase 6).
+- [x] **Submit flow per editor:** blur+submit validation, Save disabled while invalid or pending; on submit calls `useUpdateNode().mutate(patch)` and on success emits `@saved` which navigates back to `/`. Toast deferred to Phase 11.
+- [x] **Component specs** for each editor (`src/components/drawer/__tests__/`): validation triggers, submit-disabled behavior, mutation called with the right patch.
 
 **Verify Phase 6:** open `/node/<some-id>` in a fresh browser, edit a field, save → drawer closes, canvas reflects the change, refresh keeps it (localStorage write-through working end-to-end).
 
