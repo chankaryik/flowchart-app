@@ -75,7 +75,7 @@ describe('payload helpers', () => {
   it('returns the first text payload text', () => {
     expect(
       firstTextPreview([
-        { type: 'attachment', attachment: 'a' },
+        { type: 'attachment', attachments: ['a'] },
         { type: 'text', text: 'hi' },
         { type: 'text', text: 'second' },
       ]),
@@ -83,18 +83,18 @@ describe('payload helpers', () => {
   })
 
   it('returns an empty string when no text item is present', () => {
-    expect(firstTextPreview([{ type: 'attachment', attachment: 'a' }])).toBe('')
+    expect(firstTextPreview([{ type: 'attachment', attachments: ['a'] }])).toBe('')
     expect(firstTextPreview([])).toBe('')
   })
 
-  it('counts attachment payload items', () => {
+  it('counts files across all attachment items', () => {
     expect(
       attachmentCount([
         { type: 'text', text: 'a' },
-        { type: 'attachment', attachment: 'x' },
-        { type: 'attachment', attachment: 'y' },
+        { type: 'attachment', attachments: ['x', 'y'] },
+        { type: 'attachment', attachments: ['z'] },
       ]),
-    ).toBe(2)
+    ).toBe(3)
     expect(attachmentCount([])).toBe(0)
   })
 })

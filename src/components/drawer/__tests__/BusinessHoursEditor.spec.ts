@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { DateTimeNode } from '@/lib/types'
-import { makeUpdateNodeMock, mountEditor, type MutateAsyncMock } from './helpers'
+import { flushValidation, makeUpdateNodeMock, mountEditor, type MutateAsyncMock } from './helpers'
 
 let updateNodeMock: ReturnType<typeof makeUpdateNodeMock>
 
@@ -47,7 +47,9 @@ describe('BusinessHoursEditor', () => {
   it('submits a patch preserving connectors and action', async () => {
     const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
     await wrapper.find('#dt-name').setValue('Updated Hours')
-    await wrapper.find('form').trigger('submit.prevent')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
 
     expect(mutateAsyncMock()).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -78,7 +80,8 @@ describe('BusinessHoursEditor', () => {
       },
     }
     const wrapper = mountEditor(BusinessHoursEditor, { node: overlapping })
-    await wrapper.find('form').trigger('submit.prevent')
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
     expect(mutateAsyncMock()).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="times-error"]').exists()).toBe(true)
   })
@@ -92,7 +95,8 @@ describe('BusinessHoursEditor', () => {
       },
     }
     const wrapper = mountEditor(BusinessHoursEditor, { node: inverted })
-    await wrapper.find('form').trigger('submit.prevent')
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
     expect(mutateAsyncMock()).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="times-error"]').text()).toMatch(/End time/i)
   })

@@ -54,7 +54,7 @@ export function firstTextPreview(payload: SendMessagePayloadItem[]): string {
 export function attachmentCount(payload: SendMessagePayloadItem[]): number {
   let count = 0
   for (const item of payload) {
-    if (item.type === 'attachment') count += 1
+    if (item.type === 'attachment') count += item.attachments.length
   }
   return count
 }

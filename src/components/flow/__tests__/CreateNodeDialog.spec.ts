@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
@@ -12,6 +12,11 @@ import type {
 } from '@/lib/types'
 import type { CreateNodeVars } from '@/queries/nodes'
 import { useFlowStore } from '@/stores/flow'
+
+async function flushValidation(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  await flushPromises()
+}
 
 type MutateAsyncMock = ReturnType<typeof vi.fn<(vars: CreateNodeVars) => Promise<void>>>
 
@@ -173,7 +178,9 @@ describe('CreateNodeDialog', () => {
     await wrapper.find('[data-testid="create-next"]').trigger('click')
 
     await wrapper.find('#create-name').setValue('Welcome msg')
-    await wrapper.find('form').trigger('submit.prevent')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
 
     expect(createNodeMock.mutateAsync).toHaveBeenCalledTimes(1)
     const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
@@ -195,7 +202,9 @@ describe('CreateNodeDialog', () => {
     select.vm.$emit('update:modelValue', '1')
     await wrapper.vm.$nextTick()
     await wrapper.find('[data-testid="create-next"]').trigger('click')
-    await wrapper.find('form').trigger('submit.prevent')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
 
     const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
     expect(call).toBeDefined()
@@ -225,7 +234,9 @@ describe('CreateNodeDialog', () => {
     await wrapper.find('[data-testid="create-next"]').trigger('click')
 
     await wrapper.find('#create-name').setValue('')
-    await wrapper.find('form').trigger('submit.prevent')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
 
     expect(createNodeMock.mutateAsync).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
@@ -265,7 +276,9 @@ describe('CreateNodeDialog', () => {
       await wrapper.find('[data-type-option="addComment"]').trigger('click')
       await wrapper.find('[data-testid="create-next"]').trigger('click')
       await wrapper.find('#create-name').setValue('Follow-up note')
-      await wrapper.find('form').trigger('submit.prevent')
+      await flushValidation()
+      await wrapper.find('form').trigger('submit')
+      await flushValidation()
 
       const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
       expect(call).toBeDefined()
@@ -281,7 +294,9 @@ describe('CreateNodeDialog', () => {
       await wrapper.find('[data-type-option="sendMessage"]').trigger('click')
       await wrapper.find('[data-testid="create-next"]').trigger('click')
       await wrapper.find('#create-name').setValue('After success')
-      await wrapper.find('form').trigger('submit.prevent')
+      await flushValidation()
+      await wrapper.find('form').trigger('submit')
+      await flushValidation()
 
       const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
       expect(call).toBeDefined()

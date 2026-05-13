@@ -15,7 +15,7 @@ export type EditableNodeType = Exclude<NodeType, 'trigger' | 'dateTimeConnector'
 
 export type SendMessagePayloadItem =
   | { type: 'text'; text: string }
-  | { type: 'attachment'; attachment: string }
+  | { type: 'attachment'; attachments: string[] }
 
 export type BusinessHoursRow = {
   day: Day

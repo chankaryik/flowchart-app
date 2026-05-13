@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AddCommentNode } from '@/lib/types'
-import { makeUpdateNodeMock, mountEditor, type MutateAsyncMock } from './helpers'
+import { flushValidation, makeUpdateNodeMock, mountEditor, type MutateAsyncMock } from './helpers'
 
 let updateNodeMock: ReturnType<typeof makeUpdateNodeMock>
 
@@ -38,6 +38,7 @@ describe('AddCommentEditor', () => {
   it('keeps Save disabled while the title is empty', async () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
     await wrapper.find('#comment-name').setValue('')
+    await flushValidation()
     const save = wrapper.find('button[type="submit"]')
     expect(save.attributes('disabled')).toBeDefined()
   })
@@ -47,6 +48,7 @@ describe('AddCommentEditor', () => {
     const nameInput = wrapper.find('#comment-name')
     await nameInput.setValue('')
     await nameInput.trigger('blur')
+    await flushValidation()
     expect(wrapper.find('[data-testid="name-error"]').text()).toMatch(/required/i)
   })
 
@@ -54,7 +56,9 @@ describe('AddCommentEditor', () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
     await wrapper.find('#comment-name').setValue('  Renamed  ')
     await wrapper.find('#comment-body').setValue('Updated body')
-    await wrapper.find('form').trigger('submit.prevent')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
 
     expect(mutateAsyncMock()).toHaveBeenCalledTimes(1)
     expect(mutateAsyncMock()).toHaveBeenCalledWith(
@@ -69,10 +73,11 @@ describe('AddCommentEditor', () => {
   it('refuses to submit while invalid and never calls the mutation', async () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
     await wrapper.find('#comment-name').setValue('')
-    await wrapper.find('form').trigger('submit.prevent')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
     expect(mutateAsyncMock()).not.toHaveBeenCalled()
     expect(wrapper.emitted('saved')).toBeFalsy()
-    // The title error should now be visible because submit was attempted.
     expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
   })
 })

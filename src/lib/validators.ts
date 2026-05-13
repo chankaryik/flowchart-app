@@ -1,55 +1,75 @@
-import type { BusinessHoursRow, Day, ValidationResult } from '@/lib/types'
+import * as v from 'valibot'
+
+import { DAYS, type BusinessHoursRow } from '@/lib/types'
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 
-export function validateTitle(value: string): ValidationResult {
-  const trimmed = value.trim()
-  if (trimmed.length === 0) {
-    return { ok: false, message: 'Title is required.' }
-  }
-  if (trimmed.length > 80) {
-    return { ok: false, message: 'Title must be 80 characters or fewer.' }
-  }
-  return { ok: true }
-}
+export const titleSchema = v.pipe(
+  v.string(),
+  v.transform((value) => value.trim()),
+  v.minLength(1, 'Title is required.'),
+  v.maxLength(80, 'Title must be 80 characters or fewer.'),
+)
 
-export function validateDescription(value: string): ValidationResult {
-  if (value.length > 500) {
-    return { ok: false, message: 'Description must be 500 characters or fewer.' }
-  }
-  return { ok: true }
-}
+export const descriptionSchema = v.pipe(
+  v.string(),
+  v.maxLength(500, 'Description must be 500 characters or fewer.'),
+)
 
-export function validateAttachmentUrl(value: string): ValidationResult {
-  const trimmed = value.trim()
-  if (trimmed.length === 0) {
-    return { ok: false, message: 'Attachment URL is required.' }
-  }
-  try {
-     
-    new URL(trimmed)
-    return { ok: true }
-  } catch {
-    return { ok: false, message: 'Attachment URL must be a valid URL (e.g. https://example.com/file.png).' }
-  }
-}
+export const commentSchema = v.pipe(
+  v.string(),
+  v.maxLength(1000, 'Comment must be 1000 characters or fewer.'),
+)
 
-export function validateComment(value: string): ValidationResult {
-  if (value.length > 1000) {
-    return { ok: false, message: 'Comment must be 1000 characters or fewer.' }
-  }
-  return { ok: true }
-}
+export const attachmentSchema = v.pipe(
+  v.string(),
+  v.minLength(1, 'Please upload a file.'),
+)
 
-export function validateTimeRange(startTime: string, endTime: string): ValidationResult {
-  if (!TIME_PATTERN.test(startTime) || !TIME_PATTERN.test(endTime)) {
-    return { ok: false, message: 'Times must be in HH:MM 24-hour format.' }
-  }
-  if (toMinutes(endTime) <= toMinutes(startTime)) {
-    return { ok: false, message: 'End time must be after start time.' }
-  }
-  return { ok: true }
-}
+export const attachmentsSchema = v.pipe(
+  v.array(attachmentSchema),
+  v.minLength(1, 'Please upload at least one file.'),
+)
+
+const timeStringSchema = v.pipe(
+  v.string(),
+  v.regex(TIME_PATTERN, 'Times must be in HH:MM 24-hour format.'),
+)
+
+export const businessHoursRowSchema = v.pipe(
+  v.object({
+    day: v.picklist(DAYS),
+    startTime: timeStringSchema,
+    endTime: timeStringSchema,
+  }),
+  v.check(
+    ({ startTime, endTime }) => toMinutes(endTime) > toMinutes(startTime),
+    'End time must be after start time.',
+  ),
+)
+
+export const businessHoursSchema = v.pipe(
+  v.array(businessHoursRowSchema),
+  v.minLength(1, 'At least one time range is required.'),
+  v.check((rows) => !hasOverlap(rows), 'Overlapping time ranges within a day.'),
+)
+
+export const sendMessageTextRowSchema = v.object({
+  type: v.literal('text'),
+  text: v.string(),
+})
+
+export const sendMessageAttachmentRowSchema = v.object({
+  type: v.literal('attachment'),
+  attachments: attachmentsSchema,
+})
+
+export const sendMessagePayloadItemSchema = v.union([
+  sendMessageTextRowSchema,
+  sendMessageAttachmentRowSchema,
+])
+
+export const sendMessagePayloadSchema = v.array(sendMessagePayloadItemSchema)
 
 export function rangesOverlap(
   a: { startTime: string; endTime: string },
@@ -62,41 +82,24 @@ export function rangesOverlap(
   return aStart < bEnd && bStart < aEnd
 }
 
-export function validateBusinessHours(times: BusinessHoursRow[]): ValidationResult {
-  if (times.length === 0) {
-    return { ok: false, message: 'At least one time range is required.' }
-  }
-
-  for (let i = 0; i < times.length; i++) {
-    const row = times[i]
-    if (row == null) continue
-    const rangeResult = validateTimeRange(row.startTime, row.endTime)
-    if (!rangeResult.ok) {
-      return { ok: false, message: `Row ${i + 1}: ${rangeResult.message}` }
-    }
-  }
-
-  const byDay = new Map<Day, BusinessHoursRow[]>()
-  for (const row of times) {
+function hasOverlap(rows: BusinessHoursRow[]): boolean {
+  const byDay = new Map<string, BusinessHoursRow[]>()
+  for (const row of rows) {
     const existing = byDay.get(row.day) ?? []
     existing.push(row)
     byDay.set(row.day, existing)
   }
-
-  for (const [day, rows] of byDay) {
-    for (let i = 0; i < rows.length; i++) {
-      for (let j = i + 1; j < rows.length; j++) {
-        const a = rows[i]
-        const b = rows[j]
+  for (const rowsForDay of byDay.values()) {
+    for (let i = 0; i < rowsForDay.length; i++) {
+      for (let j = i + 1; j < rowsForDay.length; j++) {
+        const a = rowsForDay[i]
+        const b = rowsForDay[j]
         if (a == null || b == null) continue
-        if (rangesOverlap(a, b)) {
-          return { ok: false, message: `Overlapping time ranges on ${day}.` }
-        }
+        if (rangesOverlap(a, b)) return true
       }
     }
   }
-
-  return { ok: true }
+  return false
 }
 
 function toMinutes(time: string): number {

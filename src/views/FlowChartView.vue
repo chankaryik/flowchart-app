@@ -19,22 +19,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { useFlowHistory } from '@/composables/useFlowHistory'
 import { useNodeKeyboard } from '@/composables/useNodeKeyboard'
-import { resetNodes } from '@/lib/payload-adapter'
+import { clearCachedNodes, resetNodes, saveNodes } from '@/lib/payload-adapter'
 import { useNodesQuery } from '@/queries/nodes'
 import { NODES_QUERY_KEY } from '@/queries/client'
 import { useFlowStore } from '@/stores/flow'
 import { useHistoryStore } from '@/stores/history'
+import { useSettingsStore } from '@/stores/settings'
 
 const route = useRoute()
 const router = useRouter()
 const store = useFlowStore()
 const history = useHistoryStore()
+const settings = useSettingsStore()
 const queryClient = useQueryClient()
 
 const query = useNodesQuery()
 const resetConfirmOpen = ref(false)
+const persistOffConfirmOpen = ref(false)
 const helpOpen = ref(false)
 const resetting = ref(false)
 
@@ -84,6 +89,30 @@ watch(
   { immediate: true },
 )
 
+function onPersistToggle(next: boolean): void {
+  if (next) {
+    settings.setPersistEnabled(true)
+    // Persist the current in-memory state immediately so the user sees the
+    // setting take effect without needing to make a change first.
+    void saveNodes([...store.nodes])
+    toast.success('Data will be saved across refreshes')
+  } else {
+    // Confirm before destroying the cached state.
+    persistOffConfirmOpen.value = true
+  }
+}
+
+function onConfirmPersistOff(): void {
+  settings.setPersistEnabled(false)
+  clearCachedNodes()
+  persistOffConfirmOpen.value = false
+  toast.success('Saved data cleared; a refresh will reset everything')
+}
+
+function onCancelPersistOff(): void {
+  persistOffConfirmOpen.value = false
+}
+
 async function onConfirmReset(): Promise<void> {
   resetting.value = true
   try {
@@ -121,7 +150,23 @@ async function onConfirmReset(): Promise<void> {
         </span>
         <span v-else class="text-xs text-slate-500">{{ store.nodes.length }} nodes</span>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <Label
+            for="persist-switch"
+            class="text-xs font-medium text-slate-700"
+            title="When on, your changes are saved to localStorage and survive page refreshes. File uploads are never persisted."
+          >
+            Persist data
+          </Label>
+          <Switch
+            id="persist-switch"
+            data-testid="persist-switch"
+            :model-value="settings.persistEnabled"
+            @update:model-value="onPersistToggle"
+          />
+        </div>
+        <div class="mx-1 h-5 w-px bg-slate-200" aria-hidden="true" />
         <button
           type="button"
           class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100"
@@ -180,6 +225,26 @@ async function onConfirmReset(): Promise<void> {
             @click="onConfirmReset"
           >
             {{ resetting ? 'Resetting…' : 'Reset' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog :open="persistOffConfirmOpen" @update:open="(v) => (persistOffConfirmOpen = v)">
+      <AlertDialogContent data-testid="persist-off-confirm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Turn off data persistence?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Disabling this setting clears any saved canvas state from this browser. After a
+            refresh the canvas will reset to the original payload.json. Continue?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel data-testid="persist-off-cancel" @click="onCancelPersistOff">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction data-testid="persist-off-confirm-action" @click="onConfirmPersistOff">
+            Turn off
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

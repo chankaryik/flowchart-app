@@ -12,8 +12,10 @@ const baseNode: SendMessageNodeShape = {
   data: {
     payload: [
       { type: 'text', text: 'Hello there' },
-      { type: 'attachment', attachment: 'https://example.com/pic.jpg' },
-      { type: 'attachment', attachment: 'https://example.com/pic2.jpg' },
+      {
+        type: 'attachment',
+        attachments: ['https://example.com/pic.jpg', 'https://example.com/pic2.jpg'],
+      },
     ],
   },
 }

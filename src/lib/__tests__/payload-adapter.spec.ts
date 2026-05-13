@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PAYLOAD_URL, STORAGE_KEY, loadNodes, resetNodes, saveNodes } from '@/lib/payload-adapter'
 import type { FlowNode } from '@/lib/types'
+import { PERSIST_ENABLED_KEY } from '@/stores/settings'
 
 const SEED: FlowNode[] = [
   { id: 1, parentId: -1, type: 'trigger', data: { type: 'conversationOpened', oncePerContact: false } },
@@ -17,6 +18,10 @@ function mockFetchOnce(body: FlowNode[], ok = true, status = 200) {
   return fetchMock
 }
 
+function enablePersist(): void {
+  localStorage.setItem(PERSIST_ENABLED_KEY, '1')
+}
+
 describe('payload-adapter', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -28,7 +33,8 @@ describe('payload-adapter', () => {
   })
 
   describe('loadNodes', () => {
-    it('returns cached nodes from localStorage without calling fetch', async () => {
+    it('returns cached nodes when persist is enabled and cache exists', async () => {
+      enablePersist()
       localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED))
       const fetchMock = vi.fn<typeof fetch>()
       vi.stubGlobal('fetch', fetchMock)
@@ -39,14 +45,22 @@ describe('payload-adapter', () => {
       expect(fetchMock).not.toHaveBeenCalled()
     })
 
-    it('fetches /payload.json on cache miss and seeds localStorage', async () => {
+    it('ignores cached nodes when persist is disabled', async () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED))
       const fetchMock = mockFetchOnce(SEED)
 
       const result = await loadNodes()
 
       expect(fetchMock).toHaveBeenCalledWith(PAYLOAD_URL)
       expect(result).toEqual(SEED)
-      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual(SEED)
+    })
+
+    it('does not write to localStorage on fetch when persist is disabled', async () => {
+      mockFetchOnce(SEED)
+
+      await loadNodes()
+
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
     })
 
     it('throws when fetch responds with a non-ok status', async () => {
@@ -54,7 +68,8 @@ describe('payload-adapter', () => {
       await expect(loadNodes()).rejects.toThrow(/Failed to load payload\.json/)
     })
 
-    it('falls back to fetch when localStorage contains invalid JSON', async () => {
+    it('falls back to fetch when localStorage cache is invalid JSON and persist is on', async () => {
+      enablePersist()
       localStorage.setItem(STORAGE_KEY, '{not json')
       const fetchMock = mockFetchOnce(SEED)
 
@@ -66,9 +81,15 @@ describe('payload-adapter', () => {
   })
 
   describe('saveNodes', () => {
-    it('writes the given nodes to localStorage', async () => {
+    it('writes the given nodes when persist is enabled', async () => {
+      enablePersist()
       await saveNodes(SEED)
       expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual(SEED)
+    })
+
+    it('does not write when persist is disabled', async () => {
+      await saveNodes(SEED)
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
     })
   })
 
@@ -81,7 +102,6 @@ describe('payload-adapter', () => {
 
       expect(fetchMock).toHaveBeenCalledWith(PAYLOAD_URL)
       expect(result).toEqual(SEED)
-      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual(SEED)
     })
   })
 })

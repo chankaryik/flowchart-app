@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { toTypedSchema } from '@vee-validate/valibot'
 import { Plus, Trash2 } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { useFieldArray, useForm } from 'vee-validate'
+import * as v from 'valibot'
+import { computed, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
@@ -15,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { humanizeKey } from '@/lib/format'
 import { DAYS, type BusinessHoursRow, type DateTimeNode, type Day, type FlowNode } from '@/lib/types'
-import { validateBusinessHours, validateTitle } from '@/lib/validators'
+import { businessHoursSchema, titleSchema } from '@/lib/validators'
 import { useUpdateNode } from '@/queries/nodes'
 
 const TIMEZONES = ['UTC', 'GMT', 'EST', 'EDT', 'PST', 'PDT', 'CST', 'MST', 'CET', 'JST'] as const
@@ -23,64 +26,78 @@ const TIMEZONES = ['UTC', 'GMT', 'EST', 'EDT', 'PST', 'PDT', 'CST', 'MST', 'CET'
 const props = defineProps<{ node: DateTimeNode }>()
 const emit = defineEmits<{ (e: 'saved'): void }>()
 
-const name = ref(props.node.name)
-const timezone = ref(props.node.data.timezone)
-const times = ref<BusinessHoursRow[]>(cloneTimes(props.node.data.times))
-const nameTouched = ref(false)
-const submitAttempted = ref(false)
+const formSchema = toTypedSchema(
+  v.object({
+    name: titleSchema,
+    timezone: v.string(),
+    times: businessHoursSchema,
+  }),
+)
 
 function cloneTimes(input: BusinessHoursRow[]): BusinessHoursRow[] {
   return input.map((row) => ({ ...row }))
 }
 
+const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
+  validationSchema: formSchema,
+  initialValues: {
+    name: props.node.name,
+    timezone: props.node.data.timezone,
+    times: cloneTimes(props.node.data.times),
+  },
+  validateOnMount: false,
+})
+
+const [name, nameProps] = defineField('name', { validateOnBlur: true })
+const [timezone] = defineField('timezone')
+
+const { fields, push, remove, update } = useFieldArray<BusinessHoursRow>('times')
+
 watch(
   () => props.node.id,
   () => {
-    name.value = props.node.name
-    timezone.value = props.node.data.timezone
-    times.value = cloneTimes(props.node.data.times)
-    nameTouched.value = false
-    submitAttempted.value = false
+    resetForm({
+      values: {
+        name: props.node.name,
+        timezone: props.node.data.timezone,
+        times: cloneTimes(props.node.data.times),
+      },
+    })
   },
 )
 
-const nameResult = computed(() => validateTitle(name.value))
-const timesResult = computed(() => validateBusinessHours(times.value))
-
-const nameError = computed(() =>
-  (nameTouched.value || submitAttempted.value) && !nameResult.value.ok
-    ? nameResult.value.message
-    : null,
-)
-const timesError = computed(() =>
-  submitAttempted.value && !timesResult.value.ok ? timesResult.value.message : null,
-)
-
-const isValid = computed(() => nameResult.value.ok && timesResult.value.ok)
+// Row-level errors (e.g. end < start) attach to `times[N]`; array-level
+// errors (empty, overlap) attach to `times`. Surface whichever is present so
+// users see a single banner regardless of which valibot check fired.
+const timesError = computed(() => {
+  const arrayErr = errors.value.times
+  if (arrayErr != null) return arrayErr
+  for (let i = 0; i < fields.value.length; i++) {
+    const rowErr = errors.value[`times[${i}]`]
+    if (rowErr != null) return rowErr
+  }
+  return null
+})
 
 function addRow(): void {
-  times.value.push({ day: 'mon', startTime: '09:00', endTime: '17:00' })
-}
-function removeRow(index: number): void {
-  times.value.splice(index, 1)
+  push({ day: 'mon', startTime: '09:00', endTime: '17:00' })
 }
 function setRowDay(index: number, day: Day): void {
-  const row = times.value[index]
-  if (row != null) row.day = day
+  const field = fields.value[index]
+  if (field == null) return
+  update(index, { ...field.value, day })
 }
 
 const mutation = useUpdateNode()
 
-async function onSubmit(): Promise<void> {
-  submitAttempted.value = true
-  if (!isValid.value) return
+const onSubmit = handleSubmit(async (values) => {
   // Preserve connectors and action — the editor only owns name/times/timezone.
   const patch: Partial<FlowNode> = {
-    name: name.value.trim(),
+    name: values.name.trim(),
     data: {
       ...props.node.data,
-      times: cloneTimes(times.value),
-      timezone: timezone.value,
+      times: cloneTimes(values.times),
+      timezone: values.timezone,
     },
   } as Partial<FlowNode>
   try {
@@ -90,23 +107,23 @@ async function onSubmit(): Promise<void> {
   }
   toast.success('Business hours saved')
   emit('saved')
-}
+})
 </script>
 
 <template>
-  <form class="flex h-full flex-col" novalidate @submit.prevent="onSubmit">
+  <form class="flex h-full flex-col" novalidate @submit="onSubmit">
     <div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
       <div class="space-y-1.5">
         <Label for="dt-name">Name</Label>
         <Input
           id="dt-name"
           v-model="name"
+          v-bind="nameProps"
           maxlength="80"
-          :aria-invalid="nameError != null"
-          @blur="nameTouched = true"
+          :aria-invalid="errors.name != null"
         />
-        <p v-if="nameError" class="text-xs text-destructive" data-testid="name-error">
-          {{ nameError }}
+        <p v-if="errors.name" class="text-xs text-destructive" data-testid="name-error">
+          {{ errors.name }}
         </p>
       </div>
 
@@ -143,19 +160,22 @@ async function onSubmit(): Promise<void> {
         </div>
 
         <p
-          v-if="times.length === 0"
+          v-if="fields.length === 0"
           class="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground"
         >
           No schedule rows yet.
         </p>
 
         <div
-          v-for="(row, index) in times"
-          :key="index"
+          v-for="(field, index) in fields"
+          :key="field.key"
           class="grid grid-cols-[6.5rem_1fr_1fr_auto] items-center gap-2 rounded-md border border-border bg-card px-3 py-2"
           :data-row-index="index"
         >
-          <Select :model-value="row.day" @update:model-value="(d) => setRowDay(index, d as Day)">
+          <Select
+            :model-value="field.value.day"
+            @update:model-value="(d) => setRowDay(index, d as Day)"
+          >
             <SelectTrigger class="w-full" :aria-label="`Day for row ${index + 1}`">
               <SelectValue />
             </SelectTrigger>
@@ -164,12 +184,12 @@ async function onSubmit(): Promise<void> {
             </SelectContent>
           </Select>
           <Input
-            v-model="row.startTime"
+            v-model="field.value.startTime"
             type="time"
             :aria-label="`Start time for row ${index + 1}`"
           />
           <Input
-            v-model="row.endTime"
+            v-model="field.value.endTime"
             type="time"
             :aria-label="`End time for row ${index + 1}`"
           />
@@ -178,7 +198,7 @@ async function onSubmit(): Promise<void> {
             variant="ghost"
             size="icon"
             :aria-label="`Remove row ${index + 1}`"
-            @click="removeRow(index)"
+            @click="remove(index)"
           >
             <Trash2 class="size-4" />
           </Button>
@@ -191,7 +211,7 @@ async function onSubmit(): Promise<void> {
     </div>
 
     <footer class="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
-      <Button type="submit" :disabled="!isValid || mutation.isPending.value">
+      <Button type="submit" :disabled="!meta.valid || mutation.isPending.value">
         {{ mutation.isPending.value ? 'Saving…' : 'Save' }}
       </Button>
     </footer>

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { toTypedSchema } from '@vee-validate/valibot'
+import { useForm } from 'vee-validate'
+import * as v from 'valibot'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -25,7 +28,7 @@ import { humanizeKey } from '@/lib/format'
 import { H_GAP, NODE_HEIGHT, NODE_WIDTH, V_GAP } from '@/lib/layout'
 import { createNode } from '@/lib/node-factory'
 import type { EditableNodeType, FlowNode, NodeId } from '@/lib/types'
-import { validateTitle } from '@/lib/validators'
+import { titleSchema } from '@/lib/validators'
 import { useCreateNode } from '@/queries/nodes'
 import { nodeKey, type Position, useFlowStore } from '@/stores/flow'
 
@@ -49,9 +52,15 @@ type Step = 'type' | 'parent' | 'details'
 const step = ref<Step>('type')
 const type = ref<EditableNodeType | null>(null)
 const parentKey = ref<string | null>(null)
-const name = ref('')
-const nameTouched = ref(false)
-const submitAttempted = ref(false)
+
+const formSchema = toTypedSchema(v.object({ name: titleSchema }))
+
+const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
+  validationSchema: formSchema,
+  initialValues: { name: '' },
+})
+
+const [name, nameProps] = defineField('name', { validateOnBlur: true })
 
 // When the dialog was opened from a node's plus button, parentId is preset
 // and the parent step is skipped (type -> details). When opened from the
@@ -69,9 +78,7 @@ watch(
     step.value = 'type'
     type.value = null
     parentKey.value = presetParent.value != null ? nodeKey(presetParent.value.id) : null
-    name.value = ''
-    nameTouched.value = false
-    submitAttempted.value = false
+    resetForm({ values: { name: '' } })
   },
 )
 
@@ -97,13 +104,6 @@ const parentLabel = computed(() => {
   return 'name' in parent ? parent.name : `Trigger #${parent.id}`
 })
 
-const nameResult = computed(() => validateTitle(name.value))
-const nameError = computed(() =>
-  (nameTouched.value || submitAttempted.value) && !nameResult.value.ok
-    ? nameResult.value.message
-    : null,
-)
-
 function defaultName(t: EditableNodeType): string {
   switch (t) {
     case 'sendMessage':
@@ -127,18 +127,14 @@ function goNext(): void {
   if (step.value === 'type') {
     if (type.value == null) return
     if (presetParent.value != null) {
-      name.value = defaultName(type.value)
-      nameTouched.value = false
-      submitAttempted.value = false
+      resetForm({ values: { name: defaultName(type.value) } })
       step.value = 'details'
       return
     }
     step.value = 'parent'
   } else if (step.value === 'parent') {
     if (parentKey.value == null || type.value == null) return
-    name.value = defaultName(type.value)
-    nameTouched.value = false
-    submitAttempted.value = false
+    resetForm({ values: { name: defaultName(type.value) } })
     step.value = 'details'
   }
 }
@@ -183,14 +179,12 @@ function computePositions(
   return result
 }
 
-async function onSubmit(): Promise<void> {
-  submitAttempted.value = true
+const onSubmit = handleSubmit(async (values) => {
   const t = type.value
   const parent = selectedParent.value
   if (t == null || parent == null) return
-  if (!nameResult.value.ok) return
 
-  const trimmedName = name.value.trim()
+  const trimmedName = values.name.trim()
   let nodes: FlowNode[]
   let primaryId: NodeId
 
@@ -219,7 +213,7 @@ async function onSubmit(): Promise<void> {
   setOpen(false)
   toast.success(`${defaultName(t)} created`)
   void router.push(`/node/${primaryId}`)
-}
+})
 </script>
 
 <template>
@@ -240,7 +234,7 @@ async function onSubmit(): Promise<void> {
         </DialogDescription>
       </DialogHeader>
 
-      <form class="space-y-4" novalidate @submit.prevent="onSubmit">
+      <form class="space-y-4" novalidate @submit="onSubmit">
         <div v-if="step === 'type'" class="grid gap-2" data-testid="step-type">
           <button
             v-for="opt in TYPE_OPTIONS"
@@ -278,12 +272,12 @@ async function onSubmit(): Promise<void> {
           <Input
             id="create-name"
             v-model="name"
+            v-bind="nameProps"
             maxlength="80"
-            :aria-invalid="nameError != null"
-            @blur="nameTouched = true"
+            :aria-invalid="errors.name != null"
           />
-          <p v-if="nameError" class="text-xs text-destructive" data-testid="name-error">
-            {{ nameError }}
+          <p v-if="errors.name" class="text-xs text-destructive" data-testid="name-error">
+            {{ errors.name }}
           </p>
           <p v-else class="text-xs text-muted-foreground">
             You can edit details after creating.
@@ -319,7 +313,7 @@ async function onSubmit(): Promise<void> {
             <Button
               v-else
               type="submit"
-              :disabled="!nameResult.ok || mutation.isPending.value"
+              :disabled="!meta.valid || mutation.isPending.value"
               data-testid="create-submit"
             >
               {{ mutation.isPending.value ? 'Creating…' : 'Create' }}

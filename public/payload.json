@@ -100,7 +100,9 @@
 				},
 				{
 					"type": "attachment",
-					"attachment": "https://fastly.picsum.photos/id/396/536/354.jpg?hmac=GmUosOuXb6nGkFhmTE-83i0ciQcaleMyvIyqzeFbW58"
+					"attachments": [
+						"https://fastly.picsum.photos/id/396/536/354.jpg?hmac=GmUosOuXb6nGkFhmTE-83i0ciQcaleMyvIyqzeFbW58"
+					]
 				}
 			]
 		},

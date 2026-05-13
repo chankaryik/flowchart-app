@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import { STORAGE_KEY } from '@/lib/payload-adapter'
+import { STORAGE_KEY, isPersistEnabled } from '@/lib/payload-adapter'
 import type { FlowNode, NodeId } from '@/lib/types'
 
 const FlowChartView = () => import('@/views/FlowChartView.vue')
@@ -51,6 +51,7 @@ function guardNodeRoute(to: RouteLocationNormalized) {
 
 function peekCachedNodes(): FlowNode[] | null {
   if (typeof localStorage === 'undefined') return null
+  if (!isPersistEnabled()) return null
   const raw = localStorage.getItem(STORAGE_KEY)
   if (raw == null) return null
   try {
