@@ -17,6 +17,9 @@ A Flow Chart editor built on Vue Flow. It loads a workflow graph from [public/pa
 | TanStack Vue Query | 5.100 | Fetch + mutations against `payload.json` |
 | Vue Flow | 1.48 (`@vue-flow/core`) | Canvas engine |
 | TypeScript | 6.0 strict | `noUncheckedIndexedAccess: true` |
+| VeeValidate | 4.5.1 |
+| VeeValidate/valibot | 4.5.1 |
+| VueUse | 14.3.0 |
 | Vitest | 4.1 | Unit tests, jsdom env |
 | Playwright | 1.59 | E2E across chromium/firefox/webkit |
 | oxlint + ESLint + oxfmt | latest | Run before declaring done |
@@ -203,3 +206,4 @@ Resolve these with the user before building far beyond the canvas:
 - TanStack Query (Vue): https://tanstack.com/query/latest/docs/framework/vue/overview
 - Shadcn Vue: https://www.shadcn-vue.com/
 - Tailwind v4: https://tailwindcss.com/docs/v4-beta
+- VeeValidate: https://vee-validate.logaretm.com/v4/guide/overview/
