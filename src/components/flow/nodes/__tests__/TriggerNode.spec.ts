@@ -39,4 +39,11 @@ describe('TriggerNode', () => {
     const wrapper = mountNode(TriggerNode, { id: '1', data: triggerData })
     expect(wrapper.find('[data-node-type="trigger"]').exists()).toBe(true)
   })
+
+  it('renders an add-node plus button pointing at the trigger as parent', () => {
+    const wrapper = mountNode(TriggerNode, { id: '1', data: triggerData })
+    const button = wrapper.find('[data-testid="add-node-button"]')
+    expect(button.exists()).toBe(true)
+    expect(button.attributes('data-add-node-parent')).toBe('1')
+  })
 })

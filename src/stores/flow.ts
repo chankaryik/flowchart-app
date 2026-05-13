@@ -13,11 +13,20 @@ export function sameNodeId(a: NodeId, b: NodeId): boolean {
   return String(a) === String(b)
 }
 
+export type CreateDialogState = {
+  open: boolean
+  // When set, the create dialog skips the parent step and locks the new
+  // node's parent to this id (plus-button-on-node flow). When null and
+  // open is true, the dialog runs its full 3-step picker (header button flow).
+  parentId: NodeId | null
+}
+
 export const useFlowStore = defineStore('flow', () => {
   const nodes = ref<FlowNode[]>([])
   const positions = ref<Record<string, Position>>({})
   const selectedId = ref<NodeId | null>(null)
   const draggingId = ref<NodeId | null>(null)
+  const createDialog = ref<CreateDialogState>({ open: false, parentId: null })
 
   const nodesById = computed(() => {
     const map = new Map<string, FlowNode>()
@@ -118,11 +127,20 @@ export const useFlowStore = defineStore('flow', () => {
     draggingId.value = id
   }
 
+  function openCreateDialog(parentId?: NodeId | null): void {
+    createDialog.value = { open: true, parentId: parentId ?? null }
+  }
+
+  function closeCreateDialog(): void {
+    createDialog.value = { open: false, parentId: null }
+  }
+
   return {
     nodes,
     positions,
     selectedId,
     draggingId,
+    createDialog,
     getNodeById,
     getChildren,
     getDescendants,
@@ -136,5 +154,7 @@ export const useFlowStore = defineStore('flow', () => {
     clearPositions,
     setSelection,
     setDragging,
+    openCreateDialog,
+    closeCreateDialog,
   }
 })

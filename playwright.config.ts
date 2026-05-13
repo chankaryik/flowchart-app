@@ -25,8 +25,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Opt out of parallel tests on CI. Locally cap parallelism at 2 — three
+     concurrent Firefox/Webkit tabs hammering a single Vite dev server cause
+     intermittent click hangs when one tab is mid-HMR and another fires input. */
+  workers: process.env.CI ? 1 : 2,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

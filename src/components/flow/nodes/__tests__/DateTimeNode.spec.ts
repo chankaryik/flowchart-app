@@ -63,4 +63,12 @@ describe('DateTimeNode', () => {
     expect(map['target']).toBe('top')
     expect(map['source']).toBe('bottom')
   })
+
+  // The branch outlets (success/failure connectors) carry the plus button
+  // instead — CLAUDE.md / Example.jpg call out dateTime as the only node
+  // type without a child-add affordance directly under it.
+  it('does not render an add-node plus button', () => {
+    const wrapper = mountNode(DateTimeNode, { id: 'dt', data: fullWeek })
+    expect(wrapper.find('[data-testid="add-node-button"]').exists()).toBe(false)
+  })
 })

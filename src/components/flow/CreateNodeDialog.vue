@@ -53,13 +53,22 @@ const name = ref('')
 const nameTouched = ref(false)
 const submitAttempted = ref(false)
 
+// When the dialog was opened from a node's plus button, parentId is preset
+// and the parent step is skipped (type -> details). When opened from the
+// header "Create Node" button, parentId is null and the full picker runs.
+const presetParent = computed<FlowNode | null>(() => {
+  const id = store.createDialog.parentId
+  if (id == null) return null
+  return store.getNodeById(id) ?? null
+})
+
 watch(
   () => props.open,
   (next) => {
     if (!next) return
     step.value = 'type'
     type.value = null
-    parentKey.value = null
+    parentKey.value = presetParent.value != null ? nodeKey(presetParent.value.id) : null
     name.value = ''
     nameTouched.value = false
     submitAttempted.value = false
@@ -76,9 +85,16 @@ const parentOptions = computed(() =>
 )
 
 const selectedParent = computed<FlowNode | null>(() => {
+  if (presetParent.value != null) return presetParent.value
   const key = parentKey.value
   if (key == null) return null
   return store.nodes.find((n) => nodeKey(n.id) === key) ?? null
+})
+
+const parentLabel = computed(() => {
+  const parent = selectedParent.value
+  if (parent == null) return null
+  return 'name' in parent ? parent.name : `Trigger #${parent.id}`
 })
 
 const nameResult = computed(() => validateTitle(name.value))
@@ -110,6 +126,13 @@ function selectType(t: EditableNodeType): void {
 function goNext(): void {
   if (step.value === 'type') {
     if (type.value == null) return
+    if (presetParent.value != null) {
+      name.value = defaultName(type.value)
+      nameTouched.value = false
+      submitAttempted.value = false
+      step.value = 'details'
+      return
+    }
     step.value = 'parent'
   } else if (step.value === 'parent') {
     if (parentKey.value == null || type.value == null) return
@@ -121,8 +144,10 @@ function goNext(): void {
 }
 
 function goBack(): void {
-  if (step.value === 'details') step.value = 'parent'
-  else if (step.value === 'parent') step.value = 'type'
+  if (step.value === 'details') {
+    // Preset parent: skip back over the (hidden) parent step too.
+    step.value = presetParent.value != null ? 'type' : 'parent'
+  } else if (step.value === 'parent') step.value = 'type'
 }
 
 function computePositions(
@@ -203,8 +228,14 @@ async function onSubmit(): Promise<void> {
       <DialogHeader>
         <DialogTitle>Create node</DialogTitle>
         <DialogDescription>
-          <template v-if="step === 'type'">Pick a node type to add to the canvas.</template>
+          <template v-if="step === 'type' && parentLabel != null">
+            Pick a node type to add under <strong>{{ parentLabel }}</strong>.
+          </template>
+          <template v-else-if="step === 'type'">Pick a node type to add to the canvas.</template>
           <template v-else-if="step === 'parent'">Choose where this node should attach.</template>
+          <template v-else-if="parentLabel != null">
+            Name the new node. It will attach under <strong>{{ parentLabel }}</strong>.
+          </template>
           <template v-else>Confirm the new node&rsquo;s name.</template>
         </DialogDescription>
       </DialogHeader>

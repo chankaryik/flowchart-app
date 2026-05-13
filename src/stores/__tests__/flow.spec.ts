@@ -193,4 +193,30 @@ describe('useFlowStore', () => {
     expect(getName(store.getNodeById('msg-1'))).toBe('Welcome Message')
     expect(store.positions['msg-1']).toEqual({ x: 11, y: 22 })
   })
+
+  describe('createDialog UI state', () => {
+    it('starts closed with no preset parent', () => {
+      const store = useFlowStore()
+      expect(store.createDialog).toEqual({ open: false, parentId: null })
+    })
+
+    it('openCreateDialog() with no arg opens the dialog without a preset parent', () => {
+      const store = useFlowStore()
+      store.openCreateDialog()
+      expect(store.createDialog).toEqual({ open: true, parentId: null })
+    })
+
+    it('openCreateDialog(id) opens the dialog with the preset parent', () => {
+      const store = useFlowStore()
+      store.openCreateDialog('msg-1')
+      expect(store.createDialog).toEqual({ open: true, parentId: 'msg-1' })
+    })
+
+    it('closeCreateDialog resets both fields so a re-open after a plus-button click starts clean', () => {
+      const store = useFlowStore()
+      store.openCreateDialog('msg-1')
+      store.closeCreateDialog()
+      expect(store.createDialog).toEqual({ open: false, parentId: null })
+    })
+  })
 })

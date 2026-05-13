@@ -1,4 +1,5 @@
 import { mount, type ComponentMountingOptions } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import type { Component } from 'vue'
 
 // Vue Flow's <Handle> uses an injected VueFlow context. Outside of a real
@@ -37,11 +38,13 @@ export function mountNode<Props extends Record<string, unknown>>(
   const existing = options.global ?? {}
   const existingStubs =
     typeof existing.stubs === 'object' && existing.stubs != null ? existing.stubs : {}
+  const existingPlugins = existing.plugins ?? []
   return mount(component, {
     ...options,
     props,
     global: {
       ...existing,
+      plugins: [createPinia(), ...existingPlugins],
       stubs: {
         Handle: HandleStub,
         ...tooltipStubs,

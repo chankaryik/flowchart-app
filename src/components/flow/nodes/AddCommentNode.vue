@@ -3,6 +3,7 @@ import { Handle, Position } from '@vue-flow/core'
 import { StickyNote } from 'lucide-vue-next'
 import { computed } from 'vue'
 
+import AddNodeButton from '@/components/flow/AddNodeButton.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { AddCommentNode as AddCommentNodeShape } from '@/lib/types'
@@ -16,7 +17,7 @@ const comment = computed(() => props.data.data.comment)
   <Tooltip>
     <TooltipTrigger as-child>
       <Card
-        class="node-card w-[220px] gap-0 border-amber-300 bg-amber-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        class="node-card relative w-[220px] gap-0 border-amber-300 bg-amber-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         data-node-type="addComment"
         :data-flow-node-id="id"
         tabindex="0"
@@ -39,6 +40,7 @@ const comment = computed(() => props.data.data.comment)
           <p v-else class="mt-1 text-[11px] italic text-amber-700/60">No comment yet</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
+        <AddNodeButton :parent-id="data.id" />
       </Card>
     </TooltipTrigger>
     <TooltipContent side="right" :side-offset="8" class="max-w-xs">

@@ -43,4 +43,11 @@ describe('AddCommentNode', () => {
     const wrapper = mountNode(AddCommentNode, { id: 'c1', data: baseNode })
     expect(wrapper.find('[data-node-type="addComment"]').exists()).toBe(true)
   })
+
+  it('renders an add-node plus button pointing at itself as parent', () => {
+    const wrapper = mountNode(AddCommentNode, { id: 'c1', data: baseNode })
+    const button = wrapper.find('[data-testid="add-node-button"]')
+    expect(button.exists()).toBe(true)
+    expect(button.attributes('data-add-node-parent')).toBe('c1')
+  })
 })

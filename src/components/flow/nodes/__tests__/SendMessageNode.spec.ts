@@ -60,4 +60,11 @@ describe('SendMessageNode', () => {
     expect(map['target']).toBe('top')
     expect(map['source']).toBe('bottom')
   })
+
+  it('renders an add-node plus button pointing at itself as parent', () => {
+    const wrapper = mountNode(SendMessageNode, { id: 'm1', data: baseNode })
+    const button = wrapper.find('[data-testid="add-node-button"]')
+    expect(button.exists()).toBe(true)
+    expect(button.attributes('data-add-node-parent')).toBe('m1')
+  })
 })

@@ -3,6 +3,7 @@ import { Handle, Position } from '@vue-flow/core'
 import { Zap } from 'lucide-vue-next'
 import { computed } from 'vue'
 
+import AddNodeButton from '@/components/flow/AddNodeButton.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { humanizeKey } from '@/lib/format'
@@ -23,7 +24,7 @@ const oncePerContact = computed(() => props.data.data.oncePerContact)
       <!-- Trigger is locked per Day-0 decision (TODO.md): exactly one trigger per
            flow, not deletable, never offered in Create Node. -->
       <Card
-        class="node-card w-[220px] gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        class="node-card relative w-[220px] gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         data-node-type="trigger"
         :data-flow-node-id="id"
         tabindex="0"
@@ -41,6 +42,7 @@ const oncePerContact = computed(() => props.data.data.oncePerContact)
           </p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
+        <AddNodeButton :parent-id="data.id" />
       </Card>
     </TooltipTrigger>
     <TooltipContent side="right" :side-offset="8">

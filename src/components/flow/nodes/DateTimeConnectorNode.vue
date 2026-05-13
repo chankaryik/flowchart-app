@@ -3,6 +3,7 @@ import { Handle, Position } from '@vue-flow/core'
 import { CheckCircle2, XCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
 
+import AddNodeButton from '@/components/flow/AddNodeButton.vue'
 import type { DateTimeConnectorNode as DateTimeConnectorNodeShape } from '@/lib/types'
 
 // Display-only per CLAUDE.md §8.1. Do NOT wire click/keyboard handlers, do NOT
@@ -16,7 +17,7 @@ const isSuccess = computed(() => props.data.data.connectorType === 'success')
 
 <template>
   <div
-    class="connector-node inline-flex w-[140px] items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide shadow-sm"
+    class="connector-node relative inline-flex w-[140px] items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide shadow-sm"
     :class="
       isSuccess
         ? 'border-emerald-400 bg-emerald-100 text-emerald-800'
@@ -32,5 +33,6 @@ const isSuccess = computed(() => props.data.data.connectorType === 'success')
     <XCircle v-else class="size-3.5" aria-hidden="true" />
     <span>{{ isSuccess ? 'Success' : 'Failure' }}</span>
     <Handle type="source" :position="Position.Bottom" />
+    <AddNodeButton :parent-id="data.id" />
   </div>
 </template>

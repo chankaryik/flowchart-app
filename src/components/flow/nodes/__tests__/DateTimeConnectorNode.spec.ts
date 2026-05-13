@@ -54,4 +54,14 @@ describe('DateTimeConnectorNode', () => {
     expect(map['target']).toBe('top')
     expect(map['source']).toBe('bottom')
   })
+
+  // Connectors are display-only for navigation but they CAN be parents of new
+  // nodes (CLAUDE.md says "Any node can act as a parent, including success/
+  // failure connectors"). The plus button is the entry point for that flow.
+  it('renders an add-node plus button pointing at the connector as parent', () => {
+    const wrapper = mountNode(DateTimeConnectorNode, { id: 's', data: makeNode('success') })
+    const button = wrapper.find('[data-testid="add-node-button"]')
+    expect(button.exists()).toBe(true)
+    expect(button.attributes('data-add-node-parent')).toBe('s')
+  })
 })

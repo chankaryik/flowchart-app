@@ -242,4 +242,68 @@ describe('CreateNodeDialog', () => {
     expect(events).toBeTruthy()
     expect(events![events!.length - 1]).toEqual([false])
   })
+
+  describe('with a preset parent (plus-button-on-node flow)', () => {
+    it('skips the parent step and goes type -> details', async () => {
+      const store = useFlowStore()
+      store.openCreateDialog('msg')
+      const wrapper = mountDialog()
+
+      await wrapper.find('[data-type-option="sendMessage"]').trigger('click')
+      await wrapper.find('[data-testid="create-next"]').trigger('click')
+
+      // No parent step was rendered; we landed on details.
+      expect(wrapper.find('[data-testid="step-parent"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="step-details"]').exists()).toBe(true)
+    })
+
+    it('locks the parent to the preset id on submit', async () => {
+      const store = useFlowStore()
+      store.openCreateDialog('msg')
+      const wrapper = mountDialog()
+
+      await wrapper.find('[data-type-option="addComment"]').trigger('click')
+      await wrapper.find('[data-testid="create-next"]').trigger('click')
+      await wrapper.find('#create-name').setValue('Follow-up note')
+      await wrapper.find('form').trigger('submit.prevent')
+
+      const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
+      expect(call).toBeDefined()
+      expect(call!.nodes).toHaveLength(1)
+      expect(String(call!.nodes[0]!.parentId)).toBe('msg')
+    })
+
+    it('lets the user attach a new node under a connector via its plus button', async () => {
+      const store = useFlowStore()
+      store.openCreateDialog('s')
+      const wrapper = mountDialog()
+
+      await wrapper.find('[data-type-option="sendMessage"]').trigger('click')
+      await wrapper.find('[data-testid="create-next"]').trigger('click')
+      await wrapper.find('#create-name').setValue('After success')
+      await wrapper.find('form').trigger('submit.prevent')
+
+      const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
+      expect(call).toBeDefined()
+      expect(String(call!.nodes[0]!.parentId)).toBe('s')
+    })
+
+    it('Back from details returns to the type step (parent step is hidden)', async () => {
+      const store = useFlowStore()
+      store.openCreateDialog('msg')
+      const wrapper = mountDialog()
+
+      await wrapper.find('[data-type-option="sendMessage"]').trigger('click')
+      await wrapper.find('[data-testid="create-next"]').trigger('click')
+
+      const back = wrapper
+        .findAll('button[type="button"]')
+        .find((b) => b.text().trim() === 'Back')
+      if (back == null) throw new Error('Back button not found')
+      await back.trigger('click')
+
+      expect(wrapper.find('[data-testid="step-type"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="step-parent"]').exists()).toBe(false)
+    })
+  })
 })

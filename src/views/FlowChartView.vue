@@ -34,10 +34,17 @@ const history = useHistoryStore()
 const queryClient = useQueryClient()
 
 const query = useNodesQuery()
-const createDialogOpen = ref(false)
 const resetConfirmOpen = ref(false)
 const helpOpen = ref(false)
 const resetting = ref(false)
+
+const createDialogOpen = computed({
+  get: () => store.createDialog.open,
+  set: (next) => {
+    if (next) store.openCreateDialog()
+    else store.closeCreateDialog()
+  },
+})
 
 useFlowHistory()
 useNodeKeyboard({
@@ -140,7 +147,7 @@ async function onConfirmReset(): Promise<void> {
           class="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
           :disabled="query.isPending.value || query.isError.value"
           data-testid="create-node-button"
-          @click="createDialogOpen = true"
+          @click="store.openCreateDialog()"
         >
           + Create Node
         </button>
