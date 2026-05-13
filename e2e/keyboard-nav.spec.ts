@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { SEED, gotoCanvas, nodeLocator, resetState } from './helpers'
 
@@ -6,12 +6,19 @@ test.beforeEach(async ({ page }) => {
   await resetState(page)
 })
 
-async function focusedFlowNodeId(page: import('@playwright/test').Page): Promise<string | null> {
+async function focusedFlowNodeId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const active = document.activeElement
     if (!(active instanceof HTMLElement)) return null
     return active.getAttribute('data-flow-node-id')
   })
+}
+
+async function tabToNextFlowNode(page: Page): Promise<string> {
+  await page.keyboard.press('Tab')
+  const id = await focusedFlowNodeId(page)
+  if (id == null) throw new Error('Tab did not move focus to a flow node')
+  return id
 }
 
 test('Tab from a node cycles through editable nodes only (connectors skipped)', async ({ page }) => {
@@ -25,12 +32,10 @@ test('Tab from a node cycles through editable nodes only (connectors skipped)', 
   // Walk Tab through the whole graph; connectors must never appear.
   const visited = new Set<string>([SEED.trigger])
   for (let i = 0; i < 6; i++) {
-    await page.keyboard.press('Tab')
-    const id = await focusedFlowNodeId(page)
-    expect(id).not.toBeNull()
+    const id = await tabToNextFlowNode(page)
     expect(id).not.toBe(SEED.successConnector)
     expect(id).not.toBe(SEED.failureConnector)
-    if (id != null) visited.add(id)
+    visited.add(id)
   }
 
   // Five editable nodes total → after enough Tabs we should have seen each.

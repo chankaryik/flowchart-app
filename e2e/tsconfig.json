@@ -1,4 +1,14 @@
 {
   "extends": "@tsconfig/node24/tsconfig.json",
-  "include": ["./**/*"]
+  "include": ["./**/*"],
+  "compilerOptions": {
+    // Playwright transpiles test files through esbuild, so the strict Node
+    // ESM rules (mandatory .js extensions on relative imports) don't apply.
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    // Tests run in Node, but page.evaluate/page.waitForFunction callbacks
+    // execute in the browser and need DOM globals (window, document, ...).
+    "lib": ["es2024", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  }
 }

@@ -35,10 +35,11 @@ async function createNode(
   await page.waitForURL('/')
 }
 
+// dateTime adds 3 nodes (dateTime + 2 connectors); the others add 1.
 const SCENARIOS = [
-  { type: 'sendMessage' as const, name: 'Undoable SendMessage', deltaAfterUndo: 7 },
-  { type: 'dateTime' as const, name: 'Undoable DateTime', deltaAfterUndo: 7 },
-  { type: 'addComment' as const, name: 'Undoable Comment', deltaAfterUndo: 7 },
+  { type: 'sendMessage' as const, name: 'Undoable SendMessage', expectedAfterCreate: 8, deltaAfterUndo: 7 },
+  { type: 'dateTime' as const, name: 'Undoable DateTime', expectedAfterCreate: 10, deltaAfterUndo: 7 },
+  { type: 'addComment' as const, name: 'Undoable Comment', expectedAfterCreate: 8, deltaAfterUndo: 7 },
 ]
 
 for (const scenario of SCENARIOS) {
@@ -48,14 +49,12 @@ for (const scenario of SCENARIOS) {
 
     await createNode(page, scenario.type, scenario.name)
 
-    // dateTime adds 3 nodes (dateTime + 2 connectors); the others add 1.
-    const expectedAfterCreate = scenario.type === 'dateTime' ? 10 : 8
-    await expect(page.getByText(`${expectedAfterCreate} nodes`)).toBeVisible()
+    await expect(page.getByText(`${scenario.expectedAfterCreate} nodes`)).toBeVisible()
 
     await pressUndo(page)
     await expect(page.getByText(`${scenario.deltaAfterUndo} nodes`)).toBeVisible()
 
     await pressRedo(page)
-    await expect(page.getByText(`${expectedAfterCreate} nodes`)).toBeVisible()
+    await expect(page.getByText(`${scenario.expectedAfterCreate} nodes`)).toBeVisible()
   })
 }
