@@ -23,8 +23,11 @@ import { useUpdateNode } from '@/queries/nodes'
 
 const TIMEZONES = ['UTC', 'GMT', 'EST', 'EDT', 'PST', 'PDT', 'CST', 'MST', 'CET', 'JST'] as const
 
-const props = defineProps<{ node: DateTimeNode }>()
-const emit = defineEmits<{ (e: 'saved'): void }>()
+const props = withDefaults(
+  defineProps<{ node: DateTimeNode; canDelete?: boolean; deletePending?: boolean }>(),
+  { canDelete: false, deletePending: false },
+)
+const emit = defineEmits<{ (e: 'saved'): void; (e: 'delete'): void }>()
 
 const formSchema = toTypedSchema(
   v.object({
@@ -210,7 +213,19 @@ const onSubmit = handleSubmit(async (values) => {
       </div>
     </div>
 
-    <footer class="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+    <footer class="flex items-center justify-between gap-2 border-t border-border px-4 py-3">
+      <Button
+        v-if="canDelete"
+        type="button"
+        variant="destructive"
+        data-testid="drawer-delete"
+        :disabled="deletePending"
+        @click="emit('delete')"
+      >
+        <Trash2 class="size-4" />
+        Delete
+      </Button>
+      <span v-else />
       <Button type="submit" :disabled="!meta.valid || mutation.isPending.value">
         {{ mutation.isPending.value ? 'Saving…' : 'Save' }}
       </Button>

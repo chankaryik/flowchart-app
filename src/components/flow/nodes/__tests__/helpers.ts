@@ -18,6 +18,7 @@ export const HandleStub = {
 // trigger's slot renders inline and the content goes to a deterministic node.
 const SlotPassthrough = { template: '<div><slot /></div>' } as Component
 const SlotPassthroughAsChild = {
+  inheritAttrs: false,
   template: '<slot />',
 } as Component
 

@@ -16,8 +16,11 @@ import { sendMessagePayloadSchema, titleSchema } from '@/lib/validators'
 import { useUpdateNode } from '@/queries/nodes'
 import { useAttachmentsStore } from '@/stores/attachments'
 
-const props = defineProps<{ node: SendMessageNode }>()
-const emit = defineEmits<{ (e: 'saved'): void }>()
+const props = withDefaults(
+  defineProps<{ node: SendMessageNode; canDelete?: boolean; deletePending?: boolean }>(),
+  { canDelete: false, deletePending: false },
+)
+const emit = defineEmits<{ (e: 'saved'): void; (e: 'delete'): void }>()
 
 const formSchema = toTypedSchema(
   v.object({
@@ -266,7 +269,19 @@ const onSubmit = handleSubmit(async (values) => {
       </div>
     </div>
 
-    <footer class="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+    <footer class="flex items-center justify-between gap-2 border-t border-border px-4 py-3">
+      <Button
+        v-if="canDelete"
+        type="button"
+        variant="destructive"
+        data-testid="drawer-delete"
+        :disabled="deletePending"
+        @click="emit('delete')"
+      >
+        <Trash2 class="size-4" />
+        Delete
+      </Button>
+      <span v-else />
       <Button type="submit" :disabled="!meta.valid || mutation.isPending.value">
         {{ mutation.isPending.value ? 'Saving…' : 'Save' }}
       </Button>

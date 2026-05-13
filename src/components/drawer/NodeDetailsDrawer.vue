@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Trash2 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -14,7 +13,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
 import {
   Sheet,
   SheetContent,
@@ -112,30 +110,16 @@ async function onConfirmDelete(): Promise<void> {
     >
       <template v-if="node">
         <SheetHeader class="border-b border-border px-4 py-3">
-          <div class="flex items-start justify-between gap-3">
-            <div class="space-y-0.5">
-              <span
-                class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                {{ typeLabel(node) }}
-              </span>
-              <SheetTitle class="text-base font-semibold">{{ nodeTitle(node) }}</SheetTitle>
-              <SheetDescription class="text-xs">
-                ID <code class="font-mono">{{ node.id }}</code>
-              </SheetDescription>
-            </div>
-            <Button
-              v-if="canDelete"
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Delete node"
-              data-testid="drawer-delete"
-              :disabled="deleteMutation.isPending.value"
-              @click="confirmOpen = true"
+          <div class="space-y-0.5 pr-10">
+            <span
+              class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
             >
-              <Trash2 class="size-4 text-destructive" />
-            </Button>
+              {{ typeLabel(node) }}
+            </span>
+            <SheetTitle class="text-base font-semibold">{{ nodeTitle(node) }}</SheetTitle>
+            <SheetDescription class="text-xs">
+              ID <code class="font-mono">{{ node.id }}</code>
+            </SheetDescription>
           </div>
         </SheetHeader>
 
@@ -143,17 +127,26 @@ async function onConfirmDelete(): Promise<void> {
           <SendMessageEditor
             v-if="node.type === 'sendMessage'"
             :node="node"
+            :can-delete="canDelete"
+            :delete-pending="deleteMutation.isPending.value"
             @saved="close"
+            @delete="confirmOpen = true"
           />
           <BusinessHoursEditor
             v-else-if="node.type === 'dateTime'"
             :node="node"
+            :can-delete="canDelete"
+            :delete-pending="deleteMutation.isPending.value"
             @saved="close"
+            @delete="confirmOpen = true"
           />
           <AddCommentEditor
             v-else-if="node.type === 'addComment'"
             :node="node"
+            :can-delete="canDelete"
+            :delete-pending="deleteMutation.isPending.value"
             @saved="close"
+            @delete="confirmOpen = true"
           />
           <TriggerDetails v-else-if="node.type === 'trigger'" :node="node" />
         </div>

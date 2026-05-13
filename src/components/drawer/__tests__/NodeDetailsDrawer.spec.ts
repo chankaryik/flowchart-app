@@ -58,9 +58,29 @@ const overlayStubs = {
       '<button data-testid="delete-confirm-action" type="button" @click="$emit(\'click\', $event)"><slot /></button>',
   },
   // The editor components aren't under test here; stub them to avoid mounting.
-  SendMessageEditor: { template: '<form data-testid="send-editor" />' },
-  BusinessHoursEditor: { template: '<form data-testid="dt-editor" />' },
-  AddCommentEditor: { template: '<form data-testid="comment-editor" />' },
+  // Stubs expose the delete affordance so the drawer's confirm/delete flow can
+  // be exercised without dragging in the full editor implementation.
+  SendMessageEditor: {
+    name: 'SendMessageEditor',
+    props: ['node', 'canDelete', 'deletePending'],
+    emits: ['delete', 'saved'],
+    template:
+      '<form data-testid="send-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
+  },
+  BusinessHoursEditor: {
+    name: 'BusinessHoursEditor',
+    props: ['node', 'canDelete', 'deletePending'],
+    emits: ['delete', 'saved'],
+    template:
+      '<form data-testid="dt-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
+  },
+  AddCommentEditor: {
+    name: 'AddCommentEditor',
+    props: ['node', 'canDelete', 'deletePending'],
+    emits: ['delete', 'saved'],
+    template:
+      '<form data-testid="comment-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
+  },
   TriggerDetails: { template: '<div data-testid="trigger-details" />' },
 }
 

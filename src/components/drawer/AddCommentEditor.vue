@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/valibot'
+import { Trash2 } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import * as v from 'valibot'
 import { watch } from 'vue'
@@ -13,8 +14,11 @@ import type { AddCommentNode, FlowNode } from '@/lib/types'
 import { commentSchema, titleSchema } from '@/lib/validators'
 import { useUpdateNode } from '@/queries/nodes'
 
-const props = defineProps<{ node: AddCommentNode }>()
-const emit = defineEmits<{ (e: 'saved'): void }>()
+const props = withDefaults(
+  defineProps<{ node: AddCommentNode; canDelete?: boolean; deletePending?: boolean }>(),
+  { canDelete: false, deletePending: false },
+)
+const emit = defineEmits<{ (e: 'saved'): void; (e: 'delete'): void }>()
 
 const formSchema = toTypedSchema(
   v.object({
@@ -96,7 +100,19 @@ const onSubmit = handleSubmit(async (values) => {
       </div>
     </div>
 
-    <footer class="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+    <footer class="flex items-center justify-between gap-2 border-t border-border px-4 py-3">
+      <Button
+        v-if="canDelete"
+        type="button"
+        variant="destructive"
+        data-testid="drawer-delete"
+        :disabled="deletePending"
+        @click="emit('delete')"
+      >
+        <Trash2 class="size-4" />
+        Delete
+      </Button>
+      <span v-else />
       <Button type="submit" :disabled="!meta.valid || mutation.isPending.value">
         {{ mutation.isPending.value ? 'Saving…' : 'Save' }}
       </Button>
