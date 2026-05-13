@@ -262,6 +262,43 @@ describe('useMoveNode', () => {
 
     app.unmount()
   })
+
+  it('applies secondary moves and restores all of them on undo', async () => {
+    const { app, result: mutation } = withSetup(() => useMoveNode())
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+    store.setPosition('dt', { x: 0, y: 0 })
+    store.setPosition('s', { x: -100, y: 100 })
+    store.setPosition('f', { x: 100, y: 100 })
+
+    await mutation.mutateAsync({
+      id: 'dt',
+      position: { x: 50, y: 50 },
+      previousPosition: { x: 0, y: 0 },
+      secondary: [
+        { id: 's', from: { x: -100, y: 100 }, to: { x: -50, y: 150 } },
+        { id: 'f', from: { x: 100, y: 100 }, to: { x: 150, y: 150 } },
+      ],
+    })
+
+    expect(store.positions['dt']).toEqual({ x: 50, y: 50 })
+    expect(store.positions['s']).toEqual({ x: -50, y: 150 })
+    expect(store.positions['f']).toEqual({ x: 150, y: 150 })
+    expect(history.undoStack.length).toBe(1)
+
+    history.undo()
+    expect(store.positions['dt']).toEqual({ x: 0, y: 0 })
+    expect(store.positions['s']).toEqual({ x: -100, y: 100 })
+    expect(store.positions['f']).toEqual({ x: 100, y: 100 })
+
+    history.redo()
+    expect(store.positions['dt']).toEqual({ x: 50, y: 50 })
+    expect(store.positions['s']).toEqual({ x: -50, y: 150 })
+    expect(store.positions['f']).toEqual({ x: 150, y: 150 })
+
+    app.unmount()
+  })
 })
 
 describe('mutation onError', () => {

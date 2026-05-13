@@ -179,14 +179,15 @@ Goal: a "Create Node" button on the canvas opens a dialog to add a new node atta
 
 Goal: nodes can be deleted (with cascade) and dragged; drag pushes exactly one undo entry per drag-end.
 
-- [ ] **Delete:**
-  - Drawer footer "Delete" button (hidden for trigger).
-  - `useDeleteNode()` mutation cascades children + connectors. For a `dateTime`, delete its two connectors AND any descendants of those connectors. For a `sendMessage`/`addComment`/connector, reparent or detach descendants? **Recommendation:** delete the whole subtree (simpler, matches user mental model of "remove this branch"). Confirm via a shadcn confirm dialog before applying.
-  - Mutation pushes a single history entry with the full subtree so undo restores it.
-- [ ] **Drag:**
-  - Vue Flow emits `onNodeDrag` (continuous) and `onNodeDragStop` (final). Hook **`onNodeDrag`** to a throttled (≈30ms) Pinia `setPosition`. Hook **`onNodeDragStop`** to push one history entry with `before → after` position.
-  - Connectors drag with their dateTime parent (Vue Flow's `extent: 'parent'` or by listening for parent moves and translating connectors by the same delta).
-- [ ] Specs: delete cascades the right subtree; drag-end produces exactly one history entry regardless of how far the mouse moved.
+- [x] **Delete:**
+  - Header-area Trash button in `NodeDetailsDrawer.vue`, hidden for trigger.
+  - Shadcn `AlertDialog` confirm before applying.
+  - Delegates to existing `useDeleteNode()` (cascades subtree + connectors, single history entry — already verified by Phase 2 specs).
+- [x] **Drag:**
+  - `onNodeDragStart` snapshots before-positions for primary + connector children.
+  - `onNodeDrag` is throttled (~30ms, trailing edge) and translates connectors by the same delta when the primary is a dateTime.
+  - `onNodeDragStop` dispatches `useMoveNode` with a `secondary` move list — single history entry, single `saveNodes` call.
+- [x] Specs: `useMoveNode` secondary-moves cycle (apply → undo → redo restores all positions); drawer hides Delete for trigger and the confirm action triggers the mutation + `router.push('/')`.
 
 **Verify Phase 8:** delete a node with children → confirm → subtree disappears → undo restores it whole. Drag a node → position survives refresh → undo returns it to the prior spot.
 

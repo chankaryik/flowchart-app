@@ -25,10 +25,20 @@ export type DeleteNodeVars = {
   label?: string
 }
 
+export type SecondaryMove = {
+  id: NodeId
+  from: Position
+  to: Position
+}
+
 export type MoveNodeVars = {
   id: NodeId
   position: Position
   previousPosition?: Position
+  // Additional nodes that moved alongside the primary in the same gesture
+  // (e.g. dateTimeConnector children dragged with their dateTime parent).
+  // Bundled into one history entry so undo restores them together.
+  secondary?: SecondaryMove[]
   label?: string
 }
 
@@ -148,6 +158,10 @@ export function useMoveNode() {
       const previous = vars.previousPosition ?? store.positions[key]
       const next = vars.position
       store.setPosition(vars.id, next)
+      const secondary = vars.secondary ?? []
+      for (const move of secondary) {
+        store.setPosition(move.id, move.to)
+      }
       const node = store.getNodeById(vars.id)
       history.push({
         label: vars.label ?? `Move ${node?.type ?? 'node'}`,
@@ -157,8 +171,16 @@ export function useMoveNode() {
           } else {
             delete store.positions[key]
           }
+          for (const move of secondary) {
+            store.setPosition(move.id, move.from)
+          }
         },
-        redo: () => store.setPosition(vars.id, next),
+        redo: () => {
+          store.setPosition(vars.id, next)
+          for (const move of secondary) {
+            store.setPosition(move.id, move.to)
+          }
+        },
       })
     },
     onError: () => {
