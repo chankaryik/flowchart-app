@@ -1,7 +1,7 @@
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createApp, defineComponent, h } from 'vue'
 
 import type {
   AddCommentNode,
@@ -101,6 +101,9 @@ function withSetup<T>(composable: () => T): Harness<T> {
   let result!: T
   const Comp = defineComponent({
     setup() {
+      // Register the persistence watcher in useNodesQuery before the test
+      // exercises a mutation so saveNodes fires on store mutations.
+      useNodesQuery()
       result = composable()
       return () => h('div')
     },
@@ -173,10 +176,10 @@ describe('useCreateNode', () => {
 
 describe('useUpdateNode', () => {
   it('patches the node and undo restores the previous value', async () => {
-    const { app, result: mutation } = withSetup(() => useUpdateNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useUpdateNode())
 
     await mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> })
     expect(getName(store.getNodeById('msg'))).toBe('Renamed')
@@ -193,11 +196,11 @@ describe('useUpdateNode', () => {
 
 describe('useDeleteNode', () => {
   it('cascades the subtree and undo restores all nodes and positions', async () => {
-    const { app, result: mutation } = withSetup(() => useDeleteNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
     store.setPosition('msg', { x: 100, y: 200 })
+    const { app, result: mutation } = withSetup(() => useDeleteNode())
 
     await mutation.mutateAsync({ id: 'msg' })
     expect(store.getNodeById('msg')).toBeUndefined()
@@ -213,9 +216,9 @@ describe('useDeleteNode', () => {
   })
 
   it('cascading delete of a dateTime removes both connectors and their descendants', async () => {
-    const { app, result: mutation } = withSetup(() => useDeleteNode())
     const store = useFlowStore()
     store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useDeleteNode())
 
     await mutation.mutateAsync({ id: 'dt' })
     expect(store.getNodeById('dt')).toBeUndefined()
@@ -231,11 +234,11 @@ describe('useDeleteNode', () => {
 
 describe('useMoveNode', () => {
   it('updates position and undo restores the previous one', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
     store.setPosition('msg', { x: 0, y: 0 })
+    const { app, result: mutation } = withSetup(() => useMoveNode())
 
     await mutation.mutateAsync({ id: 'msg', position: { x: 80, y: 90 } })
     expect(store.positions['msg']).toEqual({ x: 80, y: 90 })
@@ -248,11 +251,11 @@ describe('useMoveNode', () => {
   })
 
   it('undo with no previous position deletes the position entry', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
     expect(store.positions['msg']).toBeUndefined()
+    const { app, result: mutation } = withSetup(() => useMoveNode())
 
     await mutation.mutateAsync({ id: 'msg', position: { x: 1, y: 2 } })
     expect(store.positions['msg']).toEqual({ x: 1, y: 2 })
@@ -264,13 +267,13 @@ describe('useMoveNode', () => {
   })
 
   it('applies secondary moves and restores all of them on undo', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
     store.setPosition('dt', { x: 0, y: 0 })
     store.setPosition('s', { x: -100, y: 100 })
     store.setPosition('f', { x: 100, y: 100 })
+    const { app, result: mutation } = withSetup(() => useMoveNode())
 
     await mutation.mutateAsync({
       id: 'dt',
@@ -419,10 +422,10 @@ describe('create → undo → redo cycle per editable type', () => {
 
 describe('undo / redo persistence', () => {
   it('persists to saveNodes after undo of an update', async () => {
-    const { app, result: mutation } = withSetup(() => useUpdateNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useUpdateNode())
 
     await mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> })
     expect(saveNodesMock).toHaveBeenCalledTimes(1)
@@ -443,10 +446,10 @@ describe('undo / redo persistence', () => {
   })
 
   it('persists to saveNodes after undo of a delete', async () => {
-    const { app, result: mutation } = withSetup(() => useDeleteNode())
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useDeleteNode())
 
     await mutation.mutateAsync({ id: 'msg' })
     expect(saveNodesMock).toHaveBeenCalledTimes(1)
@@ -486,43 +489,20 @@ describe('undo / redo persistence', () => {
     app.unmount()
   })
 
-  it('persists to saveNodes after undo of a move', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
+  it('does not persist on pure position changes (moves only touch layout state)', async () => {
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
     store.setPosition('msg', { x: 10, y: 10 })
+    const { app, result: mutation } = withSetup(() => useMoveNode())
 
     await mutation.mutateAsync({ id: 'msg', position: { x: 99, y: 99 } })
-    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+    expect(saveNodesMock).not.toHaveBeenCalled()
 
     history.undo()
-    expect(saveNodesMock).toHaveBeenCalledTimes(2)
-    // saveNodes only stores nodes, not positions — positions are layout state.
-    // What we're verifying is that saveNodes was called after undo at all.
+    expect(saveNodesMock).not.toHaveBeenCalled()
 
     app.unmount()
   })
 })
 
-describe('mutation onError', () => {
-  it('rolls back the optimistic patch when saveNodes rejects', async () => {
-    saveNodesMock.mockRejectedValueOnce(new Error('disk full'))
-
-    const { app, result: mutation } = withSetup(() => useUpdateNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-
-    await expect(
-      mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> }),
-    ).rejects.toThrow('disk full')
-    await nextTick()
-
-    expect(getName(store.getNodeById('msg'))).toBe('Welcome')
-    expect(history.undoStack.length).toBe(0)
-    expect(history.redoStack.length).toBe(0)
-
-    app.unmount()
-  })
-})

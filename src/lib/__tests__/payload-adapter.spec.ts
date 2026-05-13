@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PAYLOAD_URL, STORAGE_KEY, loadNodes, resetNodes, saveNodes } from '@/lib/payload-adapter'
 import type { FlowNode } from '@/lib/types'
-import { PERSIST_ENABLED_KEY } from '@/stores/settings'
+import { PERSIST_ENABLED_KEY } from '@/composables/usePersistFlag'
 
 const SEED: FlowNode[] = [
   { id: 1, parentId: -1, type: 'trigger', data: { type: 'conversationOpened', oncePerContact: false } },

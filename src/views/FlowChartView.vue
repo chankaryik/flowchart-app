@@ -23,18 +23,18 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useFlowHistory } from '@/composables/useFlowHistory'
 import { useNodeKeyboard } from '@/composables/useNodeKeyboard'
+import { usePersistFlag } from '@/composables/usePersistFlag'
 import { clearCachedNodes, resetNodes, saveNodes } from '@/lib/payload-adapter'
 import { useNodesQuery } from '@/queries/nodes'
 import { NODES_QUERY_KEY } from '@/queries/client'
 import { useFlowStore } from '@/stores/flow'
 import { useHistoryStore } from '@/stores/history'
-import { useSettingsStore } from '@/stores/settings'
 
 const route = useRoute()
 const router = useRouter()
 const store = useFlowStore()
 const history = useHistoryStore()
-const settings = useSettingsStore()
+const persistEnabled = usePersistFlag()
 const queryClient = useQueryClient()
 
 const query = useNodesQuery()
@@ -91,7 +91,7 @@ watch(
 
 function onPersistToggle(next: boolean): void {
   if (next) {
-    settings.setPersistEnabled(true)
+    persistEnabled.value = true
     // Persist the current in-memory state immediately so the user sees the
     // setting take effect without needing to make a change first.
     void saveNodes([...store.nodes])
@@ -103,7 +103,7 @@ function onPersistToggle(next: boolean): void {
 }
 
 function onConfirmPersistOff(): void {
-  settings.setPersistEnabled(false)
+  persistEnabled.value = false
   clearCachedNodes()
   persistOffConfirmOpen.value = false
   toast.success('Saved data cleared; a refresh will reset everything')
@@ -162,7 +162,7 @@ async function onConfirmReset(): Promise<void> {
           <Switch
             id="persist-switch"
             data-testid="persist-switch"
-            :model-value="settings.persistEnabled"
+            :model-value="persistEnabled"
             @update:model-value="onPersistToggle"
           />
         </div>

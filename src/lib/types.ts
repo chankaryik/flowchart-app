@@ -1,5 +1,13 @@
 export type NodeId = string | number
 
+export function idKey(id: NodeId): string {
+  return String(id)
+}
+
+export function sameId(a: NodeId, b: NodeId): boolean {
+  return String(a) === String(b)
+}
+
 export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 
 export const DAYS: readonly Day[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const

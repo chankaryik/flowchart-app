@@ -1,5 +1,4 @@
-import { onBeforeUnmount, onMounted } from 'vue'
-
+import { useGlobalKeydown } from '@/composables/useGlobalKeydown'
 import { useHistoryStore } from '@/stores/history'
 
 function isMac(): boolean {
@@ -47,14 +46,5 @@ export function useFlowHistory(): void {
     }
   }
 
-  // Capture phase: keydown reaches us before any descendant — including reka-ui
-  // portals (Sheet, AlertDialog) that can stopPropagation in their focus traps
-  // and would otherwise eat Ctrl+Shift+Z.
-  onMounted(() => {
-    window.addEventListener('keydown', onKeyDown, true)
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('keydown', onKeyDown, true)
-  })
+  useGlobalKeydown(onKeyDown)
 }

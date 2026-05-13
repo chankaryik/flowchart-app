@@ -1,6 +1,7 @@
-import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { useGlobalKeydown } from '@/composables/useGlobalKeydown'
 import type { FlowNode, NodeId } from '@/lib/types'
 import { nodeKey, useFlowStore, type Position } from '@/stores/flow'
 
@@ -265,11 +266,5 @@ export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
     },
   )
 
-  onMounted(() => {
-    window.addEventListener('keydown', onKeyDown, true)
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('keydown', onKeyDown, true)
-  })
+  useGlobalKeydown(onKeyDown)
 }

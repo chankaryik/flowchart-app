@@ -47,6 +47,11 @@ export type MoveNodeVars = {
   silent?: boolean
 }
 
+// A single auto-save watcher per store instance: any change to `store.nodes`
+// (forward mutations, undo, redo) is persisted at the next sync tick.
+// Positions are not watched on purpose — they're layout state, not payload.
+const wiredStores = new WeakSet<object>()
+
 export function useNodesQuery() {
   const store = useFlowStore()
   const query = useQuery({
@@ -60,21 +65,17 @@ export function useNodesQuery() {
     },
     { immediate: true },
   )
-  return query
-}
-
-// Mutations write through the mutationFn; undo/redo run outside that lifecycle
-// and would otherwise leave localStorage holding the post-mutation state — a
-// refresh after an undo would restore what the user just reverted. Wrap each
-// history callback so the store change is persisted at the same boundary.
-function persistAfter(
-  store: ReturnType<typeof useFlowStore>,
-  fn: () => void,
-): () => void {
-  return () => {
-    fn()
-    void saveNodes([...store.nodes])
+  if (!wiredStores.has(store)) {
+    wiredStores.add(store)
+    watch(
+      () => store.nodes,
+      (nodes) => {
+        void saveNodes([...nodes])
+      },
+      { deep: true, flush: 'sync' },
+    )
   }
+  return query
 }
 
 function toastError(
@@ -92,7 +93,7 @@ export function useCreateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => Promise.resolve(),
     onMutate: (vars: CreateNodeVars) => {
       const primary = vars.nodes[0]
       if (primary == null) return
@@ -106,8 +107,8 @@ export function useCreateNode() {
       store.addNodes(snapshot, positionMap)
       history.push({
         label: vars.label ?? `Create ${primary.type}`,
-        undo: persistAfter(store, () => store.removeNodes(snapshot.map((n) => n.id))),
-        redo: persistAfter(store, () => store.addNodes(snapshot, positionMap)),
+        undo: () => store.removeNodes(snapshot.map((n) => n.id)),
+        redo: () => store.addNodes(snapshot, positionMap),
       })
     },
     onError: (error, vars) => {
@@ -123,7 +124,7 @@ export function useUpdateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => Promise.resolve(),
     onMutate: (vars: UpdateNodeVars) => {
       const before = store.getNodeById(vars.id)
       if (before == null) return
@@ -134,8 +135,8 @@ export function useUpdateNode() {
       const afterCopy = { ...afterSnap } as Record<string, unknown>
       history.push({
         label: vars.label ?? `Update ${before.type}`,
-        undo: persistAfter(store, () => store.applyPatch(vars.id, beforeSnap)),
-        redo: persistAfter(store, () => store.applyPatch(vars.id, afterCopy)),
+        undo: () => store.applyPatch(vars.id, beforeSnap),
+        redo: () => store.applyPatch(vars.id, afterCopy),
       })
     },
     onError: (error, vars) => {
@@ -151,7 +152,7 @@ export function useDeleteNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => Promise.resolve(),
     onMutate: (vars: DeleteNodeVars) => {
       const subtree = store.getDescendants(vars.id)
       if (subtree.length === 0) return
@@ -167,8 +168,8 @@ export function useDeleteNode() {
       const root = snapshotNodes[0]
       history.push({
         label: vars.label ?? `Delete ${root?.type ?? 'node'}`,
-        undo: persistAfter(store, () => store.addNodes(snapshotNodes, snapshotPositions)),
-        redo: persistAfter(store, () => store.removeNodes(ids)),
+        undo: () => store.addNodes(snapshotNodes, snapshotPositions),
+        redo: () => store.removeNodes(ids),
       })
     },
     onError: (error, vars) => {
@@ -184,7 +185,7 @@ export function useMoveNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => Promise.resolve(),
     onMutate: (vars: MoveNodeVars) => {
       const key = nodeKey(vars.id)
       const previous = vars.previousPosition ?? store.positions[key]
@@ -197,7 +198,7 @@ export function useMoveNode() {
       const node = store.getNodeById(vars.id)
       history.push({
         label: vars.label ?? `Move ${node?.type ?? 'node'}`,
-        undo: persistAfter(store, () => {
+        undo: () => {
           if (previous != null) {
             store.setPosition(vars.id, previous)
           } else {
@@ -206,13 +207,13 @@ export function useMoveNode() {
           for (const move of secondary) {
             store.setPosition(move.id, move.from)
           }
-        }),
-        redo: persistAfter(store, () => {
+        },
+        redo: () => {
           store.setPosition(vars.id, next)
           for (const move of secondary) {
             store.setPosition(move.id, move.to)
           }
-        }),
+        },
       })
     },
     onError: (error, vars) => {

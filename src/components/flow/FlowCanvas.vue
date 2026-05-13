@@ -9,7 +9,8 @@ import {
 } from '@vue-flow/core'
 import { MiniMap } from '@vue-flow/minimap'
 import { AlertTriangle, RefreshCw, Sparkles } from 'lucide-vue-next'
-import { computed, nextTick, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
+import { useThrottleFn } from '@vueuse/core'
+import { computed, nextTick, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -49,9 +50,6 @@ const DRAG_THROTTLE_MS = 30
 // a single history entry with before→after for the primary + any connectors.
 let dragStart: Position | null = null
 let connectorStart: Record<string, Position> = {}
-let throttleTimer: ReturnType<typeof setTimeout> | null = null
-let lastApplied = 0
-let pendingDragEvent: NodeDragEvent | null = null
 
 // fit-view-on-init fires while the store is still empty (hydration is async);
 // re-fit on the first non-empty render so the seed graph lands inside the viewport.
@@ -122,35 +120,13 @@ function onNodeDragStart(event: NodeDragEvent): void {
   }
 }
 
-function onNodeDrag(event: NodeDragEvent): void {
-  // Trailing-edge throttle: apply immediately if past the window, otherwise
-  // schedule the latest event to fire when the window closes.
-  pendingDragEvent = event
-  const now = Date.now()
-  const elapsed = now - lastApplied
-  if (elapsed >= DRAG_THROTTLE_MS) {
-    lastApplied = now
-    applyDrag(event)
-    pendingDragEvent = null
-    return
-  }
-  if (throttleTimer != null) return
-  throttleTimer = setTimeout(() => {
-    throttleTimer = null
-    lastApplied = Date.now()
-    if (pendingDragEvent != null) {
-      applyDrag(pendingDragEvent)
-      pendingDragEvent = null
-    }
-  }, DRAG_THROTTLE_MS - elapsed)
-}
+const onNodeDrag = useThrottleFn(applyDrag, DRAG_THROTTLE_MS, true, true)
 
 function onNodeDragStop(event: NodeDragEvent): void {
-  if (throttleTimer != null) {
-    clearTimeout(throttleTimer)
-    throttleTimer = null
-  }
-  pendingDragEvent = null
+  // Apply the final position immediately, bypassing the throttle, so the
+  // history entry below sees the true drag end-point rather than a stale
+  // sample from the last throttle window.
+  applyDrag(event)
 
   const key = nodeKey(event.node.id)
   const finalPos: Position = { x: event.node.position.x, y: event.node.position.y }
@@ -185,13 +161,6 @@ function onNodeDragStop(event: NodeDragEvent): void {
     label: 'Move node',
   })
 }
-
-onBeforeUnmount(() => {
-  if (throttleTimer != null) {
-    clearTimeout(throttleTimer)
-    throttleTimer = null
-  }
-})
 
 const showLoading = computed(
   () => query.isPending.value && store.nodes.length === 0,

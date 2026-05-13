@@ -1,17 +1,12 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import type { FlowNode, NodeId } from '@/lib/types'
+import { idKey, sameId, type FlowNode, type NodeId } from '@/lib/types'
 
 export type Position = { x: number; y: number }
 
-export function nodeKey(id: NodeId): string {
-  return String(id)
-}
-
-export function sameNodeId(a: NodeId, b: NodeId): boolean {
-  return String(a) === String(b)
-}
+export const nodeKey = idKey
+export const sameNodeId = sameId
 
 export type CreateDialogState = {
   open: boolean
@@ -73,9 +68,7 @@ export const useFlowStore = defineStore('flow', () => {
   }
 
   function addNodes(toAdd: FlowNode[], positionMap?: Record<string, Position>): void {
-    for (const node of toAdd) {
-      nodes.value.push(node)
-    }
+    if (toAdd.length > 0) nodes.value.push(...toAdd)
     if (positionMap != null) {
       for (const [key, value] of Object.entries(positionMap)) {
         positions.value[key] = value

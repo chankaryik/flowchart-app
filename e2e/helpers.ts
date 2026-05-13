@@ -2,6 +2,8 @@ import { expect, type Locator, type Page } from '@playwright/test'
 
 // Keep aligned with src/lib/payload-adapter.ts STORAGE_KEY.
 export const STORAGE_KEY = 'payload-v1'
+// Keep aligned with src/composables/usePersistFlag.ts PERSIST_ENABLED_KEY.
+const PERSIST_ENABLED_KEY = 'persist-enabled-v1'
 
 // Stable seed IDs from public/payload.json. Hard-coded so specs read as
 // scenarios rather than as graph traversals.
@@ -16,13 +18,17 @@ export const SEED = {
 } as const
 
 /**
- * No-op marker for test entry points. Playwright spins up a fresh
- * BrowserContext for every test, so localStorage already starts empty — we
- * do NOT want an addInitScript here because it would also fire on page.reload()
- * and erase the write-through state we're trying to assert.
+ * Per-test setup. Persistence is opted-in app-wide via a toggle in the header;
+ * tests that verify state survives a reload need that toggle on. We set the
+ * flag via addInitScript so it lands before FlowChartView's first paint AND
+ * is re-applied on page.reload(). The payload itself (STORAGE_KEY) is never
+ * touched here — only the boolean preference — so write-through state is
+ * preserved across the reload.
  */
-export async function resetState(_page: Page): Promise<void> {
-  // Intentional no-op; kept as a hook in case future tests need seeding.
+export async function resetState(page: Page): Promise<void> {
+  await page.addInitScript((key) => {
+    window.localStorage.setItem(key, '1')
+  }, PERSIST_ENABLED_KEY)
 }
 
 /**
