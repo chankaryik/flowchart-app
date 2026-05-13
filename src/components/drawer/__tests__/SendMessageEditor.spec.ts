@@ -35,7 +35,7 @@ beforeEach(() => {
 describe('SendMessageEditor', () => {
   it('seeds the form with the current name and payload rows', () => {
     const wrapper = mountEditor(SendMessageEditor, { node: baseNode })
-    expect(wrapper.find('#sm-name').element.value).toBe('Welcome')
+    expect(wrapper.find<HTMLInputElement>('#sm-name').element.value).toBe('Welcome')
     expect(wrapper.findAll('[data-row-kind="text"]')).toHaveLength(1)
     expect(wrapper.findAll('[data-row-kind="attachment"]')).toHaveLength(1)
   })

@@ -35,7 +35,7 @@ beforeEach(() => {
 describe('BusinessHoursEditor', () => {
   it('seeds the form from the node prop', () => {
     const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
-    expect(wrapper.find('#dt-name').element.value).toBe('Business Hours')
+    expect(wrapper.find<HTMLInputElement>('#dt-name').element.value).toBe('Business Hours')
     expect(wrapper.findAll('[data-row-index]').length).toBe(1)
   })
 

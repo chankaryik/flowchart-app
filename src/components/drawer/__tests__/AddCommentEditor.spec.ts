@@ -31,8 +31,8 @@ beforeEach(() => {
 describe('AddCommentEditor', () => {
   it('seeds form fields from the node prop', () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
-    expect(wrapper.find('#comment-name').element.value).toBe('After-hours note')
-    expect(wrapper.find('#comment-body').element.value).toBe('Original comment')
+    expect(wrapper.find<HTMLInputElement>('#comment-name').element.value).toBe('After-hours note')
+    expect(wrapper.find<HTMLTextAreaElement>('#comment-body').element.value).toBe('Original comment')
   })
 
   it('keeps Save disabled while the title is empty', async () => {
