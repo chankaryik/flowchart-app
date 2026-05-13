@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { Keyboard, RotateCcw } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
 import CreateNodeDialog from '@/components/flow/CreateNodeDialog.vue'
@@ -64,14 +65,12 @@ watch(
     if (count === 0) return
     const node = store.getNodeById(id)
     if (node == null) {
-      console.warn(`[FlowChartView] /node/${id} not found, redirecting to /`)
+      toast.warning(`Node "${id}" not found`)
       void router.replace('/')
       return
     }
     if (node.type === 'dateTimeConnector') {
-      console.warn(
-        `[FlowChartView] /node/${id} is a connector (display-only), redirecting to /`,
-      )
+      toast.info('Connectors are display-only')
       void router.replace('/')
     }
   },
@@ -92,6 +91,9 @@ async function onConfirmReset(): Promise<void> {
     if (drawerNodeId.value != null) {
       void router.push('/')
     }
+    toast.success('Flow chart reset')
+  } catch (error) {
+    toast.error('Reset failed', { description: error instanceof Error ? error.message : undefined })
   } finally {
     resetting.value = false
     resetConfirmOpen.value = false

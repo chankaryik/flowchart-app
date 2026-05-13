@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { STORAGE_KEY } from '@/lib/payload-adapter'
 import type { FlowNode, NodeId } from '@/lib/types'
@@ -26,7 +27,7 @@ function guardNodeRoute(to: RouteLocationNormalized) {
   const rawId = to.params.id
   const id = Array.isArray(rawId) ? rawId[0] : rawId
   if (id == null || id === '') {
-    console.warn(`[router] /node/:id missing id, redirecting to /`)
+    toast.warning('No node id in URL')
     return { path: '/' }
   }
 
@@ -38,11 +39,11 @@ function guardNodeRoute(to: RouteLocationNormalized) {
 
   const match = cached.find((node) => sameId(node.id, id))
   if (match == null) {
-    console.warn(`[router] /node/${id} not found, redirecting to /`)
+    toast.warning(`Node "${id}" not found`)
     return { path: '/' }
   }
   if (match.type === 'dateTimeConnector') {
-    console.warn(`[router] /node/${id} is a connector (display-only), redirecting to /`)
+    toast.info('Connectors are display-only')
     return { path: '/' }
   }
   return true

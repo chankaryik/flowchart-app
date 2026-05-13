@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { loadNodes, saveNodes } from '@/lib/payload-adapter'
 import type { FlowNode, NodeId } from '@/lib/types'
@@ -12,17 +13,20 @@ export type CreateNodeVars = {
   position?: Position
   positions?: Record<string, Position>
   label?: string
+  silent?: boolean
 }
 
 export type UpdateNodeVars = {
   id: NodeId
   patch: Partial<FlowNode>
   label?: string
+  silent?: boolean
 }
 
 export type DeleteNodeVars = {
   id: NodeId
   label?: string
+  silent?: boolean
 }
 
 export type SecondaryMove = {
@@ -40,6 +44,7 @@ export type MoveNodeVars = {
   // Bundled into one history entry so undo restores them together.
   secondary?: SecondaryMove[]
   label?: string
+  silent?: boolean
 }
 
 export function useNodesQuery() {
@@ -72,6 +77,16 @@ function persistAfter(
   }
 }
 
+function toastError(
+  vars: { label?: string; silent?: boolean } | undefined,
+  fallback: string,
+  error: unknown,
+): void {
+  if (vars?.silent) return
+  const description = error instanceof Error ? error.message : undefined
+  toast.error(vars?.label ?? fallback, { description })
+}
+
 export function useCreateNode() {
   const store = useFlowStore()
   const history = useHistoryStore()
@@ -95,9 +110,10 @@ export function useCreateNode() {
         redo: persistAfter(store, () => store.addNodes(snapshot, positionMap)),
       })
     },
-    onError: () => {
+    onError: (error, vars) => {
       const cmd = history.popLast()
       cmd?.undo()
+      toastError(vars, 'Failed to create node', error)
     },
   })
 }
@@ -122,9 +138,10 @@ export function useUpdateNode() {
         redo: persistAfter(store, () => store.applyPatch(vars.id, afterCopy)),
       })
     },
-    onError: () => {
+    onError: (error, vars) => {
       const cmd = history.popLast()
       cmd?.undo()
+      toastError(vars, 'Failed to save changes', error)
     },
   })
 }
@@ -154,9 +171,10 @@ export function useDeleteNode() {
         redo: persistAfter(store, () => store.removeNodes(ids)),
       })
     },
-    onError: () => {
+    onError: (error, vars) => {
       const cmd = history.popLast()
       cmd?.undo()
+      toastError(vars, 'Failed to delete node', error)
     },
   })
 }
@@ -197,9 +215,10 @@ export function useMoveNode() {
         }),
       })
     },
-    onError: () => {
+    onError: (error, vars) => {
       const cmd = history.popLast()
       cmd?.undo()
+      toastError(vars, 'Failed to move node', error)
     },
   })
 }

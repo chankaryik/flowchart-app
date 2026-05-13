@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -184,9 +185,14 @@ async function onSubmit(): Promise<void> {
 
   const positions = computePositions(nodes, parent.id)
 
-  await mutation.mutateAsync({ nodes, positions, label: `Create ${t}` })
+  try {
+    await mutation.mutateAsync({ nodes, positions, label: `Create ${t}` })
+  } catch {
+    return
+  }
 
   setOpen(false)
+  toast.success(`${defaultName(t)} created`)
   void router.push(`/node/${primaryId}`)
 }
 </script>

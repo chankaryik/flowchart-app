@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,7 +57,12 @@ async function onSubmit(): Promise<void> {
     name: name.value.trim(),
     data: { comment: comment.value },
   } as Partial<FlowNode>
-  await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit comment' })
+  try {
+    await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit comment' })
+  } catch {
+    return
+  }
+  toast.success('Comment saved')
   emit('saved')
 }
 </script>

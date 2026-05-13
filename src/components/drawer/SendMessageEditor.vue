@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ImageIcon, Plus, Trash2 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -91,7 +92,13 @@ async function onSubmit(): Promise<void> {
     name: name.value.trim(),
     data: { payload },
   } as Partial<FlowNode>
-  await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit send message' })
+  try {
+    await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit send message' })
+  } catch {
+    // mutation onError handler surfaces the toast; swallow to keep drawer open
+    return
+  }
+  toast.success('Send message saved')
   emit('saved')
 }
 </script>

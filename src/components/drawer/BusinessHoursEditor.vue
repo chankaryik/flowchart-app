@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Plus, Trash2 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -82,7 +83,12 @@ async function onSubmit(): Promise<void> {
       timezone: timezone.value,
     },
   } as Partial<FlowNode>
-  await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit business hours' })
+  try {
+    await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit business hours' })
+  } catch {
+    return
+  }
+  toast.success('Business hours saved')
   emit('saved')
 }
 </script>

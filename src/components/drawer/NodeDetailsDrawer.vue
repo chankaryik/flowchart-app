@@ -2,6 +2,7 @@
 import { Trash2 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import {
   AlertDialog,
@@ -89,8 +90,14 @@ const canDelete = computed(() => node.value != null && node.value.type !== 'trig
 async function onConfirmDelete(): Promise<void> {
   const target = node.value
   if (target == null) return
-  await deleteMutation.mutateAsync({ id: target.id, label: `Delete ${target.type}` })
+  try {
+    await deleteMutation.mutateAsync({ id: target.id, label: `Delete ${target.type}` })
+  } catch {
+    confirmOpen.value = false
+    return
+  }
   confirmOpen.value = false
+  toast.success('Node deleted', { description: 'Press Ctrl/Cmd+Z to undo' })
   void router.push('/')
 }
 </script>
