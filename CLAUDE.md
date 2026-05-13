@@ -1,10 +1,10 @@
 # CLAUDE.md — Respondio Flow Chart App
 
-Project-specific guidance for Claude Code sessions working in this repo. Read this **before** touching any code; it captures the contract from [`../../../../Downloads/Respondio - flowchart app requirements.pdf`](../../../Downloads/Respondio - flowchart app requirements.pdf) plus the scaffolding state and the directional decisions already made with the user. If anything here conflicts with the PDF, the PDF wins — surface the conflict and ask.
+Project-specific guidance for Claude Code sessions working in this repo. Read this **before** touching any code; it captures the contract from [REQUIREMENTS.md](REQUIREMENTS.md) plus the scaffolding state and the directional decisions already made with the user. If anything here conflicts with REQUIREMENTS.md, REQUIREMENTS.md wins — surface the conflict and ask.
 
 ## 1. Project overview
 
-A Flow Chart editor built on Vue Flow. It loads a workflow graph from [payload.json](payload.json), renders it on a draggable canvas, and lets the user create, edit, drag, and delete nodes. Each node has a details drawer that opens via URL (`/node/:id`), so drawer state is shareable and back-button-friendly. The graph mixes editable nodes (`trigger`, `sendMessage`, `addComment`, `dateTime`) with display-only branch labels (`dateTimeConnector` — success/failure markers under a `dateTime` node).
+A Flow Chart editor built on Vue Flow. It loads a workflow graph from [public/payload.json](public/payload.json) (served at the site root so `fetch('/payload.json')` resolves), renders it on a draggable canvas, and lets the user create, edit, drag, and delete nodes. Each node has a details drawer that opens via URL (`/node/:id`), so drawer state is shareable and back-button-friendly. The graph mixes editable nodes (`trigger`, `sendMessage`, `addComment`, `dateTime`) with display-only branch labels (`dateTimeConnector` — success/failure markers under a `dateTime` node).
 
 ## 2. Tech stack
 
@@ -77,7 +77,7 @@ src/
 │   ├── flow.ts                      # nodes[], selection, drawer, drag
 │   └── history.ts                   # undo/redo command stack
 ├── queries/
-│   ├── client.ts                    # QueryClient w/ PDF-mandated config
+│   ├── client.ts                    # QueryClient w/ requirements-mandated config
 │   └── nodes.ts                     # useNodesQuery + mutations
 ├── composables/
 │   ├── useNodeKeyboard.ts           # arrow keys + Enter to open drawer
@@ -124,8 +124,8 @@ Keep this union in [src/lib/types.ts](src/lib/types.ts) and re-export from there
 
 - **Pinia (`stores/flow.ts`)** is the live truth for the canvas. All UI binds here. Vue Flow's internal node store is hydrated from Pinia and resynced on `onNodesChange` (positions, selection).
 - **TanStack Query (`queries/nodes.ts`)** does the initial load via `queryFn` and exposes mutations (`createNode`, `updateNode`, `deleteNode`, `moveNode`). Mutations update Pinia optimistically in `onMutate`, then persist via the adapter in `mutationFn`.
-- **`lib/payload-adapter.ts`** is the only boundary that touches `payload.json`. On first load it reads the static `payload.json` via `fetch('/payload.json')`; subsequent reads and all writes go through `localStorage` (key `payload-v1`). This satisfies the PDF's "data fetching and mutation updates involving payload.json" without needing a backend.
-- **QueryClient config** must match the PDF exactly:
+- **`lib/payload-adapter.ts`** is the only boundary that touches `payload.json`. On first load it reads the static `public/payload.json` via `fetch('/payload.json')` (Vite serves `public/` at the root); subsequent reads and all writes go through `localStorage` (key `payload-v1`). This satisfies REQUIREMENTS.md's "data fetching and mutation updates involving payload.json" without needing a backend.
+- **QueryClient config** must match REQUIREMENTS.md exactly:
 
   ```ts
   new QueryClient({
@@ -147,7 +147,7 @@ Keep this union in [src/lib/types.ts](src/lib/types.ts) and re-export from there
 
 ## 8. Hard rules (non-negotiable)
 
-These come from the PDF and from the directional decisions agreed with the user. Treat them as gates; future Claude sessions must satisfy them before declaring a feature done.
+These come from REQUIREMENTS.md and from the directional decisions agreed with the user. Treat them as gates; future Claude sessions must satisfy them before declaring a feature done.
 
 1. **`dateTimeConnector` nodes are display-only.** Never wire click/keyboard handlers, never route to `/node/<connector-id>`, never offer them in Create Node.
 2. **Every input field validates** on blur AND on submit. Submit is disabled while invalid. Concrete rules in [src/lib/validators.ts](src/lib/validators.ts):
@@ -158,7 +158,7 @@ These come from the PDF and from the directional decisions agreed with the user.
    - Comment: ≤ 1000 chars.
 3. **Edits flow through TanStack mutations**, not direct Pinia writes from components. This keeps undo/redo, persistence, and optimistic updates consistent.
 4. **Undo/Redo (Ctrl+Z / Ctrl+Shift+Z, Cmd on macOS)** covers: create, delete, drag-end position change (one stack entry per drag-end, not per pixel), and field edits committed on blur. Implemented as a command stack in [src/stores/history.ts](src/stores/history.ts).
-5. **Keyboard accessibility (PDF requirement):**
+5. **Keyboard accessibility (REQUIREMENTS.md requirement):**
    - Tab cycles focus through nodes in graph order.
    - Arrow keys move selection between graph-adjacent nodes.
    - Enter opens the drawer for the focused node.
@@ -180,14 +180,14 @@ These come from the PDF and from the directional decisions agreed with the user.
 - **Naming:** `PascalCase.vue` for components, `useThing.ts` for composables, `kebab-case.ts` for everything else. Pinia store files are lowercase singular (`flow.ts`, `history.ts`) and export `useXxxStore`.
 - **Tailwind/Shadcn:** prefer semantic shadcn tokens (`bg-background`, `text-foreground`, `border-input`) over raw colors. Custom utilities go in `assets/main.css` `@layer utilities`. Don't hand-edit anything under `src/components/ui/` — regenerate it via the CLI instead.
 - **Imports:** use the `@/` alias; no relative `../../`.
-- **Comments:** none that restate code. Only WHY comments for non-obvious constraints (the PDF's display-only rule for connectors is a classic case worth a comment at the node component).
+- **Comments:** none that restate code. Only WHY comments for non-obvious constraints (the display-only rule for connectors from REQUIREMENTS.md is a classic case worth a comment at the node component).
 
 ## 10. Open items to settle on day one
 
 Resolve these with the user before building far beyond the canvas:
 
-1. **Persistence:** plan is `localStorage` write-through; PDF says "data fetching and mutation updates involving payload.json" which is ambiguous. If the user wants real disk writes, build a tiny Vite dev plugin to PUT the JSON; otherwise stick with localStorage.
-2. **Trigger node:** the PDF never says whether `trigger` is deletable or creatable. Default: not deletable, not in Create Node options (a flow needs exactly one trigger).
+1. **Persistence:** plan is `localStorage` write-through; REQUIREMENTS.md says "data fetching and mutation updates involving payload.json" which is ambiguous. If the user wants real disk writes, build a tiny Vite dev plugin to PUT the JSON; otherwise stick with localStorage.
+2. **Trigger node:** REQUIREMENTS.md never says whether `trigger` is deletable or creatable. Default: not deletable, not in Create Node options (a flow needs exactly one trigger).
 3. **Edge style:** Vue Flow default is bezier; `smoothstep` looks more like an org chart. Pick one and stick with it across all edges.
 
 ## 11. Things to ignore from the scaffold
@@ -198,7 +198,7 @@ Resolve these with the user before building far beyond the canvas:
 
 ## 12. Reference
 
-- Requirements: [`Respondio - flowchart app requirements.pdf`](../../../Downloads/Respondio - flowchart app requirements.pdf) in the user's Downloads folder.
+- Requirements: [REQUIREMENTS.md](REQUIREMENTS.md) at the repo root.
 - Vue Flow docs: https://vueflow.dev/
 - TanStack Query (Vue): https://tanstack.com/query/latest/docs/framework/vue/overview
 - Shadcn Vue: https://www.shadcn-vue.com/
