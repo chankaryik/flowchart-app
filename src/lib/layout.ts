@@ -7,7 +7,7 @@ export const NODE_HEIGHT = 80
 export const H_GAP = 40
 export const V_GAP = 80
 
-export const layoutKey = idKey
+const layoutKey = idKey
 
 export function computeLayout(nodes: FlowNode[]): Record<string, Position> {
   if (nodes.length === 0) return {}

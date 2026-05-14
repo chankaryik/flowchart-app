@@ -39,11 +39,6 @@ export type MoveNodeVars = {
   secondary?: SecondaryMove[]
 }
 
-// A single auto-save watcher per store instance: any change to `store.nodes`
-// (forward mutations, undo, redo) is persisted at the next sync tick.
-// Positions are not watched on purpose — they're layout state, not payload.
-const wiredStores = new WeakSet<object>()
-
 export function useNodesQuery() {
   const store = useFlowStore()
   const query = useQuery({
@@ -57,16 +52,6 @@ export function useNodesQuery() {
     },
     { immediate: true },
   )
-  if (!wiredStores.has(store)) {
-    wiredStores.add(store)
-    watch(
-      () => store.nodes,
-      (nodes) => {
-        void saveNodes([...nodes])
-      },
-      { deep: true, flush: 'sync' },
-    )
-  }
   return query
 }
 
@@ -74,12 +59,20 @@ function describeError(error: unknown): string | undefined {
   return error instanceof Error ? error.message : undefined
 }
 
+function persistNodes(store: ReturnType<typeof useFlowStore>): Promise<void> {
+  return saveNodes([...store.nodes])
+}
+
+function persistNodesInBackground(store: ReturnType<typeof useFlowStore>): void {
+  void persistNodes(store).catch(() => undefined)
+}
+
 export function useCreateNode() {
   const store = useFlowStore()
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => Promise.resolve(),
+    mutationFn: () => persistNodes(store),
     onMutate: (vars: CreateNodeVars) => {
       const primary = vars.nodes[0]
       if (primary == null) return
@@ -93,8 +86,14 @@ export function useCreateNode() {
       store.addNodes(snapshot, positionMap)
       history.push({
         label: `Create ${primary.type}`,
-        undo: () => store.removeNodes(snapshot.map((n) => n.id)),
-        redo: () => store.addNodes(snapshot, positionMap),
+        undo: () => {
+          store.removeNodes(snapshot.map((n) => n.id))
+          persistNodesInBackground(store)
+        },
+        redo: () => {
+          store.addNodes(snapshot, positionMap)
+          persistNodesInBackground(store)
+        },
       })
     },
     onError: (error) => {
@@ -110,7 +109,7 @@ export function useUpdateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => Promise.resolve(),
+    mutationFn: () => persistNodes(store),
     onMutate: (vars: UpdateNodeVars) => {
       const before = store.getNodeById(vars.id)
       if (before == null) return
@@ -121,8 +120,14 @@ export function useUpdateNode() {
       const afterCopy = { ...afterSnap } as Record<string, unknown>
       history.push({
         label: `Update ${before.type}`,
-        undo: () => store.applyPatch(vars.id, beforeSnap),
-        redo: () => store.applyPatch(vars.id, afterCopy),
+        undo: () => {
+          store.applyPatch(vars.id, beforeSnap)
+          persistNodesInBackground(store)
+        },
+        redo: () => {
+          store.applyPatch(vars.id, afterCopy)
+          persistNodesInBackground(store)
+        },
       })
     },
     onError: (error) => {
@@ -138,7 +143,7 @@ export function useDeleteNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => Promise.resolve(),
+    mutationFn: () => persistNodes(store),
     onMutate: (vars: DeleteNodeVars) => {
       const subtree = store.getDescendants(vars.id)
       if (subtree.length === 0) return
@@ -154,8 +159,14 @@ export function useDeleteNode() {
       const root = snapshotNodes[0]
       history.push({
         label: `Delete ${root?.type ?? 'node'}`,
-        undo: () => store.addNodes(snapshotNodes, snapshotPositions),
-        redo: () => store.removeNodes(ids),
+        undo: () => {
+          store.addNodes(snapshotNodes, snapshotPositions)
+          persistNodesInBackground(store)
+        },
+        redo: () => {
+          store.removeNodes(ids)
+          persistNodesInBackground(store)
+        },
       })
     },
     onError: (error) => {

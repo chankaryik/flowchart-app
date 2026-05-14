@@ -23,13 +23,12 @@ export default defineConfig({
   },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* One retry locally to soak up Firefox-on-Playwright click hangs late in
-     the suite (the browser process grows unstable after ~20 tests; opening
-     a fresh context on retry clears it). CI keeps a higher cap. */
+  /* One retry locally absorbs occasional browser click timing flakes; CI
+     keeps a higher cap. */
   retries: process.env.CI ? 2 : 1,
-  /* Run tests one at a time. Concurrent Firefox/WebKit tabs against this app
+  /* Run tests one at a time. Concurrent browser tabs against this app
      intermittently hang at `locator.click()` (the stability check passes but
-     the click never lands) — observed on Firefox 150 with Playwright 1.60.
+     the click never lands).
      We've tried capping workers at 2 and switching to the preview server;
      neither eliminates the hang. Serializing is the only reliable fix.
      Override at the CLI (`--workers N`) when you accept the flake risk. */
@@ -107,10 +106,8 @@ export default defineConfig({
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
 
-  /* Run a production-built preview server for tests. The Vite dev server's HMR
-     channel races concurrent Firefox tabs and intermittently hangs
-     `locator.click()` at the stability check; serving the built bundle avoids
-     that class of flakiness entirely. For a faster local loop, run
+  /* Run a production-built preview server for tests. Serving the built bundle
+     avoids dev-server/HMR timing noise during browser automation. For a faster local loop, run
      `npm run build && npm run preview` in a separate terminal — Playwright
      will reuse the existing server. */
   webServer: {

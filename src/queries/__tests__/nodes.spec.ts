@@ -89,9 +89,6 @@ function withSetup<T>(composable: () => T): Harness<T> {
   let result!: T
   const Comp = defineComponent({
     setup() {
-      // Register the persistence watcher in useNodesQuery before exercising a
-      // mutation so saveNodes fires reactively on store changes.
-      useNodesQuery()
       result = composable()
       return () => h('div')
     },

@@ -20,14 +20,6 @@ export type CreatedDateTime = {
   connectors: [DateTimeConnectorNode, DateTimeConnectorNode]
 }
 
-export type CreateNodeResult<T extends EditableNodeType> = T extends 'sendMessage'
-  ? SendMessageNode
-  : T extends 'addComment'
-    ? AddCommentNode
-    : T extends 'dateTime'
-      ? CreatedDateTime
-      : never
-
 export function nextNodeId(): string {
   return generateId()
 }

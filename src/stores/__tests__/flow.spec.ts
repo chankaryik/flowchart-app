@@ -123,21 +123,6 @@ describe('useFlowStore', () => {
     expect(ids).not.toContain(1)
   })
 
-  it('addNode appends and stores position when given', () => {
-    const store = useFlowStore()
-    store.hydrate([trigger])
-    const newNode: SendMessageNode = {
-      id: 'new',
-      parentId: 1,
-      type: 'sendMessage',
-      name: 'X',
-      data: { payload: [] },
-    }
-    store.addNode(newNode, { x: 50, y: 60 })
-    expect(store.nodes).toHaveLength(2)
-    expect(store.positions['new']).toEqual({ x: 50, y: 60 })
-  })
-
   it('applyPatch merges into the matching node', () => {
     const store = useFlowStore()
     store.hydrate(SEED)
@@ -161,16 +146,6 @@ describe('useFlowStore', () => {
     expect(store.getNodeById('msg-1')).toBeUndefined()
     expect(store.getNodeById('comment-1')).toBeUndefined()
     expect(store.positions['msg-1']).toBeUndefined()
-  })
-
-  it('removeNodes clears selection and dragging when they reference removed nodes', () => {
-    const store = useFlowStore()
-    store.hydrate(SEED)
-    store.setSelection('msg-1')
-    store.setDragging('msg-1')
-    store.removeNodes(['msg-1'])
-    expect(store.selectedId).toBeNull()
-    expect(store.draggingId).toBeNull()
   })
 
   it('setPosition writes to the positions map keyed by stringified id', () => {

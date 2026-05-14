@@ -139,13 +139,13 @@ describe('useNodeKeyboard (integration)', () => {
     outside.remove()
   })
 
-  it('Arrow Down/Right step to the next node in array order', () => {
+  it('Arrow Down/Right step to the next node in graph order', () => {
     elements['1']!.focus()
     dispatchKey({ key: 'ArrowDown', target: elements['1']! })
     expect(document.activeElement).toBe(elements['dt'])
   })
 
-  it('Arrow Up/Left step to the previous node in array order', () => {
+  it('Arrow Up/Left step to the previous node in graph order', () => {
     elements['dt']!.focus()
     dispatchKey({ key: 'ArrowUp', target: elements['dt']! })
     expect(document.activeElement).toBe(elements['1'])

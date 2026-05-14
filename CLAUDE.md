@@ -81,7 +81,7 @@ src/
 │   │   └── AttachmentField.vue      # drag-drop file uploader; native <input type="file">
 │   └── ui/                          # shadcn-generated; do not hand-edit
 ├── stores/
-│   ├── flow.ts                      # nodes[], positions, selection, drawer, drag
+│   ├── flow.ts                      # nodes[], positions, create dialog
 │   ├── history.ts                   # undo/redo command stack
 │   └── attachments.ts               # in-memory Map<"<nodeId>:<index>", File[]>
 ├── queries/
@@ -152,7 +152,7 @@ Note that `attachments` is a string array of filenames. The actual `File` object
 
 ## 6. Source-of-truth model
 
-- **Pinia (`stores/flow.ts`)** is the live truth for the canvas: `nodes[]`, `positions: Record<string, Position>`, selection, drawer, and drag state. All UI binds here. Vue Flow's internal node store is hydrated from Pinia and resynced on `onNodesChange`.
+- **Pinia (`stores/flow.ts`)** is the live truth for the canvas: `nodes[]`, `positions: Record<string, Position>`, and create-dialog state. Keyboard focus is DOM-driven in `useNodeKeyboard`, and per-drag bookkeeping stays local to `FlowCanvas`.
 - **Pinia (`stores/attachments.ts`)** holds uploaded `File[]` per `<nodeId>:<index>` slot — in-memory only.
 - **TanStack Query (`queries/nodes.ts`)** does the initial load via `queryFn` and exposes mutations (`useCreateNode`, `useUpdateNode`, `useDeleteNode`, `useMoveNode`). Mutations update Pinia optimistically in `onMutate`, then persist via the adapter in `mutationFn`.
 - **`lib/payload-adapter.ts`** is the only boundary that touches the payload. On first load it reads `public/payload.json` via `fetch('/payload.json')`. A user-controlled flag (`localStorage` key `persist-enabled-v1`, checked by `isPersistEnabled()`) gates whether subsequent reads/writes use a `localStorage` cache under key `payload-v1`. With persistence off (default), every refresh reseeds from the canonical JSON; with it on, edits survive reload.
@@ -192,7 +192,7 @@ These come from REQUIREMENTS.md and from the directional decisions agreed with t
 5. **Undo/Redo (Ctrl+Z / Ctrl+Shift+Z, Cmd on macOS)** covers: create, delete, drag-end position change (one stack entry per drag-end, not per pixel), and field edits committed on blur. Implemented as a command stack in [src/stores/history.ts](src/stores/history.ts).
 6. **Keyboard accessibility:**
    - Tab cycles focus through nodes in graph order.
-   - Arrow keys move selection between graph-adjacent nodes.
+   - Arrow keys move focus through nodes in graph order.
    - Enter opens the drawer for the focused node.
    - Esc closes the drawer.
    - `?` opens [`ShortcutHelpDialog.vue`](src/components/ShortcutHelpDialog.vue).

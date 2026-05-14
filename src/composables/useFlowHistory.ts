@@ -1,4 +1,4 @@
-import { onKeyStroke } from '@vueuse/core'
+import { useEventListener } from '@vueuse/core'
 
 import { isEditableTarget } from '@/lib/dom'
 import { useHistoryStore } from '@/stores/history'
@@ -6,21 +6,22 @@ import { useHistoryStore } from '@/stores/history'
 export function useFlowHistory(): void {
   const history = useHistoryStore()
 
-  // Ctrl+Z / Cmd+Z to undo, +Shift to redo. Skipped inside editable fields so
-  // the browser's native text undo still works.
-  onKeyStroke('z', (event) => {
+  useEventListener(window, 'keydown', (event: KeyboardEvent) => {
     if (isEditableTarget(event.target)) return
-    if (!(event.ctrlKey || event.metaKey) || event.altKey) return
-    event.preventDefault()
-    if (event.shiftKey) history.redo()
-    else history.undo()
-  })
 
-  // Windows convention: Ctrl+Y is a second redo binding.
-  onKeyStroke('y', (event) => {
-    if (isEditableTarget(event.target)) return
-    if (!event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
-    event.preventDefault()
-    history.redo()
+    const key = event.key.toLowerCase()
+    const isUndoRedoKey = key === 'z' && (event.ctrlKey || event.metaKey) && !event.altKey
+    if (isUndoRedoKey) {
+      event.preventDefault()
+      if (event.shiftKey) history.redo()
+      else history.undo()
+      return
+    }
+
+    const isWindowsRedo = key === 'y' && event.ctrlKey && !event.metaKey && !event.altKey
+    if (isWindowsRedo && !event.shiftKey) {
+      event.preventDefault()
+      history.redo()
+    }
   })
 }

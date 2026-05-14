@@ -10,17 +10,15 @@ export const sameNodeId = sameId
 
 export type CreateDialogState = {
   open: boolean
-  // When set, the create dialog skips the parent step and locks the new
-  // node's parent to this id (plus-button-on-node flow). When null and
-  // open is true, the dialog runs its full 3-step picker (header button flow).
+  // When set, the create dialog locks the new node's parent to this id
+  // (plus-button-on-node flow). When null, the header button creates an
+  // orphan node on the canvas.
   parentId: NodeId | null
 }
 
 export const useFlowStore = defineStore('flow', () => {
   const nodes = ref<FlowNode[]>([])
   const positions = ref<Record<string, Position>>({})
-  const selectedId = ref<NodeId | null>(null)
-  const draggingId = ref<NodeId | null>(null)
   const createDialog = ref<CreateDialogState>({ open: false, parentId: null })
 
   const nodesById = computed(() => {
@@ -60,13 +58,6 @@ export const useFlowStore = defineStore('flow', () => {
     nodes.value = seed.map((node) => ({ ...node }))
   }
 
-  function addNode(node: FlowNode, position?: Position): void {
-    nodes.value.push(node)
-    if (position != null) {
-      positions.value[nodeKey(node.id)] = position
-    }
-  }
-
   function addNodes(toAdd: FlowNode[], positionMap?: Record<string, Position>): void {
     if (toAdd.length > 0) nodes.value.push(...toAdd)
     if (positionMap != null) {
@@ -90,12 +81,6 @@ export const useFlowStore = defineStore('flow', () => {
     for (const key of removeSet) {
       delete positions.value[key]
     }
-    if (selectedId.value != null && removeSet.has(nodeKey(selectedId.value))) {
-      selectedId.value = null
-    }
-    if (draggingId.value != null && removeSet.has(nodeKey(draggingId.value))) {
-      draggingId.value = null
-    }
   }
 
   function setPosition(id: NodeId, xy: Position): void {
@@ -112,14 +97,6 @@ export const useFlowStore = defineStore('flow', () => {
     positions.value = {}
   }
 
-  function setSelection(id: NodeId | null): void {
-    selectedId.value = id
-  }
-
-  function setDragging(id: NodeId | null): void {
-    draggingId.value = id
-  }
-
   function openCreateDialog(parentId?: NodeId | null): void {
     createDialog.value = { open: true, parentId: parentId ?? null }
   }
@@ -131,22 +108,17 @@ export const useFlowStore = defineStore('flow', () => {
   return {
     nodes,
     positions,
-    selectedId,
-    draggingId,
     createDialog,
     getNodeById,
     getChildren,
     getDescendants,
     hydrate,
-    addNode,
     addNodes,
     applyPatch,
     removeNodes,
     setPosition,
     setPositions,
     clearPositions,
-    setSelection,
-    setDragging,
     openCreateDialog,
     closeCreateDialog,
   }

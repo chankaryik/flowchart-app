@@ -98,5 +98,3 @@ export type FlowNode =
   | DateTimeNode
   | DateTimeConnectorNode
   | AddCommentNode
-
-export type ValidationResult = { ok: true } | { ok: false; message: string }

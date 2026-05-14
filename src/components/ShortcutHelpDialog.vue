@@ -19,14 +19,14 @@ function isMac(): boolean {
   return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent ?? '')
 }
 
-const mod = computed(() => (isMac() ? '⌘' : 'Ctrl'))
+const mod = computed(() => (isMac() ? 'Cmd' : 'Ctrl'))
 
 type Shortcut = { keys: string[]; description: string }
 
 const navigationShortcuts = computed<Shortcut[]>(() => [
   { keys: ['Tab'], description: 'Focus next node' },
   { keys: ['Shift', 'Tab'], description: 'Focus previous node' },
-  { keys: ['↑', '↓', '←', '→'], description: 'Move focus to an adjacent node' },
+  { keys: ['Up', 'Down', 'Left', 'Right'], description: 'Move focus through nodes' },
   { keys: ['Enter'], description: 'Open details for the focused node' },
   { keys: ['Esc'], description: 'Close the open drawer or dialog' },
 ])

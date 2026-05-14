@@ -10,19 +10,20 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 
 1. [What's in the box](#whats-in-the-box)
 2. [Requirements coverage](#requirements-coverage)
-3. [Tech stack](#tech-stack)
-4. [Getting started](#getting-started)
-5. [Available scripts](#available-scripts)
-6. [Project structure](#project-structure)
-7. [Architecture & design decisions](#architecture--design-decisions)
-8. [Domain model](#domain-model)
-9. [Persistence model](#persistence-model)
-10. [Routing & URL contract](#routing--url-contract)
-11. [Validation rules](#validation-rules)
-12. [Keyboard shortcuts](#keyboard-shortcuts)
-13. [Testing strategy](#testing-strategy)
-14. [Continuous integration](#continuous-integration)
-15. [Trade-offs & future work](#trade-offs--future-work)
+3. [AI-assisted workflow disclosure](#ai-assisted-workflow-disclosure)
+4. [Tech stack](#tech-stack)
+5. [Getting started](#getting-started)
+6. [Available scripts](#available-scripts)
+7. [Project structure](#project-structure)
+8. [Architecture & design decisions](#architecture--design-decisions)
+9. [Domain model](#domain-model)
+10. [Persistence model](#persistence-model)
+11. [Routing & URL contract](#routing--url-contract)
+12. [Validation rules](#validation-rules)
+13. [Keyboard shortcuts](#keyboard-shortcuts)
+14. [Testing strategy](#testing-strategy)
+15. [Continuous integration](#continuous-integration)
+16. [Trade-offs & future work](#trade-offs--future-work)
 
 ---
 
@@ -33,10 +34,10 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 - **Create / Edit / Delete** for every editable node type, with per-type editors (text payloads, attachments, business-hours grid, comment textarea).
 - **Drag-and-drop** with throttled position updates and a single undo entry per drag end. `dateTime` siblings move with their parent.
 - **Undo / Redo** via `Ctrl/Cmd+Z` and `Ctrl/Cmd+Shift+Z`, backed by a command stack. Field edits batch to blur/submit granularity so each user-visible change is a single history entry.
-- **Keyboard accessibility**: Tab cycles nodes in graph order, arrow keys move selection to graph-adjacent nodes, Enter opens the drawer, Esc closes it, `?` opens a shortcut help dialog. Connector nodes are intentionally skipped.
+- **Keyboard accessibility**: Tab and arrow keys move focus through nodes in graph order, Enter opens the drawer, Esc closes it, `?` opens a shortcut help dialog. Connector nodes are intentionally skipped.
 - **TanStack Query** for fetching and mutating `payload.json` with the exact client config required by the spec; optimistic Pinia updates plus rollback on error.
-- **Comprehensive validation** at blur and submit (title, description, attachment URL, comment length, business-hours overlap detection).
-- **Tests**: ~60 Vitest specs covering components, stores, queries, composables, and pure utilities; 8 Playwright E2E scenarios covering the golden paths across Chromium, Firefox, and WebKit.
+- **Comprehensive validation** at blur and submit (title, description, attachment uploads, comment length, business-hours overlap detection).
+- **Tests**: Vitest coverage for the custom components, stores, queries, composables, and pure utilities; 8 Playwright E2E scenarios covering the golden paths across Chromium and WebKit.
 - **Toasts, skeleton loading state, empty-state recovery**, and a tooltip-rich UI built on Shadcn Vue + Tailwind v4.
 
 ## Requirements coverage
@@ -60,6 +61,19 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 | Keyboard accessibility | `src/composables/useNodeKeyboard.ts`, `src/components/ShortcutHelpDialog.vue` |
 | CI/CD pipeline | `.github/workflows/ci.yml` (manual-dispatch — see [CI section](#continuous-integration)) |
 
+## AI-assisted workflow disclosure
+
+This take-home was built with full assistance from AI coding agents. I am being explicit about this because Respond.io shared that AI agents are already part of the team's development workflow, and I wanted this submission to reflect how I would work in that kind of environment: transparently, quickly, and with review discipline.
+
+The workflow used here was:
+
+- **Claude Code with Claude Opus 4.7, Extra High reasoning** for the main coding tasks: scaffolding features, implementing Vue components/composables/stores, writing tests, and iterating on the requirements.
+- **Codex with GPT-5.5, Extra High reasoning** for verification, code review, simplification, and optimization after the main implementation was complete.
+
+The main benefits of using agents on this project were faster iteration, broader test generation, easier exploration of edge cases, and a second-pass review loop that helped remove over-engineering. The agents were used as pair-programming and review tools, not as an unchecked autopilot.
+
+I still treated every AI-produced change as draft code. I reviewed diffs manually, did "eyeball checks" on the implementation and UI behavior, asked the agents to justify suspicious decisions, and verified the final result with the local test suite and browser smoke checks. Any remaining trade-offs in this repository are my responsibility.
+
 ## Tech stack
 
 | Layer | Choice | Why |
@@ -76,7 +90,7 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 | Misc | **VueUse**, **nanoid** | `nanoid(6)` matches the 6-char ID shape already in `payload.json`. |
 | Types | **TypeScript 6 strict** with `noUncheckedIndexedAccess` | Catches the entire class of "array index might be undefined" bugs at compile time. |
 | Test (unit) | **Vitest 4** with `jsdom`, **`@vue/test-utils`** | Required. |
-| Test (E2E) | **Playwright 1.59** across `chromium` / `firefox` / `webkit` | Required. |
+| Test (E2E) | **Playwright 1.59** across `chromium` / `webkit` | Firefox is documented in the config but disabled because the bundled browser was unstable for this app. |
 | Linting | **oxlint** + **ESLint** + **oxfmt** | oxlint catches the common stuff fast; ESLint covers the Vue-specific rules. |
 | Build | **Vite 8** with the official Tailwind v4 plugin | Required. |
 
@@ -100,9 +114,9 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. The canvas loads the seed graph from `public/payload.json`. After the first load, all subsequent reads and writes go to `localStorage` under the key `payload-v1` (see [Persistence model](#persistence-model)).
+Open <http://localhost:5173>. The canvas loads the seed graph from `public/payload.json`. Persistence is off by default, so refreshing re-reads the canonical payload. Turn on **Persist data** in the header to save node edits in `localStorage` under `payload-v1` (see [Persistence model](#persistence-model)).
 
-To reset the graph to the seed, clear that one localStorage key in DevTools and refresh:
+To reset the graph to the seed, use the **Reset** button in the header, or clear the cache in DevTools:
 
 ```js
 localStorage.removeItem('payload-v1'); location.reload();
@@ -120,7 +134,7 @@ npm run preview    # serves the production build on http://localhost:4173
 ```sh
 npm run test:unit               # Vitest, jsdom env
 npx playwright install          # once, to grab browser binaries
-npm run test:e2e                # Playwright across chromium/firefox/webkit
+npm run test:e2e                # Playwright across chromium/webkit
 npm run test:e2e -- --project=chromium       # narrow to one browser
 npm run test:e2e -- e2e/create-node.spec.ts  # narrow to one file
 ```
@@ -161,7 +175,7 @@ src/
 │   ├── flow/
 │   │   ├── FlowCanvas.vue           Vue Flow wrapper; edges derived; drag with secondary moves
 │   │   ├── AddNodeButton.vue        floating "Create Node" affordance
-│   │   ├── CreateNodeDialog.vue     three-step (type → parent → name) creation flow
+│   │   ├── CreateNodeDialog.vue     title / description / type creation flow
 │   │   └── nodes/                   one component per node type + connector
 │   ├── drawer/
 │   │   ├── NodeDetailsDrawer.vue    URL-driven Sheet
@@ -173,10 +187,9 @@ src/
 │   ├── ShortcutHelpDialog.vue       opens on '?'
 │   └── ui/                          shadcn-generated; do not hand-edit
 ├── stores/
-│   ├── flow.ts                      live canvas state (nodes, positions, selection)
+│   ├── flow.ts                      live canvas state (nodes, positions, create dialog)
 │   ├── history.ts                   undo/redo command stack
-│   ├── attachments.ts               local object-URL cache for uploaded files
-│   └── settings.ts                  persistence-on/off toggle
+│   └── attachments.ts               in-memory file cache for uploaded files
 ├── queries/
 │   ├── client.ts                    QueryClient with the spec-mandated config
 │   └── nodes.ts                     useNodesQuery + create/update/delete/move mutations
@@ -186,7 +199,7 @@ src/
 │   └── useFlowHistory.ts            Ctrl+Z / Ctrl+Shift+Z bindings
 └── lib/
     ├── types.ts                     FlowNode union, NodeType, Day, NodeId
-    ├── validators.ts                title/url/time-range/business-hours/comment
+    ├── validators.ts                title/description/attachment/business-hours/comment
     ├── node-factory.ts              createNode(type, parentId, partialData)
     ├── payload-adapter.ts           the only module that touches storage
     ├── layout.ts                    top-down tree layout for first render
@@ -216,7 +229,7 @@ Tests sit alongside the code they cover under `__tests__/` folders, mirroring th
    Component ◄── useFlowStore().nodes (reactive)
 ```
 
-- **`stores/flow.ts`** is the live truth that the canvas binds to. Components never write to it directly.
+- **`stores/flow.ts`** is the live truth that the canvas binds to. Components route create/edit/delete/move operations through query mutations instead of patching node data directly.
 - **`queries/nodes.ts`** holds the mutations. `onMutate` patches the store optimistically and pushes a history entry; `mutationFn` persists; `onError` rolls back through the same history entry.
 - **`lib/payload-adapter.ts`** is the only module that talks to storage. Swapping the adapter for a real HTTP backend is a one-file change.
 - **`stores/history.ts`** is a plain command stack with `undo`/`redo`/`canUndo`/`canRedo` and a depth cap. It is invoked by `useFlowHistory` (keyboard) and by mutations (each mutation registers its own undo/redo pair).
@@ -240,7 +253,7 @@ This makes every drawer state shareable and back-button-friendly with no extra w
 
 | Decision | Choice | Reason |
 | --- | --- | --- |
-| Persistence | `localStorage` write-through under `payload-v1` | The spec says "data fetching and mutation updates involving payload.json" without prescribing a backend. The static file is served by Vite at `/payload.json` for the initial seed; mutations stay client-side. The adapter is a clean swap point. |
+| Persistence | Optional `localStorage` cache under `payload-v1` | The spec says "data fetching and mutation updates involving payload.json" without prescribing a backend. The static file is served by Vite at `/payload.json` for the initial seed; mutations stay client-side when persistence is enabled. The adapter is a clean swap point. |
 | Trigger node | Locked: not deletable, not in Create Node | A flow needs exactly one trigger; the spec never says otherwise. The trigger's drawer is read-only. |
 | Edge style | `smoothstep` everywhere | Looks like an org chart, which makes the `dateTime → success/failure → next-action` branching legible at a glance. |
 
@@ -279,10 +292,10 @@ The discriminated union flows through every layer — components, stores, valida
 
 ## Persistence model
 
-- **First load:** `payload-adapter.loadNodes()` reads `localStorage['payload-v1']`. If absent, it fetches `/payload.json` (served by Vite from `public/`), seeds localStorage, and returns the nodes.
-- **All mutations:** write the full node list back to `localStorage['payload-v1']`. The TanStack mutation's `mutationFn` calls `saveNodes(store.nodes)` after the optimistic Pinia patch.
-- **Resetting:** clear the key (`localStorage.removeItem('payload-v1')`) and refresh, or use the **"Reset to default payload"** button that appears on the empty state.
-- **E2E reset:** every Playwright spec calls a helper in `beforeEach` that wipes the key so tests are independent.
+- **Default mode:** `payload-adapter.loadNodes()` fetches `/payload.json` on every refresh. This keeps the take-home easy to review because a reload always returns to the canonical seed.
+- **Persist data mode:** when the header switch is on, `loadNodes()` reads `localStorage['payload-v1']` first, and node mutations write the full node list back through `saveNodes(store.nodes)`.
+- **Resetting:** the header **Reset** button clears cached nodes, re-fetches `/payload.json`, clears undo history, and recomputes layout.
+- **E2E setup:** Playwright enables the persistence flag per test so create/edit/delete scenarios can assert reload behavior inside an isolated browser context.
 
 Why localStorage and not a real backend: the spec is explicit about TanStack Query but ambiguous about where mutations land. Going through a single `payload-adapter` module means swapping to a real backend is a one-file change — the rest of the app already speaks "send a list of nodes to be saved."
 
@@ -303,7 +316,7 @@ Implemented in `src/lib/validators.ts`. Every input field validates on **blur** 
 | --- | --- |
 | Title / name | Required, 1–80 chars |
 | Description / comment | ≤ 1000 chars (comment), ≤ 500 chars (description) |
-| Attachment URL | Must parse via `new URL()` |
+| Attachment upload | At least one uploaded file is required for an attachment row |
 | Business-hours row | `endTime > startTime` |
 | Business-hours rows within a day | May repeat the day, but rows must not overlap |
 
@@ -314,7 +327,7 @@ Press `?` in the app to see this list at any time.
 | Shortcut | Action |
 | --- | --- |
 | `Tab` / `Shift+Tab` | Cycle focus through nodes in graph order (connectors skipped) |
-| `Arrow keys` | Move selection to the nearest graph-adjacent node |
+| `Arrow keys` | Move focus through nodes in graph order |
 | `Enter` | Open the details drawer for the focused node |
 | `Esc` | Close the drawer |
 | `Ctrl+Z` / `Cmd+Z` | Undo |
@@ -329,17 +342,17 @@ The spec calls out tests as a gate, not an afterthought. Two layers:
 
 ### Unit (Vitest, jsdom)
 
-Located next to the code they cover under `__tests__/`. Every file in `src/components/`, `src/composables/`, `src/lib/`, `src/stores/`, and `src/queries/` has a sibling spec. Coverage is behavior-focused:
+Located next to the code they cover under `__tests__/`. Custom components, composables, stores, queries, and pure utilities have behavior-focused specs; generated Shadcn UI wrappers are treated as vendor code.
 
-- **Lib** (`validators`, `node-factory`, `payload-adapter`, `layout`, `format`) — pure-function coverage, including overlap edge cases for business hours and the localStorage-miss-then-fetch path for the adapter.
+- **Lib** (`validators`, `node-factory`, `payload-adapter`, `layout`, `format`) — pure-function coverage, including overlap edge cases for business hours and the persistence-on/off paths for the adapter.
 - **Stores** (`flow`, `history`) — state transitions, cascade deletion of subtrees + connectors, history depth cap, full undo/redo round-trips.
 - **Queries** (`nodes`) — optimistic Pinia patch, rollback on error, history entry registration, secondary moves on `useMoveNode`.
-- **Composables** (`useNodeEdges`, `useNodeKeyboard`, `useFlowHistory`) — edge derivation, Tab order, arrow-key adjacency math, modifier-key detection.
+- **Composables** (`useNodeEdges`, `useNodeKeyboard`, `useFlowHistory`) — edge derivation, keyboard traversal, drawer shortcuts, and modifier-key detection.
 - **Components** — render with seeded props, validation triggers, submit-disabled behavior, that connectors don't emit click navigation, that the trigger drawer is read-only.
 
 Run with `npm run test:unit`.
 
-### E2E (Playwright across Chromium / Firefox / WebKit)
+### E2E (Playwright across Chromium / WebKit)
 
 One spec per scenario in [CLAUDE.md §8.7](CLAUDE.md):
 
@@ -347,14 +360,14 @@ One spec per scenario in [CLAUDE.md §8.7](CLAUDE.md):
 - `create-node.spec.ts` — open dialog, create each editable type, persists after refresh.
 - `edit-node.spec.ts` — navigate to `/node/:id` directly, edit, save, value sticks.
 - `delete-node.spec.ts` — delete with cascade; trigger has no Delete button.
-- `drag-node.spec.ts` — drag persists; single undo reverts.
+- `drag-node.spec.ts` — drag moves the node in-session; single undo reverts.
 - `undo-redo.spec.ts` — create → undo → redo on every editable type.
 - `deep-link.spec.ts` — `/node/:id` opens drawer; connector/unknown ids redirect with toast.
 - `keyboard-nav.spec.ts` — Tab, Arrows, Enter, Esc, `?`; connectors skipped.
 
-Every spec resets `localStorage` in `beforeEach` so they're independent. Local runs use the Vite dev server; CI builds first and runs against the preview server (see `playwright.config.ts`).
+Every spec starts in a fresh browser context and enables the persistence flag in `beforeEach`. Local runs use the Vite dev server; CI builds first and runs against the preview server (see `playwright.config.ts`).
 
-Run with `npm run test:e2e` (after `npx playwright install` once to grab browser binaries).
+Run with `npm run test:e2e` (after `npx playwright install` once to grab browser binaries). Firefox is left commented in `playwright.config.ts` with the reason, but it is not part of the default gate.
 
 ## Continuous integration
 
@@ -369,7 +382,7 @@ GitHub Actions workflow at [.github/workflows/ci.yml](.github/workflows/ci.yml) 
 7. `npm run test:e2e`
 8. Upload the Playwright HTML report on failure.
 
-> **Trigger:** the workflow is currently `workflow_dispatch` only (manually triggered from the GitHub Actions UI). The auto-trigger on `push` / `pull_request` was disabled in commit `34c5aad` to avoid burning CI minutes during the take-home review window — uncomment the two lines at the top of `ci.yml` to re-enable PR/main CI. All seven steps are wired and have been validated on a manual run.
+> **Trigger:** the workflow is currently `workflow_dispatch` only (manually triggered from the GitHub Actions UI). The auto-trigger on `push` / `pull_request` was disabled in commit `34c5aad` to avoid burning CI minutes during the take-home review window — uncomment the two lines at the top of `ci.yml` to re-enable PR/main CI. The gate steps are wired and have been validated on a manual run.
 
 ## Trade-offs & future work
 
@@ -379,8 +392,8 @@ A few places where I made a deliberate trade-off rather than reach for a heavier
 - **Trigger node is locked.** A workflow needs exactly one trigger; making it deletable would require a "no-trigger" empty state that the spec doesn't describe. Easy to relax later.
 - **Edge routing is `smoothstep` everywhere.** Vue Flow's `bezier` looks fine too — `smoothstep` was chosen because the `dateTime → success/failure → next-action` shape reads more like an org chart that way.
 - **History is field-level, not keystroke-level.** Per-keystroke undo would conflict with the browser's native in-field undo and explode the history stack. Blur/submit granularity is what users expect for form fields.
-- **Auto-layout runs once, on first hydrate.** After that, positions are persisted alongside nodes. A future enhancement would be a "re-layout" button.
-- **Attachments are stored as URLs** in the payload; uploaded files are kept in an in-memory object-URL store (`stores/attachments.ts`) and would need real upload infrastructure to be production-ready.
+- **Auto-layout fills missing positions.** Dragged positions live in Pinia for the current session; a future enhancement would persist layout or add a "re-layout" button.
+- **Attachments are client-side only.** The payload stores filenames, while uploaded `File` objects live in the in-memory `stores/attachments.ts` map and would need real upload infrastructure to be production-ready.
 
 ---
 

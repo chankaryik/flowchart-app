@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useQueryClient } from "@tanstack/vue-query";
 import { useStorage } from "@vueuse/core";
-import { Keyboard, RotateCcw } from "lucide-vue-next";
+import { AlertTriangle, Keyboard, RefreshCw, RotateCcw, Sparkles } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
@@ -20,7 +20,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useFlowHistory } from "@/composables/useFlowHistory";
 import { useNodeKeyboard } from "@/composables/useNodeKeyboard";
@@ -53,6 +55,7 @@ const query = useNodesQuery();
 const resetConfirmOpen = ref(false);
 const helpOpen = ref(false);
 const resetting = ref(false);
+const seeding = ref(false);
 
 const createDialogOpen = computed({
   get: () => store.createDialog.open,
@@ -75,6 +78,12 @@ const drawerNodeId = computed(() => {
   const value = Array.isArray(raw) ? raw[0] : raw;
   return value == null || value === "" ? null : value;
 });
+
+const showLoading = computed(() => query.isPending.value && store.nodes.length === 0);
+const showError = computed(() => query.isError.value && store.nodes.length === 0);
+const showEmpty = computed(
+  () => !query.isPending.value && !query.isError.value && store.nodes.length === 0,
+);
 
 // Post-hydration guard. The router's beforeEnter handles the case when
 // localStorage is already seeded; this watcher catches first-visit deep
@@ -113,8 +122,7 @@ function onPersistToggle(next: boolean): void {
   }
 }
 
-async function onConfirmReset(): Promise<void> {
-  resetting.value = true;
+async function restoreDefaultPayload(successMessage: string): Promise<boolean> {
   try {
     const seed = await resetNodes();
     store.hydrate(seed);
@@ -127,11 +135,40 @@ async function onConfirmReset(): Promise<void> {
     if (drawerNodeId.value != null) {
       void router.push("/");
     }
-    toast.success("Flow chart reset");
+    toast.success(successMessage);
+    return true;
   } catch (error) {
     toast.error("Reset failed", {
       description: error instanceof Error ? error.message : undefined,
     });
+    return false;
+  }
+}
+
+async function onRetry(): Promise<void> {
+  try {
+    await query.refetch();
+    toast.success("Reloaded");
+  } catch (error) {
+    toast.error("Reload failed", {
+      description: error instanceof Error ? error.message : undefined,
+    });
+  }
+}
+
+async function onSeedDefault(): Promise<void> {
+  seeding.value = true;
+  try {
+    await restoreDefaultPayload("Default payload restored");
+  } finally {
+    seeding.value = false;
+  }
+}
+
+async function onConfirmReset(): Promise<void> {
+  resetting.value = true;
+  try {
+    await restoreDefaultPayload("Flow chart reset");
   } finally {
     resetting.value = false;
     resetConfirmOpen.value = false;
@@ -202,6 +239,74 @@ async function onConfirmReset(): Promise<void> {
     <main class="relative flex-1 overflow-hidden">
       <FlowCanvas class="absolute inset-0" />
       <NodeDetailsDrawer />
+
+      <div
+        v-if="showLoading"
+        class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-50/80 backdrop-blur-sm"
+        data-testid="canvas-loading"
+        role="status"
+        aria-live="polite"
+      >
+        <div class="flex w-72 flex-col gap-3 rounded-lg border border-border bg-white p-4 shadow-sm">
+          <Skeleton class="h-4 w-24" />
+          <Skeleton class="h-16 w-full" />
+          <Skeleton class="h-16 w-full" />
+          <Skeleton class="h-4 w-32" />
+        </div>
+        <p class="text-xs text-muted-foreground">Loading flow chart…</p>
+      </div>
+
+      <div
+        v-else-if="showError"
+        class="absolute inset-0 z-10 flex items-center justify-center bg-slate-50/90 backdrop-blur-sm"
+        data-testid="canvas-error"
+        role="alert"
+      >
+        <div class="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-white p-6 text-center shadow-sm">
+          <AlertTriangle class="size-6 text-destructive" aria-hidden="true" />
+          <div>
+            <p class="text-sm font-semibold">Could not load the flow chart</p>
+            <p class="mt-1 text-xs text-muted-foreground">
+              {{ query.error.value instanceof Error ? query.error.value.message : 'The payload failed to load.' }}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            :disabled="query.isFetching.value"
+            data-testid="canvas-retry"
+            @click="onRetry"
+          >
+            <RefreshCw class="size-3" />
+            {{ query.isFetching.value ? "Retrying…" : "Retry" }}
+          </Button>
+        </div>
+      </div>
+
+      <div
+        v-else-if="showEmpty"
+        class="absolute inset-0 z-10 flex items-center justify-center bg-slate-50/90"
+        data-testid="canvas-empty"
+      >
+        <div class="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-border bg-white p-6 text-center shadow-sm">
+          <Sparkles class="size-6 text-muted-foreground" aria-hidden="true" />
+          <div>
+            <p class="text-sm font-semibold">The canvas is empty</p>
+            <p class="mt-1 text-xs text-muted-foreground">
+              Restore the original payload to bring back the seed flow chart.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            :disabled="seeding"
+            data-testid="canvas-seed-default"
+            @click="onSeedDefault"
+          >
+            {{ seeding ? "Restoring…" : "Reset to default payload" }}
+          </Button>
+        </div>
+      </div>
     </main>
     <CreateNodeDialog v-model:open="createDialogOpen" />
     <ShortcutHelpDialog v-model:open="helpOpen" />
