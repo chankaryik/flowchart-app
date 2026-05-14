@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useQueryClient } from '@tanstack/vue-query'
-import { Keyboard, RotateCcw } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
+import { useQueryClient } from "@tanstack/vue-query";
+import { Keyboard, RotateCcw } from "lucide-vue-next";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 
-import NodeDetailsDrawer from '@/components/drawer/NodeDetailsDrawer.vue'
-import CreateNodeDialog from '@/components/flow/CreateNodeDialog.vue'
-import FlowCanvas from '@/components/flow/FlowCanvas.vue'
-import ShortcutHelpDialog from '@/components/ShortcutHelpDialog.vue'
+import NodeDetailsDrawer from "@/components/drawer/NodeDetailsDrawer.vue";
+import CreateNodeDialog from "@/components/flow/CreateNodeDialog.vue";
+import FlowCanvas from "@/components/flow/FlowCanvas.vue";
+import ShortcutHelpDialog from "@/components/ShortcutHelpDialog.vue";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,52 +18,52 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { useFlowHistory } from '@/composables/useFlowHistory'
-import { useNodeKeyboard } from '@/composables/useNodeKeyboard'
-import { usePersistFlag } from '@/composables/usePersistFlag'
-import { clearCachedNodes, resetNodes, saveNodes } from '@/lib/payload-adapter'
-import { useNodesQuery } from '@/queries/nodes'
-import { NODES_QUERY_KEY } from '@/queries/client'
-import { useFlowStore } from '@/stores/flow'
-import { useHistoryStore } from '@/stores/history'
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useFlowHistory } from "@/composables/useFlowHistory";
+import { useNodeKeyboard } from "@/composables/useNodeKeyboard";
+import { usePersistFlag } from "@/composables/usePersistFlag";
+import { clearCachedNodes, resetNodes, saveNodes } from "@/lib/payload-adapter";
+import { useNodesQuery } from "@/queries/nodes";
+import { NODES_QUERY_KEY } from "@/queries/client";
+import { useFlowStore } from "@/stores/flow";
+import { useHistoryStore } from "@/stores/history";
 
-const route = useRoute()
-const router = useRouter()
-const store = useFlowStore()
-const history = useHistoryStore()
-const persistEnabled = usePersistFlag()
-const queryClient = useQueryClient()
+const route = useRoute();
+const router = useRouter();
+const store = useFlowStore();
+const history = useHistoryStore();
+const persistEnabled = usePersistFlag();
+const queryClient = useQueryClient();
 
-const query = useNodesQuery()
-const resetConfirmOpen = ref(false)
-const persistOffConfirmOpen = ref(false)
-const helpOpen = ref(false)
-const resetting = ref(false)
+const query = useNodesQuery();
+const resetConfirmOpen = ref(false);
+const persistOffConfirmOpen = ref(false);
+const helpOpen = ref(false);
+const resetting = ref(false);
 
 const createDialogOpen = computed({
   get: () => store.createDialog.open,
   set: (next) => {
-    if (next) store.openCreateDialog()
-    else store.closeCreateDialog()
+    if (next) store.openCreateDialog();
+    else store.closeCreateDialog();
   },
-})
+});
 
-useFlowHistory()
+useFlowHistory();
 useNodeKeyboard({
   onHelp: () => {
-    helpOpen.value = true
+    helpOpen.value = true;
   },
-})
+});
 
 const drawerNodeId = computed(() => {
-  const raw = route.params.id
-  if (raw == null) return null
-  const value = Array.isArray(raw) ? raw[0] : raw
-  return value == null || value === '' ? null : value
-})
+  const raw = route.params.id;
+  if (raw == null) return null;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value == null || value === "" ? null : value;
+});
 
 // Post-hydration guard. The router's beforeEnter handles the case when
 // localStorage is already seeded; this watcher catches first-visit deep
@@ -73,75 +73,75 @@ const drawerNodeId = computed(() => {
 watch(
   [drawerNodeId, () => store.nodes.length],
   ([id, count]) => {
-    if (id == null) return
-    if (count === 0) return
-    const node = store.getNodeById(id)
+    if (id == null) return;
+    if (count === 0) return;
+    const node = store.getNodeById(id);
     if (node == null) {
-      toast.warning(`Node "${id}" not found`)
-      void router.replace('/')
-      return
+      toast.warning(`Node "${id}" not found`);
+      void router.replace("/");
+      return;
     }
-    if (node.type === 'dateTimeConnector') {
-      toast.info('Connectors are display-only')
-      void router.replace('/')
+    if (node.type === "dateTimeConnector") {
+      toast.info("Connectors are display-only");
+      void router.replace("/");
     }
   },
   { immediate: true },
-)
+);
 
 function onPersistToggle(next: boolean): void {
   if (next) {
-    persistEnabled.value = true
+    persistEnabled.value = true;
     // Persist the current in-memory state immediately so the user sees the
     // setting take effect without needing to make a change first.
-    void saveNodes([...store.nodes])
-    toast.success('Data will be saved across refreshes')
+    void saveNodes([...store.nodes]);
+    toast.success("Data will be saved across refreshes");
   } else {
     // Confirm before destroying the cached state.
-    persistOffConfirmOpen.value = true
+    persistOffConfirmOpen.value = true;
   }
 }
 
 function onConfirmPersistOff(): void {
-  persistEnabled.value = false
-  clearCachedNodes()
-  persistOffConfirmOpen.value = false
-  toast.success('Saved data cleared; a refresh will reset everything')
+  persistEnabled.value = false;
+  clearCachedNodes();
+  persistOffConfirmOpen.value = false;
+  toast.success("Saved data cleared; a refresh will reset everything");
 }
 
 function onCancelPersistOff(): void {
-  persistOffConfirmOpen.value = false
+  persistOffConfirmOpen.value = false;
 }
 
 async function onConfirmReset(): Promise<void> {
-  resetting.value = true
+  resetting.value = true;
   try {
-    const seed = await resetNodes()
-    store.hydrate(seed)
+    const seed = await resetNodes();
+    store.hydrate(seed);
     // Drop the layout cache so the watchEffect in FlowCanvas re-computes from
     // the canonical tree — otherwise nodes the user dragged stay where they
     // were instead of snapping back to the original layout.
-    store.clearPositions()
-    history.clear()
-    queryClient.setQueryData(NODES_QUERY_KEY, seed)
+    store.clearPositions();
+    history.clear();
+    queryClient.setQueryData(NODES_QUERY_KEY, seed);
     if (drawerNodeId.value != null) {
-      void router.push('/')
+      void router.push("/");
     }
-    toast.success('Flow chart reset')
+    toast.success("Flow chart reset");
   } catch (error) {
-    toast.error('Reset failed', { description: error instanceof Error ? error.message : undefined })
+    toast.error("Reset failed", {
+      description: error instanceof Error ? error.message : undefined,
+    });
   } finally {
-    resetting.value = false
-    resetConfirmOpen.value = false
+    resetting.value = false;
+    resetConfirmOpen.value = false;
   }
 }
 </script>
 
 <template>
   <div class="flex h-screen flex-col bg-slate-50 text-slate-900">
-    <header
-      class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3"
-    >
+    <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
       <div class="flex items-baseline gap-3">
         <h1 class="text-base font-semibold tracking-tight">Flow Chart</h1>
         <span v-if="query.isPending.value" class="text-xs text-slate-500">Loading…</span>
@@ -194,7 +194,7 @@ async function onConfirmReset(): Promise<void> {
           data-testid="create-node-button"
           @click="store.openCreateDialog()"
         >
-          + Create Node
+          + Create New Node
         </button>
       </div>
     </header>
@@ -211,8 +211,8 @@ async function onConfirmReset(): Promise<void> {
         <AlertDialogHeader>
           <AlertDialogTitle>Reset the flow chart?</AlertDialogTitle>
           <AlertDialogDescription>
-            This discards every change you have made and restores the original payload.json.
-            Undo history is cleared and cannot be recovered.
+            This discards every change you have made and restores the original payload.json. Undo
+            history is cleared and cannot be recovered.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -224,7 +224,7 @@ async function onConfirmReset(): Promise<void> {
             :disabled="resetting"
             @click="onConfirmReset"
           >
-            {{ resetting ? 'Resetting…' : 'Reset' }}
+            {{ resetting ? "Resetting…" : "Reset" }}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -235,8 +235,8 @@ async function onConfirmReset(): Promise<void> {
         <AlertDialogHeader>
           <AlertDialogTitle>Turn off data persistence?</AlertDialogTitle>
           <AlertDialogDescription>
-            Disabling this setting clears any saved canvas state from this browser. After a
-            refresh the canvas will reset to the original payload.json. Continue?
+            Disabling this setting clears any saved canvas state from this browser. After a refresh
+            the canvas will reset to the original payload.json. Continue?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

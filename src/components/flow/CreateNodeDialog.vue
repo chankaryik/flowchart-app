@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/valibot'
-import { useForm } from 'vee-validate'
-import * as v from 'valibot'
-import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
+import { toTypedSchema } from "@vee-validate/valibot";
+import { useForm } from "vee-validate";
+import * as v from "valibot";
+import { computed, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,221 +14,220 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { humanizeKey } from '@/lib/format'
-import { H_GAP, NODE_HEIGHT, NODE_WIDTH, V_GAP } from '@/lib/layout'
-import { createNode } from '@/lib/node-factory'
-import type { EditableNodeType, FlowNode, NodeId } from '@/lib/types'
-import { titleSchema } from '@/lib/validators'
-import { useCreateNode } from '@/queries/nodes'
-import { nodeKey, type Position, useFlowStore } from '@/stores/flow'
+} from "@/components/ui/select";
+import { humanizeKey } from "@/lib/format";
+import { H_GAP, NODE_HEIGHT, NODE_WIDTH, V_GAP } from "@/lib/layout";
+import { createNode } from "@/lib/node-factory";
+import type { EditableNodeType, FlowNode, NodeId } from "@/lib/types";
+import { titleSchema } from "@/lib/validators";
+import { useCreateNode } from "@/queries/nodes";
+import { nodeKey, type Position, useFlowStore } from "@/stores/flow";
 
 // Trigger and dateTimeConnector are excluded from the type list:
 // trigger is locked (Day-0 decision), connectors are display-only (CLAUDE.md §8.1).
 const TYPE_OPTIONS: { value: EditableNodeType; label: string; hint: string }[] = [
-  { value: 'sendMessage', label: 'Send Message', hint: 'Reply with text or attachments.' },
-  { value: 'dateTime', label: 'Date / Time', hint: 'Branch on business hours.' },
-  { value: 'addComment', label: 'Comment', hint: 'Add an internal note.' },
-]
+  { value: "sendMessage", label: "Send Message", hint: "Reply with text or attachments." },
+  { value: "dateTime", label: "Date / Time", hint: "Branch on business hours." },
+  { value: "addComment", label: "Comment", hint: "Add an internal note." },
+];
 
-const props = defineProps<{ open: boolean }>()
-const emit = defineEmits<{ (e: 'update:open', value: boolean): void }>()
+const props = defineProps<{ open: boolean }>();
+const emit = defineEmits<{ (e: "update:open", value: boolean): void }>();
 
-const router = useRouter()
-const store = useFlowStore()
-const mutation = useCreateNode()
+const router = useRouter();
+const store = useFlowStore();
+const mutation = useCreateNode();
 
-type Step = 'type' | 'parent' | 'details'
+type Step = "type" | "parent" | "details";
 
-const step = ref<Step>('type')
-const type = ref<EditableNodeType | null>(null)
-const parentKey = ref<string | null>(null)
+const step = ref<Step>("type");
+const type = ref<EditableNodeType | null>(null);
+const parentKey = ref<string | null>(null);
 
-const formSchema = toTypedSchema(v.object({ name: titleSchema }))
+const formSchema = toTypedSchema(v.object({ name: titleSchema }));
 
 const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
   validationSchema: formSchema,
-  initialValues: { name: '' },
-})
+  initialValues: { name: "" },
+});
 
-const [name, nameProps] = defineField('name', { validateOnBlur: true })
+const [name, nameProps] = defineField("name", { validateOnBlur: true });
 
 // When the dialog was opened from a node's plus button, parentId is preset
 // and the parent step is skipped (type -> details). When opened from the
-// header "Create Node" button, parentId is null and the full picker runs.
+// header "Create New Node" button, parentId is null and the full picker runs.
 const presetParent = computed<FlowNode | null>(() => {
-  const id = store.createDialog.parentId
-  if (id == null) return null
-  return store.getNodeById(id) ?? null
-})
+  const id = store.createDialog.parentId;
+  if (id == null) return null;
+  return store.getNodeById(id) ?? null;
+});
 
 watch(
   () => props.open,
   (next) => {
-    if (!next) return
-    step.value = 'type'
-    type.value = null
-    parentKey.value = presetParent.value != null ? nodeKey(presetParent.value.id) : null
-    resetForm({ values: { name: '' } })
+    if (!next) return;
+    step.value = "type";
+    type.value = null;
+    parentKey.value = presetParent.value != null ? nodeKey(presetParent.value.id) : null;
+    resetForm({ values: { name: "" } });
   },
-)
+);
 
 const parentOptions = computed(() =>
   store.nodes.map((n) => ({
     key: nodeKey(n.id),
     id: n.id,
-    label: 'name' in n ? n.name : `Trigger #${n.id}`,
+    label: "name" in n ? n.name : `Trigger #${n.id}`,
     type: n.type,
   })),
-)
+);
 
 const selectedParent = computed<FlowNode | null>(() => {
-  if (presetParent.value != null) return presetParent.value
-  const key = parentKey.value
-  if (key == null) return null
-  return store.nodes.find((n) => nodeKey(n.id) === key) ?? null
-})
+  if (presetParent.value != null) return presetParent.value;
+  const key = parentKey.value;
+  if (key == null) return null;
+  return store.nodes.find((n) => nodeKey(n.id) === key) ?? null;
+});
 
 const parentLabel = computed(() => {
-  const parent = selectedParent.value
-  if (parent == null) return null
-  return 'name' in parent ? parent.name : `Trigger #${parent.id}`
-})
+  const parent = selectedParent.value;
+  if (parent == null) return null;
+  return "name" in parent ? parent.name : `Trigger #${parent.id}`;
+});
 
 function defaultName(t: EditableNodeType): string {
   switch (t) {
-    case 'sendMessage':
-      return 'Send Message'
-    case 'addComment':
-      return 'Add Comment'
-    case 'dateTime':
-      return 'Business Hours'
+    case "sendMessage":
+      return "Send Message";
+    case "addComment":
+      return "Add Comment";
+    case "dateTime":
+      return "Business Hours";
   }
 }
 
 function setOpen(open: boolean): void {
-  emit('update:open', open)
+  emit("update:open", open);
 }
 
 function selectType(t: EditableNodeType): void {
-  type.value = t
+  type.value = t;
 }
 
 function goNext(): void {
-  if (step.value === 'type') {
-    if (type.value == null) return
+  if (step.value === "type") {
+    if (type.value == null) return;
     if (presetParent.value != null) {
-      resetForm({ values: { name: defaultName(type.value) } })
-      step.value = 'details'
-      return
+      resetForm({ values: { name: defaultName(type.value) } });
+      step.value = "details";
+      return;
     }
-    step.value = 'parent'
-  } else if (step.value === 'parent') {
-    if (parentKey.value == null || type.value == null) return
-    resetForm({ values: { name: defaultName(type.value) } })
-    step.value = 'details'
+    step.value = "parent";
+  } else if (step.value === "parent") {
+    if (parentKey.value == null || type.value == null) return;
+    resetForm({ values: { name: defaultName(type.value) } });
+    step.value = "details";
   }
 }
 
 function goBack(): void {
-  if (step.value === 'details') {
+  if (step.value === "details") {
     // Preset parent: skip back over the (hidden) parent step too.
-    step.value = presetParent.value != null ? 'type' : 'parent'
-  } else if (step.value === 'parent') step.value = 'type'
+    step.value = presetParent.value != null ? "type" : "parent";
+  } else if (step.value === "parent") step.value = "type";
 }
 
-function computePositions(
-  newNodes: FlowNode[],
-  parentId: NodeId,
-): Record<string, Position> {
-  const parentPos = store.positions[nodeKey(parentId)] ?? { x: 0, y: 0 }
-  const result: Record<string, Position> = {}
+function computePositions(newNodes: FlowNode[], parentId: NodeId): Record<string, Position> {
+  const parentPos = store.positions[nodeKey(parentId)] ?? { x: 0, y: 0 };
+  const result: Record<string, Position> = {};
   if (newNodes.length === 1) {
-    const first = newNodes[0]
-    if (first == null) return result
+    const first = newNodes[0];
+    if (first == null) return result;
     // Stagger horizontally based on existing children count so siblings don't overlap.
-    const siblings = store.getChildren(parentId).length
+    const siblings = store.getChildren(parentId).length;
     result[nodeKey(first.id)] = {
       x: parentPos.x + siblings * (NODE_WIDTH + H_GAP),
       y: parentPos.y + NODE_HEIGHT + V_GAP,
-    }
-    return result
+    };
+    return result;
   }
-  const [dt, success, failure] = newNodes
-  if (dt == null || success == null || failure == null) return result
-  const dtY = parentPos.y + NODE_HEIGHT + V_GAP
-  const connectorY = dtY + NODE_HEIGHT + V_GAP
-  result[nodeKey(dt.id)] = { x: parentPos.x, y: dtY }
+  const [dt, success, failure] = newNodes;
+  if (dt == null || success == null || failure == null) return result;
+  const dtY = parentPos.y + NODE_HEIGHT + V_GAP;
+  const connectorY = dtY + NODE_HEIGHT + V_GAP;
+  result[nodeKey(dt.id)] = { x: parentPos.x, y: dtY };
   result[nodeKey(success.id)] = {
     x: parentPos.x - (NODE_WIDTH + H_GAP) / 2,
     y: connectorY,
-  }
+  };
   result[nodeKey(failure.id)] = {
     x: parentPos.x + (NODE_WIDTH + H_GAP) / 2,
     y: connectorY,
-  }
-  return result
+  };
+  return result;
 }
 
 const onSubmit = handleSubmit(async (values) => {
-  const t = type.value
-  const parent = selectedParent.value
-  if (t == null || parent == null) return
+  const t = type.value;
+  const parent = selectedParent.value;
+  if (t == null || parent == null) return;
 
-  const trimmedName = values.name.trim()
-  let nodes: FlowNode[]
-  let primaryId: NodeId
+  const trimmedName = values.name.trim();
+  let nodes: FlowNode[];
+  let primaryId: NodeId;
 
-  if (t === 'dateTime') {
-    const created = createNode('dateTime', parent.id, { name: trimmedName })
-    nodes = [created.dateTime, created.connectors[0], created.connectors[1]]
-    primaryId = created.dateTime.id
-  } else if (t === 'sendMessage') {
-    const created = createNode('sendMessage', parent.id, { name: trimmedName })
-    nodes = [created]
-    primaryId = created.id
+  if (t === "dateTime") {
+    const created = createNode("dateTime", parent.id, { name: trimmedName });
+    nodes = [created.dateTime, created.connectors[0], created.connectors[1]];
+    primaryId = created.dateTime.id;
+  } else if (t === "sendMessage") {
+    const created = createNode("sendMessage", parent.id, { name: trimmedName });
+    nodes = [created];
+    primaryId = created.id;
   } else {
-    const created = createNode('addComment', parent.id, { name: trimmedName })
-    nodes = [created]
-    primaryId = created.id
+    const created = createNode("addComment", parent.id, { name: trimmedName });
+    nodes = [created];
+    primaryId = created.id;
   }
 
-  const positions = computePositions(nodes, parent.id)
+  const positions = computePositions(nodes, parent.id);
 
   try {
-    await mutation.mutateAsync({ nodes, positions, label: `Create ${t}` })
+    await mutation.mutateAsync({ nodes, positions, label: `Create ${t}` });
   } catch {
-    return
+    return;
   }
 
-  setOpen(false)
-  toast.success(`${defaultName(t)} created`)
-  void router.push(`/node/${primaryId}`)
-})
+  setOpen(false);
+  toast.success(`${defaultName(t)} created`);
+  void router.push(`/node/${primaryId}`);
+});
 </script>
 
 <template>
   <Dialog :open="open" @update:open="setOpen">
     <DialogContent data-testid="create-node-dialog" class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle>Create node</DialogTitle>
+        <DialogTitle>Create New Node</DialogTitle>
         <DialogDescription>
           <template v-if="step === 'type' && parentLabel != null">
-            Pick a node type to add under <strong>{{ parentLabel }}</strong>.
+            Pick a node type to add under <strong>{{ parentLabel }}</strong
+            >.
           </template>
           <template v-else-if="step === 'type'">Pick a node type to add to the canvas.</template>
           <template v-else-if="step === 'parent'">Choose where this node should attach.</template>
           <template v-else-if="parentLabel != null">
-            Name the new node. It will attach under <strong>{{ parentLabel }}</strong>.
+            Name the new node. It will attach under <strong>{{ parentLabel }}</strong
+            >.
           </template>
           <template v-else>Confirm the new node&rsquo;s name.</template>
         </DialogDescription>
@@ -279,9 +278,7 @@ const onSubmit = handleSubmit(async (values) => {
           <p v-if="errors.name" class="text-xs text-destructive" data-testid="name-error">
             {{ errors.name }}
           </p>
-          <p v-else class="text-xs text-muted-foreground">
-            You can edit details after creating.
-          </p>
+          <p v-else class="text-xs text-muted-foreground">You can edit details after creating.</p>
         </div>
 
         <DialogFooter class="flex items-center justify-between gap-2 sm:justify-between">
@@ -302,8 +299,7 @@ const onSubmit = handleSubmit(async (values) => {
               v-if="step !== 'details'"
               type="button"
               :disabled="
-                (step === 'type' && type == null) ||
-                (step === 'parent' && parentKey == null)
+                (step === 'type' && type == null) || (step === 'parent' && parentKey == null)
               "
               data-testid="create-next"
               @click="goNext"
@@ -316,7 +312,7 @@ const onSubmit = handleSubmit(async (values) => {
               :disabled="!meta.valid || mutation.isPending.value"
               data-testid="create-submit"
             >
-              {{ mutation.isPending.value ? 'Creating…' : 'Create' }}
+              {{ mutation.isPending.value ? "Creating…" : "Create" }}
             </Button>
           </div>
         </DialogFooter>

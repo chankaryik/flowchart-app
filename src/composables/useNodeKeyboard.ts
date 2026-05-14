@@ -165,7 +165,7 @@ export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
   function handleTab(event: KeyboardEvent): void {
     const fromId = activeFlowNodeId()
     // Tab from outside the graph falls through to native browser handling
-    // so users can still reach the Create Node button etc.
+    // so users can still reach the Create New Node button etc.
     if (fromId == null) return
     const order = computeTabOrder(navigableNodeIds(store.nodes), store.positions)
     if (order.length === 0) return
