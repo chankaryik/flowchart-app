@@ -32,7 +32,7 @@ describe('AddCommentEditor', () => {
     await flushValidation()
 
     expect(updateNodeMock.mutateAsync).not.toHaveBeenCalled()
-    expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="title-error"]').exists()).toBe(true)
   })
 
   it('submits a trimmed name + comment patch on save', async () => {
@@ -46,7 +46,21 @@ describe('AddCommentEditor', () => {
     expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'c1',
-        patch: { name: 'Renamed', data: { comment: 'Updated body' } },
+        patch: { name: 'Renamed', description: undefined, data: { comment: 'Updated body' } },
+      }),
+    )
+  })
+
+  it('persists a trimmed description in the patch when present', async () => {
+    const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
+    await wrapper.find('[data-testid="comment-description"]').setValue('  internal note  ')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
+
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patch: expect.objectContaining({ description: 'internal note' }),
       }),
     )
   })

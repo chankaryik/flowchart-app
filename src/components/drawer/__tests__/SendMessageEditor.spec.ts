@@ -54,6 +54,7 @@ describe('SendMessageEditor', () => {
         id: 'm1',
         patch: {
           name: 'Renamed',
+          description: undefined,
           data: {
             payload: [
               { type: 'text', text: 'Hello' },
@@ -61,6 +62,20 @@ describe('SendMessageEditor', () => {
             ],
           },
         },
+      }),
+    )
+  })
+
+  it('persists a trimmed description in the patch when present', async () => {
+    const wrapper = mountEditor(SendMessageEditor, { node: baseNode })
+    await wrapper.find('[data-testid="sm-description"]').setValue('  greet customer  ')
+    await flushValidation()
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
+
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patch: expect.objectContaining({ description: 'greet customer' }),
       }),
     )
   })

@@ -9,9 +9,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { humanizeKey } from "@/lib/format";
 import type { TriggerNode as TriggerNodeShape } from "@/lib/types";
 
-// Vue Flow's node slot passes the FlowNode itself via the `data` prop on the
-// custom-node template (see FlowCanvas.vue), so `data.data.type` is the
-// trigger's underlying event key (e.g. "conversationOpened").
 const props = defineProps<{ id: string; data: TriggerNodeShape }>();
 
 const eventLabel = computed(() => humanizeKey(props.data.data.type));
@@ -21,25 +18,18 @@ const oncePerContact = computed(() => props.data.data.oncePerContact);
 <template>
   <Tooltip>
     <TooltipTrigger as-child>
-      <!-- Trigger is locked per Day-0 decision (TODO.md): exactly one trigger per
-           flow, not deletable, never offered in Create New Node. -->
       <Card
         class="node-card relative w-[220px] gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         data-node-type="trigger"
         :data-flow-node-id="id"
         tabindex="0"
       >
-        <CardHeader class="flex-row items-center gap-2 px-3 pt-3 pb-1">
-          <Zap class="size-4 text-sky-700" aria-hidden="true" />
-          <CardTitle class="text-[10px] font-semibold uppercase tracking-wide text-sky-700">
-            Trigger
-          </CardTitle>
+        <CardHeader class="flex flex-row items-center gap-2 px-3 pt-3 pb-2">
+          <Zap class="size-4 shrink-0 text-sky-700" aria-hidden="true" />
+          <CardTitle class="truncate text-sm font-medium text-slate-900">Trigger</CardTitle>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-sm font-medium text-slate-900">{{ eventLabel }}</p>
-          <p class="mt-1 text-[11px] text-slate-500">
-            {{ oncePerContact ? "Once per contact" : "Every time" }}
-          </p>
+          <p class="truncate text-[11px] text-slate-500">{{ eventLabel }}</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

@@ -29,6 +29,7 @@ export type BusinessHoursRow = {
   day: Day
   startTime: string
   endTime: string
+  closed?: boolean
 }
 
 export type ConnectorType = 'success' | 'failure'
@@ -48,6 +49,9 @@ export type SendMessageNode = {
   parentId: NodeId
   type: 'sendMessage'
   name: string
+  // Optional because payload.json-seeded nodes don't carry one; only set on
+  // nodes the user creates through the Create New Node form (REQUIREMENTS.md).
+  description?: string
   data: {
     payload: SendMessagePayloadItem[]
   }
@@ -58,6 +62,7 @@ export type DateTimeNode = {
   parentId: NodeId
   type: 'dateTime'
   name: string
+  description?: string
   data: {
     times: BusinessHoursRow[]
     connectors: NodeId[]
@@ -81,6 +86,7 @@ export type AddCommentNode = {
   parentId: NodeId
   type: 'addComment'
   name: string
+  description?: string
   data: {
     comment: string
   }

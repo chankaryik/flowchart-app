@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core'
-import { MessageSquare, Paperclip } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { Handle, Position } from "@vue-flow/core";
+import { MessageSquare, Paperclip } from "lucide-vue-next";
+import { computed } from "vue";
 
-import AddNodeButton from '@/components/flow/AddNodeButton.vue'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { attachmentCount, firstTextPreview } from '@/lib/format'
-import type { SendMessageNode as SendMessageNodeShape } from '@/lib/types'
+import AddNodeButton from "@/components/flow/AddNodeButton.vue";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { attachmentCount, firstTextPreview } from "@/lib/format";
+import type { SendMessageNode as SendMessageNodeShape } from "@/lib/types";
+import { useFlowStore } from "@/stores/flow";
 
-const props = defineProps<{ id: string; data: SendMessageNodeShape }>()
+const props = defineProps<{ id: string; data: SendMessageNodeShape }>();
 
-const preview = computed(() => firstTextPreview(props.data.data.payload))
-const attachments = computed(() => attachmentCount(props.data.data.payload))
+const store = useFlowStore();
+const description = computed(() => props.data.description ?? "");
+const preview = computed(() => firstTextPreview(props.data.data.payload));
+const attachments = computed(() => attachmentCount(props.data.data.payload));
+const hasParent = computed(() => store.getNodeById(props.data.parentId) != null);
 </script>
 
 <template>
@@ -24,17 +28,24 @@ const attachments = computed(() => attachmentCount(props.data.data.payload))
         :data-flow-node-id="id"
         tabindex="0"
       >
-        <Handle type="target" :position="Position.Top" />
-        <CardHeader class="items-center gap-1 px-3 pt-3 pb-1">
-          <div class="flex items-center gap-2">
-            <MessageSquare class="size-4 text-violet-700" aria-hidden="true" />
-            <CardTitle
-              class="text-[10px] font-semibold uppercase tracking-wide text-violet-700"
-            >
-              Send Message
-            </CardTitle>
+        <Handle v-if="hasParent" type="target" :position="Position.Top" />
+        <CardHeader class="flex justify-between gap-2 px-3 pt-3 pb-2">
+          <div class="flex gap-2 min-w-0">
+            <MessageSquare class="size-4 shrink-0 text-violet-700 mt-0.5" aria-hidden="true" />
+            <div class="min-w-0">
+              <CardTitle class="min-w-0 flex-1 text-sm font-medium text-slate-900">
+                {{ data.name }}
+              </CardTitle>
+              <p
+                v-if="description.length > 0"
+                class="truncate text-[11px] text-slate-500"
+                data-testid="node-description"
+              >
+                {{ description }}
+              </p>
+            </div>
           </div>
-          <CardAction v-if="attachments > 0" class="self-center">
+          <CardAction v-if="attachments > 0">
             <span
               class="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700"
               :aria-label="`${attachments} attachment${attachments === 1 ? '' : 's'}`"
@@ -46,14 +57,10 @@ const attachments = computed(() => attachmentCount(props.data.data.payload))
           </CardAction>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-sm font-medium text-slate-900">{{ data.name }}</p>
-          <p
-            v-if="preview.length > 0"
-            class="mt-1 line-clamp-2 text-[11px] text-slate-500"
-          >
+          <p v-if="preview.length > 0" class="text-[11px] text-slate-500">
             {{ preview }}
           </p>
-          <p v-else class="mt-1 text-[11px] italic text-slate-400">No message yet</p>
+          <p v-else class="truncate text-[11px] italic text-slate-400">No message yet</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />
@@ -64,9 +71,7 @@ const attachments = computed(() => attachmentCount(props.data.data.payload))
         <p class="font-medium">{{ data.name }}</p>
         <p v-if="preview.length > 0" class="whitespace-pre-line">{{ preview }}</p>
         <p v-else class="italic opacity-70">No message yet</p>
-        <p v-if="attachments > 0">
-          {{ attachments }} attachment{{ attachments === 1 ? '' : 's' }}
-        </p>
+        <p v-if="attachments > 0">{{ attachments }} attachment{{ attachments === 1 ? "" : "s" }}</p>
       </div>
     </TooltipContent>
   </Tooltip>

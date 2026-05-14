@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import type { FlowNode, SendMessageNode, SendMessagePayloadItem } from '@/lib/types'
-import { sendMessagePayloadSchema, titleSchema } from '@/lib/validators'
+import { descriptionSchema, sendMessagePayloadSchema, titleSchema } from '@/lib/validators'
 import { useUpdateNode } from '@/queries/nodes'
 import { useAttachmentsStore } from '@/stores/attachments'
 
@@ -25,6 +25,7 @@ const emit = defineEmits<{ (e: 'saved'): void; (e: 'delete'): void }>()
 const formSchema = toTypedSchema(
   v.object({
     name: titleSchema,
+    description: descriptionSchema,
     payload: sendMessagePayloadSchema,
   }),
 )
@@ -41,11 +42,13 @@ const { defineField, handleSubmit, errors, meta, resetForm, submitCount } = useF
   validationSchema: formSchema,
   initialValues: {
     name: props.node.name,
+    description: props.node.description ?? '',
     payload: clonePayload(props.node.data.payload),
   },
 })
 
 const [name, nameProps] = defineField('name', { validateOnBlur: true })
+const [description, descriptionProps] = defineField('description', { validateOnBlur: true })
 const { fields, push, remove } = useFieldArray<SendMessagePayloadItem>('payload')
 
 // Files live in a Pinia store so they survive the drawer close/reopen that
@@ -73,6 +76,7 @@ watch(
     resetForm({
       values: {
         name: props.node.name,
+        description: props.node.description ?? '',
         payload: clonePayload(props.node.data.payload),
       },
     })
@@ -142,8 +146,10 @@ const onSubmit = handleSubmit(async (values) => {
           attachments: row.attachments.map((a) => a.trim()).filter((a) => a.length > 0),
         },
   )
+  const trimmedDescription = (values.description ?? '').trim()
   const patch: Partial<FlowNode> = {
     name: values.name.trim(),
+    description: trimmedDescription.length > 0 ? trimmedDescription : undefined,
     data: { payload },
   } as Partial<FlowNode>
   try {
@@ -170,7 +176,7 @@ const onSubmit = handleSubmit(async (values) => {
   <form class="flex h-full flex-col" novalidate @submit="onSubmit">
     <div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
       <div class="space-y-1.5">
-        <Label for="sm-name">Name</Label>
+        <Label for="sm-name">Title</Label>
         <Input
           id="sm-name"
           v-model="name"
@@ -178,8 +184,28 @@ const onSubmit = handleSubmit(async (values) => {
           maxlength="80"
           :aria-invalid="errors.name != null"
         />
-        <p v-if="errors.name" class="text-xs text-destructive" data-testid="name-error">
+        <p v-if="errors.name" class="text-xs text-destructive" data-testid="title-error">
           {{ errors.name }}
+        </p>
+      </div>
+
+      <div class="space-y-1.5">
+        <Label for="sm-description">Description</Label>
+        <Textarea
+          id="sm-description"
+          v-model="description"
+          v-bind="descriptionProps"
+          rows="3"
+          maxlength="500"
+          data-testid="sm-description"
+          :aria-invalid="errors.description != null"
+        />
+        <p
+          v-if="errors.description"
+          class="text-xs text-destructive"
+          data-testid="description-error"
+        >
+          {{ errors.description }}
         </p>
       </div>
 

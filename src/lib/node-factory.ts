@@ -1,12 +1,14 @@
 import { customAlphabet } from 'nanoid'
 
-import type {
-  AddCommentNode,
-  DateTimeConnectorNode,
-  DateTimeNode,
-  EditableNodeType,
-  NodeId,
-  SendMessageNode,
+import {
+  DAYS,
+  type AddCommentNode,
+  type BusinessHoursRow,
+  type DateTimeConnectorNode,
+  type DateTimeNode,
+  type EditableNodeType,
+  type NodeId,
+  type SendMessageNode,
 } from '@/lib/types'
 
 const ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -30,20 +32,24 @@ export function nextNodeId(): string {
   return generateId()
 }
 
+type SendMessagePartial = Partial<SendMessageNode['data']> & { name?: string; description?: string }
+type AddCommentPartial = Partial<AddCommentNode['data']> & { name?: string; description?: string }
+type DateTimePartial = Partial<DateTimeNode['data']> & { name?: string; description?: string }
+
 export function createNode(
   type: 'sendMessage',
   parentId: NodeId,
-  partial?: Partial<SendMessageNode['data']> & { name?: string },
+  partial?: SendMessagePartial,
 ): SendMessageNode
 export function createNode(
   type: 'addComment',
   parentId: NodeId,
-  partial?: Partial<AddCommentNode['data']> & { name?: string },
+  partial?: AddCommentPartial,
 ): AddCommentNode
 export function createNode(
   type: 'dateTime',
   parentId: NodeId,
-  partial?: Partial<DateTimeNode['data']> & { name?: string },
+  partial?: DateTimePartial,
 ): CreatedDateTime
 export function createNode(
   type: EditableNodeType,
@@ -52,22 +58,25 @@ export function createNode(
 ): SendMessageNode | AddCommentNode | CreatedDateTime {
   switch (type) {
     case 'sendMessage': {
-      return buildSendMessage(parentId, partial as Partial<SendMessageNode['data']> & { name?: string })
+      return buildSendMessage(parentId, partial as SendMessagePartial)
     }
     case 'addComment': {
-      return buildAddComment(parentId, partial as Partial<AddCommentNode['data']> & { name?: string })
+      return buildAddComment(parentId, partial as AddCommentPartial)
     }
     case 'dateTime': {
-      return buildDateTime(parentId, partial as Partial<DateTimeNode['data']> & { name?: string })
+      return buildDateTime(parentId, partial as DateTimePartial)
     }
   }
 }
 
-function buildSendMessage(
-  parentId: NodeId,
-  partial: Partial<SendMessageNode['data']> & { name?: string },
-): SendMessageNode {
-  return {
+function trimmedDescription(value: string | undefined): string | undefined {
+  if (value == null) return undefined
+  const trimmed = value.trim()
+  return trimmed.length === 0 ? undefined : trimmed
+}
+
+function buildSendMessage(parentId: NodeId, partial: SendMessagePartial): SendMessageNode {
+  const node: SendMessageNode = {
     id: nextNodeId(),
     parentId,
     type: 'sendMessage',
@@ -76,13 +85,13 @@ function buildSendMessage(
       payload: partial.payload ?? [{ type: 'text', text: '' }],
     },
   }
+  const description = trimmedDescription(partial.description)
+  if (description != null) node.description = description
+  return node
 }
 
-function buildAddComment(
-  parentId: NodeId,
-  partial: Partial<AddCommentNode['data']> & { name?: string },
-): AddCommentNode {
-  return {
+function buildAddComment(parentId: NodeId, partial: AddCommentPartial): AddCommentNode {
+  const node: AddCommentNode = {
     id: nextNodeId(),
     parentId,
     type: 'addComment',
@@ -91,12 +100,16 @@ function buildAddComment(
       comment: partial.comment ?? '',
     },
   }
+  const description = trimmedDescription(partial.description)
+  if (description != null) node.description = description
+  return node
 }
 
-function buildDateTime(
-  parentId: NodeId,
-  partial: Partial<DateTimeNode['data']> & { name?: string },
-): CreatedDateTime {
+function defaultBusinessHours(): BusinessHoursRow[] {
+  return DAYS.map((day) => ({ day, startTime: '09:00', endTime: '17:00' }))
+}
+
+function buildDateTime(parentId: NodeId, partial: DateTimePartial): CreatedDateTime {
   const dateTimeId = nextNodeId()
   const successId = nextNodeId()
   const failureId = nextNodeId()
@@ -107,12 +120,14 @@ function buildDateTime(
     type: 'dateTime',
     name: partial.name ?? 'Date & Time',
     data: {
-      times: partial.times ?? [{ day: 'mon', startTime: '09:00', endTime: '17:00' }],
+      times: partial.times ?? defaultBusinessHours(),
       connectors: [successId, failureId],
       timezone: partial.timezone ?? 'UTC',
       action: partial.action ?? 'businessHours',
     },
   }
+  const description = trimmedDescription(partial.description)
+  if (description != null) dateTime.description = description
 
   const success: DateTimeConnectorNode = {
     id: successId,

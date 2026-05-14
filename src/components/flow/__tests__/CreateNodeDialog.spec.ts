@@ -51,7 +51,8 @@ const selectStubs = {
   SelectContent: { template: '<div><slot /></div>' },
   SelectItem: {
     props: ['value'],
-    template: '<button type="button" :data-option-value="value"><slot /></button>',
+    template:
+      '<button type="button" :data-option-value="value" :data-type-option="value"><slot /></button>',
   },
 }
 
@@ -102,6 +103,19 @@ function mountDialog() {
   })
 }
 
+async function fillForm(
+  wrapper: ReturnType<typeof mountDialog>,
+  values: { title: string; description?: string; type: 'sendMessage' | 'addComment' | 'dateTime' },
+): Promise<void> {
+  await wrapper.find('[data-testid="create-title"]').setValue(values.title)
+  if (values.description != null) {
+    await wrapper.find('[data-testid="create-description"]').setValue(values.description)
+  }
+  wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', values.type)
+  await wrapper.vm.$nextTick()
+  await flushValidation()
+}
+
 beforeEach(() => {
   setActivePinia(createPinia())
   const store = useFlowStore()
@@ -115,25 +129,71 @@ beforeEach(() => {
   pushMock.mockReset()
 })
 
-describe('CreateNodeDialog — domain rules', () => {
-  it('lists only editable types (no trigger, no connector) — CLAUDE.md §8.1', () => {
+describe('CreateNodeDialog — REQUIREMENTS.md form fields', () => {
+  it('exposes the three Type of Node options from REQUIREMENTS.md', () => {
     const wrapper = mountDialog()
     const optionValues = wrapper
       .findAll('[data-type-option]')
       .map((el) => el.attributes('data-type-option'))
-    expect(optionValues).toEqual(['sendMessage', 'dateTime', 'addComment'])
+    expect(optionValues).toEqual(['sendMessage', 'addComment', 'dateTime'])
   })
 
-  it('auto-creates success and failure connectors when the new node is a dateTime', async () => {
+  it('disables the submit button until title and type are valid', async () => {
     const wrapper = mountDialog()
-    await wrapper.find('[data-type-option="dateTime"]').trigger('click')
-    await wrapper.find('[data-testid="create-next"]').trigger('click')
+    const submit = wrapper.find('[data-testid="create-submit"]')
+    expect(submit.attributes('disabled')).toBeDefined()
 
-    const select = wrapper.findComponent({ name: 'Select' })
-    select.vm.$emit('update:modelValue', '1')
-    await wrapper.vm.$nextTick()
-    await wrapper.find('[data-testid="create-next"]').trigger('click')
+    await wrapper.find('[data-testid="create-title"]').setValue('Hello')
+    wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'sendMessage')
     await flushValidation()
+
+    expect(submit.attributes('disabled')).toBeUndefined()
+  })
+
+  it('rejects a title longer than 80 characters', async () => {
+    const wrapper = mountDialog()
+    await wrapper.find('[data-testid="create-title"]').setValue('x'.repeat(81))
+    wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'sendMessage')
+    await flushValidation()
+
+    expect(wrapper.find('[data-testid="title-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="create-submit"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('rejects a description longer than 500 characters', async () => {
+    const wrapper = mountDialog()
+    await wrapper.find('[data-testid="create-title"]').setValue('Greeting')
+    await wrapper.find('[data-testid="create-description"]').setValue('y'.repeat(501))
+    wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'sendMessage')
+    await flushValidation()
+
+    expect(wrapper.find('[data-testid="description-error"]').exists()).toBe(true)
+  })
+})
+
+describe('CreateNodeDialog — orphan creation (header button)', () => {
+  it('creates a sendMessage with parentId=-1 and the entered description', async () => {
+    const wrapper = mountDialog()
+    await fillForm(wrapper, {
+      title: 'Welcome reply',
+      description: 'Greets the customer',
+      type: 'sendMessage',
+    })
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
+
+    const call = createNodeMock.mutateAsync.mock.calls[0]?.[0]
+    expect(call!.nodes).toHaveLength(1)
+    const created = call!.nodes[0]!
+    expect(created.type).toBe('sendMessage')
+    expect(String(created.parentId)).toBe('-1')
+    expect((created as { name: string }).name).toBe('Welcome reply')
+    expect((created as { description?: string }).description).toBe('Greets the customer')
+  })
+
+  it('creates a dateTime plus its two connectors (still standalone)', async () => {
+    const wrapper = mountDialog()
+    await fillForm(wrapper, { title: 'Office hours', type: 'dateTime' })
     await wrapper.find('form').trigger('submit')
     await flushValidation()
 
@@ -141,20 +201,30 @@ describe('CreateNodeDialog — domain rules', () => {
     expect(call!.nodes).toHaveLength(3)
     const [dt, succ, fail] = call!.nodes
     expect(dt!.type).toBe('dateTime')
+    expect(String(dt!.parentId)).toBe('-1')
     expect((succ as DateTimeConnectorNode).data.connectorType).toBe('success')
     expect((fail as DateTimeConnectorNode).data.connectorType).toBe('failure')
     expect((dt as DateTimeNode).data.connectors).toEqual([succ!.id, fail!.id])
   })
 
-  it('allows a connector as parent (CLAUDE.md: any node can be a parent)', async () => {
+  it('omits description when only whitespace was entered', async () => {
+    const wrapper = mountDialog()
+    await fillForm(wrapper, { title: 'Note', description: '   ', type: 'addComment' })
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
+
+    const created = createNodeMock.mutateAsync.mock.calls[0]?.[0]?.nodes[0]
+    expect((created as { description?: string }).description).toBeUndefined()
+  })
+})
+
+describe('CreateNodeDialog — child creation (per-node + button)', () => {
+  it('uses the preset parent id when one is supplied', async () => {
     const store = useFlowStore()
     store.openCreateDialog('s')
     const wrapper = mountDialog()
 
-    await wrapper.find('[data-type-option="sendMessage"]').trigger('click')
-    await wrapper.find('[data-testid="create-next"]').trigger('click')
-    await wrapper.find('#create-name').setValue('After success')
-    await flushValidation()
+    await fillForm(wrapper, { title: 'After success', type: 'sendMessage' })
     await wrapper.find('form').trigger('submit')
     await flushValidation()
 

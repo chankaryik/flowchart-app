@@ -25,23 +25,24 @@ export function dayLabel(day: Day): string {
 }
 
 export function summarizeBusinessHours(times: BusinessHoursRow[], timezone: string): string {
-  if (times.length === 0) return `No schedule (${timezone})`
-  const first = times[0]
-  if (first == null) return `No schedule (${timezone})`
+  const open = times.filter((row) => row.closed !== true)
+  if (open.length === 0) return `Closed all week (${timezone})`
+  const first = open[0]
+  if (first == null) return `Closed all week (${timezone})`
 
-  const allSame = times.every(
+  const allSame = open.every(
     (row) => row.startTime === first.startTime && row.endTime === first.endTime,
   )
   if (allSame) {
-    if (times.length === 7) {
+    if (open.length === 7) {
       return `Daily ${first.startTime}–${first.endTime} (${timezone})`
     }
-    if (times.length === 1) {
+    if (open.length === 1) {
       return `${dayLabel(first.day)} ${first.startTime}–${first.endTime} (${timezone})`
     }
-    return `${times.length} days ${first.startTime}–${first.endTime} (${timezone})`
+    return `${open.length} days ${first.startTime}–${first.endTime} (${timezone})`
   }
-  return `${times.length} schedule rows (${timezone})`
+  return `${open.length} schedule rows (${timezone})`
 }
 
 export function firstTextPreview(payload: SendMessagePayloadItem[]): string {
