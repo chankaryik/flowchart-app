@@ -158,7 +158,6 @@ function onNodeDragStop(event: NodeDragEvent): void {
     position: finalPos,
     previousPosition: start ?? undefined,
     secondary: secondary.length > 0 ? secondary : undefined,
-    label: 'Move node',
   })
 }
 

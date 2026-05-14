@@ -89,7 +89,7 @@ async function onConfirmDelete(): Promise<void> {
   const target = node.value;
   if (target == null) return;
   try {
-    await deleteMutation.mutateAsync({ id: target.id, label: `Delete ${target.type}` });
+    await deleteMutation.mutateAsync({ id: target.id });
   } catch {
     confirmOpen.value = false;
     return;

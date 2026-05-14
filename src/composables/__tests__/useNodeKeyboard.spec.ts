@@ -2,12 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h } from 'vue'
 
-import {
-  computeTabOrder,
-  findAdjacent,
-  navigableNodeIds,
-  useNodeKeyboard,
-} from '@/composables/useNodeKeyboard'
+import { useNodeKeyboard } from '@/composables/useNodeKeyboard'
 import type { FlowNode } from '@/lib/types'
 import { useFlowStore, type Position } from '@/stores/flow'
 
@@ -56,36 +51,6 @@ function seedPositions(): Record<string, Position> {
     c1: { x: 300, y: 480 },
   }
 }
-
-describe('navigation helpers', () => {
-  it('navigableNodeIds excludes dateTimeConnector (CLAUDE.md §8.1)', () => {
-    expect(navigableNodeIds(seedFlow())).toEqual([1, 'dt', 'm1', 'c1'])
-  })
-
-  it('computeTabOrder groups by row tolerance then sorts left-right', () => {
-    const positions: Record<string, Position> = {
-      a: { x: 300, y: 100 },
-      b: { x: 100, y: 105 },
-      c: { x: 200, y: 90 },
-      d: { x: 50, y: 500 },
-    }
-    expect(computeTabOrder(['a', 'b', 'c', 'd'], positions)).toEqual(['b', 'c', 'a', 'd'])
-  })
-
-  it('computeTabOrder appends nodes lacking a position', () => {
-    expect(computeTabOrder(['a', 'lost'], { a: { x: 0, y: 0 } })).toEqual(['a', 'lost'])
-  })
-
-  it('findAdjacent moves between non-connector neighbours by direction', () => {
-    const positions = seedPositions()
-    const cands = [1, 'dt', 'm1', 'c1']
-    expect(findAdjacent(1, cands, positions, 'down')).toBe('dt')
-    expect(findAdjacent('dt', cands, positions, 'up')).toBe(1)
-    expect(findAdjacent('m1', cands, positions, 'right')).toBe('c1')
-    expect(findAdjacent('c1', cands, positions, 'left')).toBe('m1')
-    expect(findAdjacent(1, cands, positions, 'up')).toBeNull()
-  })
-})
 
 type Harness = { unmount: () => void; helpCalls: { count: number } }
 
@@ -159,6 +124,12 @@ describe('useNodeKeyboard (integration)', () => {
     expect(document.activeElement).toBe(elements['1'])
   })
 
+  it('Shift+Tab cycles in reverse order', () => {
+    elements['1']!.focus()
+    dispatchKey({ key: 'Tab', shiftKey: true, target: elements['1']! })
+    expect(document.activeElement).toBe(elements['c1'])
+  })
+
   it('Tab from outside the canvas falls through to native handling', () => {
     const outside = document.createElement('button')
     document.body.appendChild(outside)
@@ -168,10 +139,24 @@ describe('useNodeKeyboard (integration)', () => {
     outside.remove()
   })
 
-  it('Arrow keys move focus by 2D adjacency', () => {
+  it('Arrow Down/Right step to the next node in array order', () => {
     elements['1']!.focus()
     dispatchKey({ key: 'ArrowDown', target: elements['1']! })
     expect(document.activeElement).toBe(elements['dt'])
+  })
+
+  it('Arrow Up/Left step to the previous node in array order', () => {
+    elements['dt']!.focus()
+    dispatchKey({ key: 'ArrowUp', target: elements['dt']! })
+    expect(document.activeElement).toBe(elements['1'])
+  })
+
+  it('skips dateTimeConnector nodes during traversal', () => {
+    // The seed includes 'ok' and 'no' connectors between 'dt' and 'm1';
+    // arrow navigation should hop straight from 'dt' to 'm1'.
+    elements['dt']!.focus()
+    dispatchKey({ key: 'ArrowDown', target: elements['dt']! })
+    expect(document.activeElement).toBe(elements['m1'])
   })
 
   it('Enter pushes /node/<id> for the focused node', () => {

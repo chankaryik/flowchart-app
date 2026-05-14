@@ -205,7 +205,7 @@ const onSubmit = handleSubmit(async (values) => {
     parent != null ? computeChildPositions(nodes, parent.id) : computeOrphanPositions(nodes);
 
   try {
-    await mutation.mutateAsync({ nodes, positions, label: `Create ${t}` });
+    await mutation.mutateAsync({ nodes, positions });
   } catch {
     return;
   }

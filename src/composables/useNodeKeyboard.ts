@@ -1,3 +1,156 @@
+import { useEventListener } from '@vueuse/core'
+import { watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+import { isEditableTarget } from '@/lib/dom'
+import type { NodeId } from '@/lib/types'
+import { nodeKey, useFlowStore } from '@/stores/flow'
+
+export type UseNodeKeyboardOptions = {
+  onHelp: () => void
+}
+
+/**
+ * Wires keyboard accessibility for the flow chart:
+ *
+ *   Tab / Shift+Tab     → cycle focus through nodes in array order
+ *   Arrow Right / Down  → next node
+ *   Arrow Left / Up     → previous node
+ *   Enter               → open drawer for the focused node
+ *   Esc                 → close the drawer
+ *   ?                   → open the shortcut help dialog
+ *
+ * dateTimeConnector nodes are excluded from navigation (display-only).
+ */
+export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
+  const store = useFlowStore()
+  const router = useRouter()
+  const route = useRoute()
+
+  function navigableIds(): NodeId[] {
+    return store.nodes
+      .filter((n) => n.type !== 'dateTimeConnector')
+      .map((n) => n.id)
+  }
+
+  function activeFlowNodeId(): string | null {
+    const el = typeof document !== 'undefined' ? document.activeElement : null
+    if (!(el instanceof HTMLElement)) return null
+    const ancestor = el.closest('[data-flow-node-id]')
+    if (!(ancestor instanceof HTMLElement)) return null
+    const id = ancestor.getAttribute('data-flow-node-id')
+    return id != null && id !== '' ? id : null
+  }
+
+  function focusFlowNode(id: NodeId | null): void {
+    if (id == null || typeof document === 'undefined') return
+    const key = String(id)
+    for (const candidate of document.querySelectorAll('[data-flow-node-id]')) {
+      if (candidate.getAttribute('data-flow-node-id') === key && candidate instanceof HTMLElement) {
+        candidate.focus()
+        return
+      }
+    }
+  }
+
+  function step(delta: 1 | -1): void {
+    const order = navigableIds()
+    if (order.length === 0) return
+    const current = activeFlowNodeId()
+    if (current == null) {
+      focusFlowNode(order[0] ?? null)
+      return
+    }
+    const idx = order.findIndex((id) => nodeKey(id) === current)
+    if (idx < 0) {
+      focusFlowNode(order[0] ?? null)
+      return
+    }
+    const nextIdx = (idx + delta + order.length) % order.length
+    focusFlowNode(order[nextIdx] ?? null)
+  }
+
+  // Capture phase: reach the handler before reka-ui portals (Sheet,
+  // AlertDialog) stopPropagation inside their focus traps.
+  useEventListener(
+    window,
+    'keydown',
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        const id = route.params.id
+        if (id != null && id !== '') {
+          event.preventDefault()
+          void router.push('/')
+        }
+        return
+      }
+      if (isEditableTarget(event.target)) return
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+
+      switch (event.key) {
+        case 'Tab':
+          if (activeFlowNodeId() == null) return
+          event.preventDefault()
+          step(event.shiftKey ? -1 : 1)
+          return
+        case 'ArrowRight':
+        case 'ArrowDown':
+          if (activeFlowNodeId() == null) return
+          event.preventDefault()
+          step(1)
+          return
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          if (activeFlowNodeId() == null) return
+          event.preventDefault()
+          step(-1)
+          return
+        case 'Enter': {
+          const id = activeFlowNodeId()
+          if (id == null) return
+          event.preventDefault()
+          void router.push(`/node/${id}`)
+          return
+        }
+        case '?':
+          event.preventDefault()
+          options.onHelp()
+          return
+      }
+    },
+    { capture: true },
+  )
+
+  // Restore focus to the previously focused node when the drawer closes via
+  // router back — there's no Sheet trigger to fall back to since we navigated
+  // via URL.
+  let lastFocusedId: string | null = null
+  watch(
+    () => route.params.id,
+    (id, prevId) => {
+      const opened = id != null && id !== '' && (prevId == null || prevId === '')
+      const closed = (id == null || id === '') && prevId != null && prevId !== ''
+      if (opened) {
+        lastFocusedId = activeFlowNodeId()
+      } else if (closed && lastFocusedId != null) {
+        queueMicrotask(() => focusFlowNode(lastFocusedId))
+      }
+    },
+  )
+}
+
+/* ===========================================================================
+ * OLD IMPLEMENTATION — kept (commented out) for A/B comparison after refactor.
+ * Implements 2D spatial arrow-key navigation with weighted distance metrics
+ * and per-row Tab grouping. REQUIREMENTS.md only asked for "keyboard
+ * accessibility for selecting nodes and opening the details drawer", so the
+ * simpler linear traversal above replaces it. Safe to delete once the new
+ * implementation has been compared against this one.
+ *
+ * (Inner JSDoc closers have been changed from STAR-SLASH to STAR-SPACE-SLASH
+ * so this block comment stays well-formed; restore them if uncommenting.)
+ * ===========================================================================
+
 import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -16,7 +169,7 @@ const ROW_TOLERANCE = 24
  * The set of node IDs that participate in keyboard navigation.
  * Connectors are display-only per CLAUDE.md §8.1, so they're excluded from
  * Tab and Arrow targets (their tabindex is also -1 in the component).
- */
+ * /
 export function navigableNodeIds(nodes: FlowNode[]): NodeId[] {
   const out: NodeId[] = []
   for (const node of nodes) {
@@ -29,7 +182,7 @@ export function navigableNodeIds(nodes: FlowNode[]): NodeId[] {
 /**
  * Tab order: top-down rows, left-right within each row. Nodes lacking a
  * position fall to the end so they don't break the cycle.
- */
+ * /
 export function computeTabOrder(
   ids: NodeId[],
   positions: Record<string, Position>,
@@ -52,7 +205,7 @@ export function computeTabOrder(
  * Closest navigable node in the requested direction, by 2D position.
  * `up`/`down` weight horizontal drift; `left`/`right` weight vertical drift,
  * so navigation feels axis-aligned rather than diagonal.
- */
+ * /
 export function findAdjacent(
   fromId: NodeId,
   candidateIds: NodeId[],
@@ -156,7 +309,7 @@ export type UseNodeKeyboardOptions = {
  *
  * Connectors (dateTimeConnector) are skipped entirely — they have tabindex=-1
  * on the DOM side AND are filtered out of the navigation set here.
- */
+ * /
 export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
   const store = useFlowStore()
   const router = useRouter()
@@ -268,3 +421,5 @@ export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
 
   useGlobalKeydown(onKeyDown)
 }
+
+=========================================================================== */

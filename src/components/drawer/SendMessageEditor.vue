@@ -153,7 +153,7 @@ const onSubmit = handleSubmit(async (values) => {
     data: { payload },
   } as Partial<FlowNode>
   try {
-    await mutation.mutateAsync({ id: props.node.id, patch, label: 'Edit send message' })
+    await mutation.mutateAsync({ id: props.node.id, patch })
   } catch {
     return
   }

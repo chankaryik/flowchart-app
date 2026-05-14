@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test'
 
 // Keep aligned with src/lib/payload-adapter.ts STORAGE_KEY.
 export const STORAGE_KEY = 'payload-v1'
-// Keep aligned with src/composables/usePersistFlag.ts PERSIST_ENABLED_KEY.
+// Keep aligned with src/lib/payload-adapter.ts PERSIST_ENABLED_KEY.
 const PERSIST_ENABLED_KEY = 'persist-enabled-v1'
 
 // Stable seed IDs from public/payload.json. Hard-coded so specs read as

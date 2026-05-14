@@ -12,21 +12,15 @@ export type CreateNodeVars = {
   nodes: FlowNode[]
   position?: Position
   positions?: Record<string, Position>
-  label?: string
-  silent?: boolean
 }
 
 export type UpdateNodeVars = {
   id: NodeId
   patch: Partial<FlowNode>
-  label?: string
-  silent?: boolean
 }
 
 export type DeleteNodeVars = {
   id: NodeId
-  label?: string
-  silent?: boolean
 }
 
 export type SecondaryMove = {
@@ -43,8 +37,6 @@ export type MoveNodeVars = {
   // (e.g. dateTimeConnector children dragged with their dateTime parent).
   // Bundled into one history entry so undo restores them together.
   secondary?: SecondaryMove[]
-  label?: string
-  silent?: boolean
 }
 
 // A single auto-save watcher per store instance: any change to `store.nodes`
@@ -78,14 +70,8 @@ export function useNodesQuery() {
   return query
 }
 
-function toastError(
-  vars: { label?: string; silent?: boolean } | undefined,
-  fallback: string,
-  error: unknown,
-): void {
-  if (vars?.silent) return
-  const description = error instanceof Error ? error.message : undefined
-  toast.error(vars?.label ?? fallback, { description })
+function describeError(error: unknown): string | undefined {
+  return error instanceof Error ? error.message : undefined
 }
 
 export function useCreateNode() {
@@ -106,15 +92,15 @@ export function useCreateNode() {
       const snapshot = vars.nodes.map((node) => ({ ...node }))
       store.addNodes(snapshot, positionMap)
       history.push({
-        label: vars.label ?? `Create ${primary.type}`,
+        label: `Create ${primary.type}`,
         undo: () => store.removeNodes(snapshot.map((n) => n.id)),
         redo: () => store.addNodes(snapshot, positionMap),
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to create node', error)
+      toast.error('Failed to create node', { description: describeError(error) })
     },
   })
 }
@@ -134,15 +120,15 @@ export function useUpdateNode() {
       if (afterSnap == null) return
       const afterCopy = { ...afterSnap } as Record<string, unknown>
       history.push({
-        label: vars.label ?? `Update ${before.type}`,
+        label: `Update ${before.type}`,
         undo: () => store.applyPatch(vars.id, beforeSnap),
         redo: () => store.applyPatch(vars.id, afterCopy),
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to save changes', error)
+      toast.error('Failed to save changes', { description: describeError(error) })
     },
   })
 }
@@ -167,15 +153,15 @@ export function useDeleteNode() {
       store.removeNodes(ids)
       const root = snapshotNodes[0]
       history.push({
-        label: vars.label ?? `Delete ${root?.type ?? 'node'}`,
+        label: `Delete ${root?.type ?? 'node'}`,
         undo: () => store.addNodes(snapshotNodes, snapshotPositions),
         redo: () => store.removeNodes(ids),
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to delete node', error)
+      toast.error('Failed to delete node', { description: describeError(error) })
     },
   })
 }
@@ -197,7 +183,7 @@ export function useMoveNode() {
       }
       const node = store.getNodeById(vars.id)
       history.push({
-        label: vars.label ?? `Move ${node?.type ?? 'node'}`,
+        label: `Move ${node?.type ?? 'node'}`,
         undo: () => {
           if (previous != null) {
             store.setPosition(vars.id, previous)
@@ -216,10 +202,10 @@ export function useMoveNode() {
         },
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to move node', error)
+      toast.error('Failed to move node', { description: describeError(error) })
     },
   })
 }

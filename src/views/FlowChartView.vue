@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useQueryClient } from "@tanstack/vue-query";
+import { useStorage } from "@vueuse/core";
 import { Keyboard, RotateCcw } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -23,8 +24,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useFlowHistory } from "@/composables/useFlowHistory";
 import { useNodeKeyboard } from "@/composables/useNodeKeyboard";
-import { usePersistFlag } from "@/composables/usePersistFlag";
-import { clearCachedNodes, resetNodes, saveNodes } from "@/lib/payload-adapter";
+import {
+  PERSIST_ENABLED_KEY,
+  clearCachedNodes,
+  resetNodes,
+  saveNodes,
+} from "@/lib/payload-adapter";
 import { useNodesQuery } from "@/queries/nodes";
 import { NODES_QUERY_KEY } from "@/queries/client";
 import { useFlowStore } from "@/stores/flow";
@@ -34,12 +39,18 @@ const route = useRoute();
 const router = useRouter();
 const store = useFlowStore();
 const history = useHistoryStore();
-const persistEnabled = usePersistFlag();
+// Serialize as '1' / '' so the payload-adapter's `=== '1'` check keeps working
+// across both the SPA and Playwright (which seeds the flag with the literal '1').
+const persistEnabled = useStorage(PERSIST_ENABLED_KEY, false, undefined, {
+  serializer: {
+    read: (raw: string) => raw === "1",
+    write: (value: boolean) => (value ? "1" : ""),
+  },
+});
 const queryClient = useQueryClient();
 
 const query = useNodesQuery();
 const resetConfirmOpen = ref(false);
-const persistOffConfirmOpen = ref(false);
 const helpOpen = ref(false);
 const resetting = ref(false);
 
@@ -90,27 +101,16 @@ watch(
 );
 
 function onPersistToggle(next: boolean): void {
+  persistEnabled.value = next;
   if (next) {
-    persistEnabled.value = true;
     // Persist the current in-memory state immediately so the user sees the
     // setting take effect without needing to make a change first.
     void saveNodes([...store.nodes]);
     toast.success("Data will be saved across refreshes");
   } else {
-    // Confirm before destroying the cached state.
-    persistOffConfirmOpen.value = true;
+    clearCachedNodes();
+    toast.success("Saved data cleared");
   }
-}
-
-function onConfirmPersistOff(): void {
-  persistEnabled.value = false;
-  clearCachedNodes();
-  persistOffConfirmOpen.value = false;
-  toast.success("Saved data cleared; a refresh will reset everything");
-}
-
-function onCancelPersistOff(): void {
-  persistOffConfirmOpen.value = false;
 }
 
 async function onConfirmReset(): Promise<void> {
@@ -230,24 +230,5 @@ async function onConfirmReset(): Promise<void> {
       </AlertDialogContent>
     </AlertDialog>
 
-    <AlertDialog :open="persistOffConfirmOpen" @update:open="(v) => (persistOffConfirmOpen = v)">
-      <AlertDialogContent data-testid="persist-off-confirm">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Turn off data persistence?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Disabling this setting clears any saved canvas state from this browser. After a refresh
-            the canvas will reset to the original payload.json. Continue?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel data-testid="persist-off-cancel" @click="onCancelPersistOff">
-            Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction data-testid="persist-off-confirm-action" @click="onConfirmPersistOff">
-            Turn off
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   </div>
 </template>

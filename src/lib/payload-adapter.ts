@@ -1,7 +1,7 @@
-import { PERSIST_ENABLED_KEY } from '@/composables/usePersistFlag'
 import type { FlowNode } from '@/lib/types'
 
 export const STORAGE_KEY = 'payload-v1'
+export const PERSIST_ENABLED_KEY = 'persist-enabled-v1'
 export const PAYLOAD_URL = '/payload.json'
 
 export function isPersistEnabled(): boolean {
