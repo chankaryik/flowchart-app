@@ -10,12 +10,14 @@ import type {
   SendMessageNode,
   TriggerNode,
 } from '@/lib/types'
+import { computeLayout } from '@/lib/layout'
 import { createQueryClient } from '@/queries/client'
 import {
   useCreateNode,
   useDeleteNode,
   useMoveNode,
   useNodesQuery,
+  useRelayoutNodes,
   useUpdateNode,
 } from '@/queries/nodes'
 import { useFlowStore } from '@/stores/flow'
@@ -326,6 +328,55 @@ describe('useMoveNode', () => {
 
     history.undo()
     expect(store.positions['msg']).toBeUndefined()
+
+    app.unmount()
+  })
+})
+
+describe('useRelayoutNodes', () => {
+  it('replaces manual positions with computed layout and round-trips through undo/redo', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+    const previous = {
+      '1': { x: 900, y: 900 },
+      dt: { x: 700, y: 800 },
+      s: { x: 600, y: 700 },
+      f: { x: 800, y: 700 },
+      msg: { x: 500, y: 600 },
+    }
+    store.setPositions(previous)
+    const expected = computeLayout(SEED)
+    const { app, result: mutation } = withSetup(() => useRelayoutNodes())
+
+    await mutation.mutateAsync()
+
+    expect(store.positions).toEqual(expected)
+    expect(history.undoStack.length).toBe(1)
+    expect(saveNodesMock.mock.calls[0]?.[1]).toEqual(expected)
+
+    history.undo()
+    expect(store.positions).toEqual(previous)
+    expect(saveNodesMock.mock.calls[1]?.[1]).toEqual(previous)
+
+    history.redo()
+    expect(store.positions).toEqual(expected)
+    expect(saveNodesMock.mock.calls[2]?.[1]).toEqual(expected)
+
+    app.unmount()
+  })
+
+  it('does not push history when the graph is already laid out', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+    store.setPositions(computeLayout(SEED))
+    const { app, result: mutation } = withSetup(() => useRelayoutNodes())
+
+    await mutation.mutateAsync()
+
+    expect(history.undoStack.length).toBe(0)
+    expect(saveNodesMock).toHaveBeenCalledTimes(1)
 
     app.unmount()
   })

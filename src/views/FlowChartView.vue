@@ -32,7 +32,7 @@ import {
   enablePersistenceWithSnapshot,
   resetNodes,
 } from "@/lib/payload-adapter";
-import { useNodesQuery } from "@/queries/nodes";
+import { useNodesQuery, useRelayoutNodes } from "@/queries/nodes";
 import { NODES_QUERY_KEY } from "@/queries/client";
 import { useFlowStore } from "@/stores/flow";
 import { useHistoryStore } from "@/stores/history";
@@ -52,6 +52,7 @@ const persistEnabled = useStorage(PERSIST_ENABLED_KEY, false, undefined, {
 const queryClient = useQueryClient();
 
 const query = useNodesQuery();
+const relayoutMutation = useRelayoutNodes();
 const resetConfirmOpen = ref(false);
 const helpOpen = ref(false);
 const resetting = ref(false);
@@ -165,6 +166,15 @@ async function onSeedDefault(): Promise<void> {
   }
 }
 
+async function onRelayout(): Promise<void> {
+  try {
+    await relayoutMutation.mutateAsync();
+    toast.success("Layout tidied");
+  } catch {
+    // The mutation owns the failure toast.
+  }
+}
+
 async function onConfirmReset(): Promise<void> {
   resetting.value = true;
   try {
@@ -223,6 +233,23 @@ async function onConfirmReset(): Promise<void> {
         >
           <RotateCcw class="size-3" />
           Reset
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
+          :disabled="
+            query.isPending.value ||
+            query.isError.value ||
+            resetting ||
+            store.nodes.length === 0 ||
+            relayoutMutation.isPending.value
+          "
+          title="Recompute tidy node layout"
+          data-testid="relayout-button"
+          @click="onRelayout"
+        >
+          <RefreshCw class="size-3" />
+          Re-layout
         </button>
         <button
           type="button"

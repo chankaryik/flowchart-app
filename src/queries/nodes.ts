@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 import { watch } from 'vue'
 import { toast } from 'vue-sonner'
 
+import { computeLayout } from '@/lib/layout'
 import { loadNodes, loadPositions, saveNodes } from '@/lib/payload-adapter'
 import type { FlowNode, NodeId } from '@/lib/types'
 import { NODES_QUERY_KEY } from '@/queries/client'
@@ -69,6 +70,27 @@ function clonePositions(positions: Record<string, Position>): Record<string, Pos
     snapshot[key] = { x: value.x, y: value.y }
   }
   return snapshot
+}
+
+function replacePositions(
+  store: ReturnType<typeof useFlowStore>,
+  positions: Record<string, Position>,
+): void {
+  store.clearPositions()
+  store.setPositions(clonePositions(positions))
+}
+
+function positionsEqual(a: Record<string, Position>, b: Record<string, Position>): boolean {
+  const aEntries = Object.entries(a)
+  const bEntries = Object.entries(b)
+  if (aEntries.length !== bEntries.length) return false
+
+  for (const [key, aPosition] of aEntries) {
+    const bPosition = b[key]
+    if (bPosition == null) return false
+    if (aPosition.x !== bPosition.x || aPosition.y !== bPosition.y) return false
+  }
+  return true
 }
 
 function persistFlow(store: ReturnType<typeof useFlowStore>): Promise<void> {
@@ -231,6 +253,41 @@ export function useMoveNode() {
       const cmd = history.popLast()
       cmd?.undo()
       toast.error('Failed to move node', { description: describeError(error) })
+    },
+  })
+}
+
+export function useRelayoutNodes() {
+  const store = useFlowStore()
+  const history = useHistoryStore()
+
+  return useMutation({
+    mutationFn: () => persistFlow(store),
+    onMutate: () => {
+      const previous = clonePositions(store.positions)
+      const next = computeLayout(store.nodes)
+      if (positionsEqual(previous, next)) return { pushed: false }
+
+      replacePositions(store, next)
+      history.push({
+        label: 'Re-layout nodes',
+        undo: () => {
+          replacePositions(store, previous)
+          persistFlowInBackground(store)
+        },
+        redo: () => {
+          replacePositions(store, next)
+          persistFlowInBackground(store)
+        },
+      })
+      return { pushed: true }
+    },
+    onError: (error, _vars, context) => {
+      if (context?.pushed) {
+        const cmd = history.popLast()
+        cmd?.undo()
+      }
+      toast.error('Failed to re-layout nodes', { description: describeError(error) })
     },
   })
 }
