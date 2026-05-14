@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 import { watch } from 'vue'
 import { toast } from 'vue-sonner'
 
-import { loadNodes, saveNodes } from '@/lib/payload-adapter'
+import { loadNodes, loadPositions, saveNodes } from '@/lib/payload-adapter'
 import type { FlowNode, NodeId } from '@/lib/types'
 import { NODES_QUERY_KEY } from '@/queries/client'
 import { type Position, nodeKey, useFlowStore } from '@/stores/flow'
@@ -48,7 +48,11 @@ export function useNodesQuery() {
   watch(
     query.data,
     (data) => {
-      if (data != null) store.hydrate(data)
+      if (data != null) {
+        store.hydrate(data)
+        store.clearPositions()
+        store.setPositions(loadPositions())
+      }
     },
     { immediate: true },
   )
@@ -59,12 +63,20 @@ function describeError(error: unknown): string | undefined {
   return error instanceof Error ? error.message : undefined
 }
 
-function persistNodes(store: ReturnType<typeof useFlowStore>): Promise<void> {
-  return saveNodes([...store.nodes])
+function clonePositions(positions: Record<string, Position>): Record<string, Position> {
+  const snapshot: Record<string, Position> = {}
+  for (const [key, value] of Object.entries(positions)) {
+    snapshot[key] = { x: value.x, y: value.y }
+  }
+  return snapshot
 }
 
-function persistNodesInBackground(store: ReturnType<typeof useFlowStore>): void {
-  void persistNodes(store).catch(() => undefined)
+function persistFlow(store: ReturnType<typeof useFlowStore>): Promise<void> {
+  return saveNodes([...store.nodes], clonePositions(store.positions))
+}
+
+function persistFlowInBackground(store: ReturnType<typeof useFlowStore>): void {
+  void persistFlow(store).catch(() => undefined)
 }
 
 export function useCreateNode() {
@@ -72,7 +84,7 @@ export function useCreateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => persistNodes(store),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: CreateNodeVars) => {
       const primary = vars.nodes[0]
       if (primary == null) return
@@ -88,11 +100,11 @@ export function useCreateNode() {
         label: `Create ${primary.type}`,
         undo: () => {
           store.removeNodes(snapshot.map((n) => n.id))
-          persistNodesInBackground(store)
+          persistFlowInBackground(store)
         },
         redo: () => {
           store.addNodes(snapshot, positionMap)
-          persistNodesInBackground(store)
+          persistFlowInBackground(store)
         },
       })
     },
@@ -109,7 +121,7 @@ export function useUpdateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => persistNodes(store),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: UpdateNodeVars) => {
       const before = store.getNodeById(vars.id)
       if (before == null) return
@@ -122,11 +134,11 @@ export function useUpdateNode() {
         label: `Update ${before.type}`,
         undo: () => {
           store.applyPatch(vars.id, beforeSnap)
-          persistNodesInBackground(store)
+          persistFlowInBackground(store)
         },
         redo: () => {
           store.applyPatch(vars.id, afterCopy)
-          persistNodesInBackground(store)
+          persistFlowInBackground(store)
         },
       })
     },
@@ -143,7 +155,7 @@ export function useDeleteNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => persistNodes(store),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: DeleteNodeVars) => {
       const subtree = store.getDescendants(vars.id)
       if (subtree.length === 0) return
@@ -161,11 +173,11 @@ export function useDeleteNode() {
         label: `Delete ${root?.type ?? 'node'}`,
         undo: () => {
           store.addNodes(snapshotNodes, snapshotPositions)
-          persistNodesInBackground(store)
+          persistFlowInBackground(store)
         },
         redo: () => {
           store.removeNodes(ids)
-          persistNodesInBackground(store)
+          persistFlowInBackground(store)
         },
       })
     },
@@ -182,7 +194,7 @@ export function useMoveNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => Promise.resolve(),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: MoveNodeVars) => {
       const key = nodeKey(vars.id)
       const previous = vars.previousPosition ?? store.positions[key]
@@ -204,12 +216,14 @@ export function useMoveNode() {
           for (const move of secondary) {
             store.setPosition(move.id, move.from)
           }
+          persistFlowInBackground(store)
         },
         redo: () => {
           store.setPosition(vars.id, next)
           for (const move of secondary) {
             store.setPosition(move.id, move.to)
           }
+          persistFlowInBackground(store)
         },
       })
     },

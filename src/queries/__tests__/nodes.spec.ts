@@ -27,14 +27,19 @@ function getName(node: FlowNode | undefined): string | undefined {
 
 vi.mock('@/lib/payload-adapter', () => ({
   loadNodes: vi.fn<() => Promise<FlowNode[]>>(),
-  saveNodes: vi.fn<(nodes: FlowNode[]) => Promise<void>>().mockResolvedValue(undefined),
+  loadPositions: vi.fn<() => Record<string, { x: number; y: number }>>(),
+  saveNodes: vi
+    .fn<(nodes: FlowNode[], positions?: Record<string, { x: number; y: number }>) => Promise<void>>()
+    .mockResolvedValue(undefined),
   STORAGE_KEY: 'payload-v1',
+  POSITIONS_STORAGE_KEY: 'payload-positions-v1',
   PAYLOAD_URL: '/payload.json',
 }))
 
-import { loadNodes, saveNodes } from '@/lib/payload-adapter'
+import { loadNodes, loadPositions, saveNodes } from '@/lib/payload-adapter'
 
 const loadNodesMock = vi.mocked(loadNodes)
+const loadPositionsMock = vi.mocked(loadPositions)
 const saveNodesMock = vi.mocked(saveNodes)
 
 const trigger: TriggerNode = {
@@ -105,6 +110,8 @@ function withSetup<T>(composable: () => T): Harness<T> {
 beforeEach(() => {
   setActivePinia(createPinia())
   loadNodesMock.mockReset()
+  loadPositionsMock.mockReset()
+  loadPositionsMock.mockReturnValue({})
   saveNodesMock.mockReset()
   saveNodesMock.mockResolvedValue(undefined)
 })
@@ -120,6 +127,18 @@ describe('useNodesQuery', () => {
     const store = useFlowStore()
     expect(store.nodes).toHaveLength(0)
     await vi.waitFor(() => expect(store.nodes).toHaveLength(SEED.length))
+    app.unmount()
+  })
+
+  it('hydrates persisted positions with the queried nodes', async () => {
+    loadNodesMock.mockResolvedValue(SEED)
+    loadPositionsMock.mockReturnValue({ msg: { x: 11, y: 22 } })
+    const { app } = withSetup(() => useNodesQuery())
+    const store = useFlowStore()
+
+    await vi.waitFor(() => expect(store.nodes).toHaveLength(SEED.length))
+
+    expect(store.positions['msg']).toEqual({ x: 11, y: 22 })
     app.unmount()
   })
 })
@@ -144,6 +163,7 @@ describe('useCreateNode', () => {
     expect(store.positions['new1']).toEqual({ x: 5, y: 6 })
     expect(history.undoStack.length).toBe(1)
     expect(saveNodesMock).toHaveBeenCalled()
+    expect(saveNodesMock.mock.calls[0]?.[1]).toMatchObject({ new1: { x: 5, y: 6 } })
 
     history.undo()
     expect(store.getNodeById('new1')).toBeUndefined()
@@ -282,9 +302,15 @@ describe('useMoveNode', () => {
     expect(store.positions['dt']).toEqual({ x: 0, y: 0 })
     expect(store.positions['s']).toEqual({ x: -100, y: 100 })
 
-    // saveNodes never fires for pure position changes — positions live outside
-    // the payload (recomputed by computeLayout on load).
-    expect(saveNodesMock).not.toHaveBeenCalled()
+    expect(saveNodesMock).toHaveBeenCalledTimes(2)
+    expect(saveNodesMock.mock.calls[0]?.[1]).toMatchObject({
+      dt: { x: 50, y: 50 },
+      s: { x: -50, y: 150 },
+    })
+    expect(saveNodesMock.mock.calls[1]?.[1]).toMatchObject({
+      dt: { x: 0, y: 0 },
+      s: { x: -100, y: 100 },
+    })
 
     app.unmount()
   })

@@ -56,7 +56,16 @@ watchEffect(() => {
   if (store.nodes.length === 0) return
   const missingAny = store.nodes.some((node) => store.positions[nodeKey(node.id)] == null)
   if (!missingAny) return
-  store.setPositions(computeLayout(store.nodes))
+  const layout = computeLayout(store.nodes)
+  const missing: Record<string, Position> = {}
+  for (const node of store.nodes) {
+    const key = nodeKey(node.id)
+    if (store.positions[key] == null) {
+      const position = layout[key]
+      if (position != null) missing[key] = position
+    }
+  }
+  store.setPositions(missing)
 })
 
 const vueFlowNodes = computed<VueFlowNode[]>(() =>

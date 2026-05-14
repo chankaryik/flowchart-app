@@ -29,8 +29,8 @@ import { useNodeKeyboard } from "@/composables/useNodeKeyboard";
 import {
   PERSIST_ENABLED_KEY,
   clearCachedNodes,
+  enablePersistenceWithSnapshot,
   resetNodes,
-  saveNodes,
 } from "@/lib/payload-adapter";
 import { useNodesQuery } from "@/queries/nodes";
 import { NODES_QUERY_KEY } from "@/queries/client";
@@ -114,7 +114,7 @@ function onPersistToggle(next: boolean): void {
   if (next) {
     // Persist the current in-memory state immediately so the user sees the
     // setting take effect without needing to make a change first.
-    void saveNodes([...store.nodes]);
+    enablePersistenceWithSnapshot([...store.nodes], { ...store.positions });
     toast.success("Data will be saved across refreshes");
   } else {
     clearCachedNodes();

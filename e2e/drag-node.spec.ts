@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
-import { SEED, gotoCanvas, nodeLocator, pressUndo, resetState } from './helpers'
+import { SEED, gotoCanvas, nodeLocator, pressUndo, readStoredPositions, resetState } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await resetState(page)
@@ -49,6 +49,16 @@ test('dragging a node moves it in the current session', async ({ page }) => {
   expect(after.x - before.x).toBeGreaterThan(40)
   expect(after.y - before.y).toBeGreaterThan(20)
 
+})
+
+test('dragging a node stores its position for refreshes', async ({ page }) => {
+  await gotoCanvas(page)
+
+  await dragBy(page, SEED.welcomeMessage, 180, 60)
+
+  const stored = await readStoredPositions(page)
+  expect(stored?.[SEED.welcomeMessage]?.x).toEqual(expect.any(Number))
+  expect(stored?.[SEED.welcomeMessage]?.y).toEqual(expect.any(Number))
 })
 
 test('a single Ctrl+Z reverses one drag-end, even when many drag events fired', async ({ page }) => {

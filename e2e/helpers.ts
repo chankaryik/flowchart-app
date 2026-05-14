@@ -2,6 +2,8 @@ import { expect, type Locator, type Page } from '@playwright/test'
 
 // Keep aligned with src/lib/payload-adapter.ts STORAGE_KEY.
 export const STORAGE_KEY = 'payload-v1'
+// Keep aligned with src/lib/payload-adapter.ts POSITIONS_STORAGE_KEY.
+export const POSITIONS_STORAGE_KEY = 'payload-positions-v1'
 // Keep aligned with src/lib/payload-adapter.ts PERSIST_ENABLED_KEY.
 const PERSIST_ENABLED_KEY = 'persist-enabled-v1'
 
@@ -66,6 +68,20 @@ export async function readStoredPayload(page: Page): Promise<unknown[] | null> {
       return null
     }
   }, STORAGE_KEY)
+}
+
+export async function readStoredPositions(
+  page: Page,
+): Promise<Record<string, { x: number; y: number }> | null> {
+  return page.evaluate((key) => {
+    const raw = window.localStorage.getItem(key)
+    if (raw == null) return null
+    try {
+      return JSON.parse(raw) as Record<string, { x: number; y: number }>
+    } catch {
+      return null
+    }
+  }, POSITIONS_STORAGE_KEY)
 }
 
 /**
