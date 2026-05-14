@@ -40,6 +40,7 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 - **Tests**: Vitest coverage for the custom components, stores, queries, composables, and pure utilities; Playwright E2E coverage for the golden paths across Chromium and WebKit.
 - **Toasts, skeleton loading state, empty-state recovery**, and a tooltip-rich UI built on Shadcn Vue + Tailwind v4.
 - **Responsive layout** down to phone widths: the header collapses to a hamburger menu (Persist toggle, Re-layout, Keyboard shortcuts, Reset) below the `md` breakpoint, the MiniMap is hidden on small screens, and the canvas refits to the viewport whenever the container size changes.
+- **Dark mode** with Light / Dark / System options, exposed via a header toggle (and the mobile menu). The choice persists in `localStorage`, an inline boot script applies it before Vue mounts to avoid a flash, and the canvas chrome (controls, minimap, edge handles, background dots) re-skins via semantic shadcn tokens plus targeted Vue Flow overrides.
 
 ## Requirements coverage
 
