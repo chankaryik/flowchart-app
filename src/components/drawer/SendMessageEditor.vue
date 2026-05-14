@@ -85,9 +85,7 @@ watch(
   },
 )
 
-const hasTextRow = computed(() =>
-  fields.value.some((field) => field.value.type === 'text'),
-)
+const hasTextRow = computed(() => fields.value.some((field) => field.value.type === 'text'))
 const hasAttachmentRow = computed(() =>
   fields.value.some((field) => field.value.type === 'attachment'),
 )
@@ -287,8 +285,8 @@ const onSubmit = handleSubmit(async (values) => {
               {{ attachmentError(index) }}
             </p>
             <p class="text-[11px] text-muted-foreground">
-              Uploaded files are kept in memory only — the data persist setting does not support file
-              uploads yet, so attachments are lost on refresh.
+              Uploaded files are kept in memory only — the data persist setting does not support
+              file uploads yet, so attachments are lost on refresh.
             </p>
           </template>
         </div>

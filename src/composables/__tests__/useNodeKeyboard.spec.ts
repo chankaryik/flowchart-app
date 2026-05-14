@@ -34,8 +34,20 @@ function seedFlow(): FlowNode[] {
       name: 'dt',
       data: { times: [], connectors: ['ok', 'no'], timezone: 'UTC', action: 'businessHours' },
     },
-    { id: 'ok', parentId: 'dt', type: 'dateTimeConnector', name: 'ok', data: { connectorType: 'success' } },
-    { id: 'no', parentId: 'dt', type: 'dateTimeConnector', name: 'no', data: { connectorType: 'failure' } },
+    {
+      id: 'ok',
+      parentId: 'dt',
+      type: 'dateTimeConnector',
+      name: 'ok',
+      data: { connectorType: 'success' },
+    },
+    {
+      id: 'no',
+      parentId: 'dt',
+      type: 'dateTimeConnector',
+      name: 'no',
+      data: { connectorType: 'failure' },
+    },
     { id: 'm1', parentId: 'ok', type: 'sendMessage', name: 'm1', data: { payload: [] } },
     { id: 'c1', parentId: 'no', type: 'addComment', name: 'c1', data: { comment: '' } },
   ]

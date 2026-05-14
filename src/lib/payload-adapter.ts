@@ -65,10 +65,7 @@ export function loadPositions(): PersistedPositions {
   }
 }
 
-export async function saveNodes(
-  nodes: FlowNode[],
-  positions?: PersistedPositions,
-): Promise<void> {
+export async function saveNodes(nodes: FlowNode[], positions?: PersistedPositions): Promise<void> {
   if (!isPersistEnabled()) return
   if (typeof localStorage === 'undefined') return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes))

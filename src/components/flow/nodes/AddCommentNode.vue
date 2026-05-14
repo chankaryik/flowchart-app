@@ -21,21 +21,26 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
   <Tooltip>
     <TooltipTrigger as-child>
       <Card
-        class="node-card relative w-[220px] gap-0 border-amber-300 bg-amber-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        class="node-card relative w-55 gap-0 border-amber-300 bg-amber-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-amber-500/40 dark:bg-amber-950/40"
         data-node-type="addComment"
         :data-flow-node-id="id"
         tabindex="0"
       >
         <Handle v-if="hasParent" type="target" :position="Position.Top" />
         <CardHeader class="flex gap-2 px-3 pt-3 pb-2">
-          <StickyNote class="size-4 shrink-0 text-amber-700 mt-0.5" aria-hidden="true" />
+          <StickyNote
+            class="size-4 shrink-0 text-amber-700 mt-0.5 dark:text-amber-300"
+            aria-hidden="true"
+          />
           <div class="min-w-0">
-            <CardTitle class="min-w-0 flex-1 text-sm font-medium text-amber-900">
+            <CardTitle
+              class="min-w-0 flex-1 text-sm font-medium text-amber-900 dark:text-amber-100"
+            >
               {{ data.name }}
             </CardTitle>
             <p
               v-if="description.length > 0"
-              class="truncate text-[11px] text-amber-800/80"
+              class="truncate text-[11px] text-amber-800/80 dark:text-amber-200/80"
               data-testid="node-description"
             >
               {{ description }}
@@ -43,10 +48,12 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </div>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p v-if="comment.length > 0" class="text-[11px] text-amber-800/80">
+          <p v-if="comment.length > 0" class="text-[11px] text-amber-800/80 dark:text-amber-200/80">
             {{ comment }}
           </p>
-          <p v-else class="truncate text-[11px] italic text-amber-700/60">No comment yet</p>
+          <p v-else class="truncate text-[11px] italic text-amber-700/60 dark:text-amber-300/50">
+            No comment yet
+          </p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

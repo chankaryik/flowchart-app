@@ -28,13 +28,18 @@ const overlayStubs = {
   SheetHeader: { template: '<header><slot /></header>' },
   SheetTitle: { template: '<h2><slot /></h2>' },
   SheetDescription: { template: '<p><slot /></p>' },
-  AlertDialog: { props: ['open'], template: '<div data-testid="alert" :data-open="open"><slot /></div>' },
+  AlertDialog: {
+    props: ['open'],
+    template: '<div data-testid="alert" :data-open="open"><slot /></div>',
+  },
   AlertDialogContent: { template: '<div><slot /></div>' },
   AlertDialogHeader: { template: '<div><slot /></div>' },
   AlertDialogTitle: { template: '<h3><slot /></h3>' },
   AlertDialogDescription: { template: '<p><slot /></p>' },
   AlertDialogFooter: { template: '<footer><slot /></footer>' },
-  AlertDialogCancel: { template: '<button data-testid="delete-cancel" type="button"><slot /></button>' },
+  AlertDialogCancel: {
+    template: '<button data-testid="delete-cancel" type="button"><slot /></button>',
+  },
   AlertDialogAction: {
     template:
       '<button data-testid="delete-confirm-action" type="button" @click="$emit(\'click\', $event)"><slot /></button>',

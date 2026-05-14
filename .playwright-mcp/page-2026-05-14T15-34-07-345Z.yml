@@ -1,0 +1,123 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 7 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button [expanded]:
+            - img
+            - generic: "Theme: Dark"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img:
+                    - group [ref=e1] [cursor=pointer]
+                  - img
+                  - img:
+                    - group [ref=e4] [cursor=pointer]
+                  - img:
+                    - group [ref=e7] [cursor=pointer]
+                  - img:
+                    - group [ref=e10] [cursor=pointer]
+                  - img
+                  - generic:
+                    - group [ref=e13]:
+                      - generic [ref=e14]:
+                        - generic [ref=e15]:
+                          - img [ref=e16]
+                          - heading [level=3] [ref=e18]: Trigger
+                        - paragraph [ref=e20]: Conversation Opened
+                        - button [ref=e21] [cursor=pointer]:
+                          - img [ref=e24]
+                    - group [ref=e25]:
+                      - generic [ref=e26]:
+                        - generic [ref=e28]:
+                          - img [ref=e29]
+                          - heading [level=3] [ref=e32]: Away Message
+                        - paragraph [ref=e34]: Sorry, we are currently away. We will respond as soon as possible.
+                        - button [ref=e35] [cursor=pointer]:
+                          - img [ref=e38]
+                    - group [ref=e39]:
+                      - generic [ref=e40]:
+                        - generic [ref=e41]:
+                          - img [ref=e42]
+                          - heading [level=3] [ref=e46]: Business Hours
+                        - paragraph [ref=e48]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e49]:
+                      - generic [ref=e50]:
+                        - img [ref=e51]
+                        - generic [ref=e54]: Success
+                        - button [ref=e55] [cursor=pointer]:
+                          - img [ref=e58]
+                    - group [ref=e59]:
+                      - generic [ref=e60]:
+                        - img [ref=e61]
+                        - generic [ref=e65]: Failure
+                        - button [ref=e66] [cursor=pointer]:
+                          - img [ref=e69]
+                    - group [ref=e70]:
+                      - generic [ref=e71]:
+                        - generic [ref=e72]:
+                          - generic [ref=e73]:
+                            - img [ref=e74]
+                            - heading [level=3] [ref=e77]: Welcome Message
+                          - generic [ref=e79]:
+                            - img [ref=e80]
+                            - text: "1"
+                        - paragraph [ref=e83]: Hello there welcome to the chat!
+                        - button [ref=e84] [cursor=pointer]:
+                          - img [ref=e87]
+                    - group [ref=e88]:
+                      - generic [ref=e89]:
+                        - generic [ref=e90]:
+                          - img [ref=e91]
+                          - heading [level=3] [ref=e95]: "Add Comment #1"
+                        - paragraph [ref=e97]: User message during off hours
+                        - button [ref=e98] [cursor=pointer]:
+                          - img [ref=e101]
+            - img
+            - img [ref=e103]
+            - generic [ref=e112]:
+              - button [ref=e113] [cursor=pointer]:
+                - img [ref=e114]
+              - button [ref=e116] [cursor=pointer]:
+                - img [ref=e117]
+              - button [ref=e119] [cursor=pointer]:
+                - img [ref=e120]
+              - button [ref=e122] [cursor=pointer]:
+                - img [ref=e123]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - menu "Toggle theme" [active] [ref=e125]:
+    - menuitem "Light" [ref=e126]:
+      - img
+      - text: Light
+    - menuitem "Dark" [ref=e127]:
+      - img
+      - text: Dark
+    - menuitem "System" [ref=e128]:
+      - img
+      - text: System

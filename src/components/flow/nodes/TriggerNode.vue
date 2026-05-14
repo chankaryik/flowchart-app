@@ -19,17 +19,17 @@ const oncePerContact = computed(() => props.data.data.oncePerContact);
   <Tooltip>
     <TooltipTrigger as-child>
       <Card
-        class="node-card relative w-[220px] gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        class="node-card relative w-55 gap-0 border-sky-300 bg-sky-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-sky-500/40 dark:bg-sky-950/40"
         data-node-type="trigger"
         :data-flow-node-id="id"
         tabindex="0"
       >
         <CardHeader class="flex flex-row items-center gap-2 px-3 pt-3 pb-2">
-          <Zap class="size-4 shrink-0 text-sky-700" aria-hidden="true" />
-          <CardTitle class="truncate text-sm font-medium text-slate-900">Trigger</CardTitle>
+          <Zap class="size-4 shrink-0 text-sky-700 dark:text-sky-300" aria-hidden="true" />
+          <CardTitle class="truncate text-sm font-medium text-foreground">Trigger</CardTitle>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-[11px] text-slate-500">{{ eventLabel }}</p>
+          <p class="truncate text-[11px] text-muted-foreground">{{ eventLabel }}</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

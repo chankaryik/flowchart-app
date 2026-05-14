@@ -21,10 +21,7 @@ export const commentSchema = v.pipe(
   v.maxLength(1000, 'Comment must be 1000 characters or fewer.'),
 )
 
-export const attachmentSchema = v.pipe(
-  v.string(),
-  v.minLength(1, 'Please upload a file.'),
-)
+export const attachmentSchema = v.pipe(v.string(), v.minLength(1, 'Please upload a file.'))
 
 export const attachmentsSchema = v.pipe(
   v.array(attachmentSchema),

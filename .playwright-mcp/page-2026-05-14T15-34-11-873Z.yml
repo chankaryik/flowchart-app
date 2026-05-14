@@ -1,0 +1,113 @@
+- generic [ref=e129]:
+  - generic [ref=e130]:
+    - generic [ref=e131]:
+      - banner [ref=e132]:
+        - generic [ref=e133]:
+          - heading "Flow Chart" [level=1] [ref=e134]
+          - generic [ref=e135]: 7 nodes
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - generic "When on, your changes are saved to localStorage and survive page refreshes. File uploads are never persisted." [ref=e138]: Persist data
+            - switch "Persist data" [ref=e139]
+          - button "Toggle theme" [active] [ref=e141]:
+            - img [ref=e142]
+            - generic [ref=e148]: "Theme: Light"
+          - button "Show keyboard shortcuts" [ref=e149]:
+            - img [ref=e150]
+          - button "Reset" [ref=e152]:
+            - img [ref=e153]
+            - text: Reset
+          - button "Re-layout" [ref=e156]:
+            - img [ref=e157]
+            - text: Re-layout
+          - button "+ Create New Node" [ref=e162]
+      - main [ref=e163]:
+        - generic [ref=e165]:
+          - generic [ref=e167]:
+            - generic:
+              - img
+              - img:
+                - group "Edge from 28c4b9 to b6a0c1" [ref=e168] [cursor=pointer]
+              - img:
+                - group "Edge from 1 to d09c08"
+              - img:
+                - group "Edge from d09c08 to 161f52" [ref=e169] [cursor=pointer]
+              - img:
+                - group "Edge from d09c08 to 28c4b9" [ref=e170] [cursor=pointer]
+              - img:
+                - group "Edge from 161f52 to b0653a" [ref=e171] [cursor=pointer]
+              - img:
+                - group "Edge from b6a0c1 to e879e4"
+              - generic:
+                - group [ref=e13]:
+                  - generic [ref=e14]:
+                    - generic [ref=e15]:
+                      - img [ref=e16]
+                      - heading "Trigger" [level=3] [ref=e172]
+                    - paragraph [ref=e20]: Conversation Opened
+                    - button "Add child node" [ref=e173] [cursor=pointer]:
+                      - img [ref=e24]
+                - group [ref=e25]:
+                  - generic [ref=e26]:
+                    - generic [ref=e28]:
+                      - img [ref=e29]
+                      - heading "Away Message" [level=3] [ref=e174]
+                    - paragraph [ref=e34]: Sorry, we are currently away. We will respond as soon as possible.
+                    - button "Add child node" [ref=e175] [cursor=pointer]:
+                      - img [ref=e38]
+                - group [ref=e39]:
+                  - generic [ref=e40]:
+                    - generic [ref=e41]:
+                      - img [ref=e42]
+                      - heading "Business Hours" [level=3] [ref=e176]
+                    - paragraph [ref=e48]: Daily 09:00–17:00 (UTC)
+                - group [ref=e49]:
+                  - generic [ref=e50]:
+                    - img [ref=e51]
+                    - generic [ref=e54]: Success
+                    - button "Add child node" [ref=e177] [cursor=pointer]:
+                      - img [ref=e58]
+                - group [ref=e59]:
+                  - generic [ref=e60]:
+                    - img [ref=e61]
+                    - generic [ref=e65]: Failure
+                    - button "Add child node" [ref=e178] [cursor=pointer]:
+                      - img [ref=e69]
+                - group [ref=e70]:
+                  - generic [ref=e71]:
+                    - generic [ref=e72]:
+                      - generic [ref=e73]:
+                        - img [ref=e74]
+                        - heading "Welcome Message" [level=3] [ref=e179]
+                      - generic "1 attachment" [ref=e180]:
+                        - img [ref=e80]
+                        - text: "1"
+                    - paragraph [ref=e83]: Hello there welcome to the chat!
+                    - button "Add child node" [ref=e181] [cursor=pointer]:
+                      - img [ref=e87]
+                - group [ref=e88]:
+                  - generic [ref=e89]:
+                    - generic [ref=e90]:
+                      - img [ref=e91]
+                      - 'heading "Add Comment #1" [level=3] [ref=e182]'
+                    - paragraph [ref=e97]: User message during off hours
+                    - button "Add child node" [ref=e183] [cursor=pointer]:
+                      - img [ref=e101]
+          - img [ref=e184]
+          - img "Vue Flow mini map" [ref=e186]
+          - generic [ref=e112]:
+            - button [ref=e113] [cursor=pointer]:
+              - img [ref=e114]
+            - button [ref=e116] [cursor=pointer]:
+              - img [ref=e117]
+            - button [ref=e119] [cursor=pointer]:
+              - img [ref=e120]
+            - button [ref=e122] [cursor=pointer]:
+              - img [ref=e123]
+    - region "Notifications alt+T":
+      - list
+  - generic [ref=e188]:
+    - generic "Toggle devtools panel" [ref=e189] [cursor=pointer]:
+      - img [ref=e190]
+    - generic "Toggle Component Inspector" [ref=e195] [cursor=pointer]:
+      - img [ref=e196]

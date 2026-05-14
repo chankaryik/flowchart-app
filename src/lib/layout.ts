@@ -29,8 +29,7 @@ export function computeLayout(nodes: FlowNode[]): Record<string, Position> {
     const children = childrenByParent.get(layoutKey(node.id)) ?? []
     if (children.length === 0) return NODE_WIDTH
     const total =
-      children.reduce((acc, child) => acc + subtreeWidth(child), 0) +
-      (children.length - 1) * H_GAP
+      children.reduce((acc, child) => acc + subtreeWidth(child), 0) + (children.length - 1) * H_GAP
     return Math.max(NODE_WIDTH, total)
   }
 

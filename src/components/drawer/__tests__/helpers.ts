@@ -15,9 +15,7 @@ export async function flushValidation(): Promise<void> {
   await flushPromises()
 }
 
-export type MutateAsyncMock = ReturnType<
-  typeof vi.fn<(vars: UpdateNodeVars) => Promise<void>>
->
+export type MutateAsyncMock = ReturnType<typeof vi.fn<(vars: UpdateNodeVars) => Promise<void>>>
 
 export function makeUpdateNodeMock(): {
   mutateAsync: MutateAsyncMock

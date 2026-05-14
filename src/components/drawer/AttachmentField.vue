@@ -80,7 +80,8 @@ function download(index: number): void {
 
 function iconFor(name: string): typeof FileIcon {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(ext)) return ImageIconComp
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(ext))
+    return ImageIconComp
   if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return Film
   if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext)) return Music
   if (['pdf', 'doc', 'docx', 'txt', 'md', 'rtf', 'csv', 'json'].includes(ext)) return FileText
@@ -100,11 +101,7 @@ function iconFor(name: string): typeof FileIcon {
       @change="onPickerChange"
     />
 
-    <ul
-      v-if="modelValue.length > 0"
-      class="space-y-1"
-      data-testid="attachment-list"
-    >
+    <ul v-if="modelValue.length > 0" class="space-y-1" data-testid="attachment-list">
       <li
         v-for="(name, index) in modelValue"
         :key="`${name}-${index}`"

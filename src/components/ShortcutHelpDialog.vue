@@ -34,9 +34,7 @@ const navigationShortcuts = computed<Shortcut[]>(() => [
 const editingShortcuts = computed<Shortcut[]>(() => [
   { keys: [mod.value, 'Z'], description: 'Undo last change' },
   { keys: [mod.value, 'Shift', 'Z'], description: 'Redo last undone change' },
-  ...(isMac()
-    ? []
-    : [{ keys: ['Ctrl', 'Y'], description: 'Redo (Windows alias)' }]),
+  ...(isMac() ? [] : [{ keys: ['Ctrl', 'Y'], description: 'Redo (Windows alias)' }]),
 ])
 
 const helpShortcuts: Shortcut[] = [{ keys: ['?'], description: 'Show this help' }]
@@ -57,9 +55,7 @@ function onUpdateOpen(value: boolean): void {
       </DialogHeader>
       <section class="space-y-4 text-sm">
         <div>
-          <h3
-            class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-          >
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             Navigation
           </h3>
           <ul class="space-y-1.5">
@@ -76,9 +72,7 @@ function onUpdateOpen(value: boolean): void {
                   >
                     {{ k }}
                   </kbd>
-                  <span
-                    v-if="i < shortcut.keys.length - 1"
-                    class="text-xs text-muted-foreground"
+                  <span v-if="i < shortcut.keys.length - 1" class="text-xs text-muted-foreground"
                     >+</span
                   >
                 </template>
@@ -87,9 +81,7 @@ function onUpdateOpen(value: boolean): void {
           </ul>
         </div>
         <div>
-          <h3
-            class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-          >
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             Editing
           </h3>
           <ul class="space-y-1.5">
@@ -106,9 +98,7 @@ function onUpdateOpen(value: boolean): void {
                   >
                     {{ k }}
                   </kbd>
-                  <span
-                    v-if="i < shortcut.keys.length - 1"
-                    class="text-xs text-muted-foreground"
+                  <span v-if="i < shortcut.keys.length - 1" class="text-xs text-muted-foreground"
                     >+</span
                   >
                 </template>
@@ -117,9 +107,7 @@ function onUpdateOpen(value: boolean): void {
           </ul>
         </div>
         <div>
-          <h3
-            class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-          >
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             Help
           </h3>
           <ul class="space-y-1.5">

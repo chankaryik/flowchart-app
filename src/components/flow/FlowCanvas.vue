@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
-import {
-  VueFlow,
-  useVueFlow,
-  type Node as VueFlowNode,
-  type NodeDragEvent,
-} from '@vue-flow/core'
+import { VueFlow, useVueFlow, type Node as VueFlowNode, type NodeDragEvent } from '@vue-flow/core'
 import { MiniMap } from '@vue-flow/minimap'
 import { useDebounceFn, useResizeObserver, useThrottleFn } from '@vueuse/core'
 import { computed, nextTick, ref, watch, watchEffect } from 'vue'
@@ -16,6 +11,7 @@ import { computeLayout } from '@/lib/layout'
 import { useMoveNode, type SecondaryMove } from '@/queries/nodes'
 import { nodeKey, type Position, useFlowStore } from '@/stores/flow'
 import { useNodeEdges } from '@/composables/useNodeEdges'
+import { useTheme } from '@/composables/useTheme'
 
 import AddCommentNode from './nodes/AddCommentNode.vue'
 import DateTimeConnectorNode from './nodes/DateTimeConnectorNode.vue'
@@ -28,6 +24,12 @@ const router = useRouter()
 const edges = useNodeEdges()
 const { fitView } = useVueFlow()
 const moveMutation = useMoveNode()
+const { resolved: resolvedTheme } = useTheme()
+// Background pattern uses fixed SVG fill colors that CSS variables can't
+// reach, so swap the dot color when the resolved theme flips.
+const backgroundPatternColor = computed(() =>
+  resolvedTheme.value === 'dark' ? '#475569' : '#cbd5e1',
+)
 
 const DRAG_THROTTLE_MS = 30
 
@@ -111,7 +113,9 @@ function applyDrag(event: NodeDragEvent): void {
 
 function onNodeDragStart(event: NodeDragEvent): void {
   const key = nodeKey(event.node.id)
-  dragStart = { ...(store.positions[key] ?? { x: event.node.position.x, y: event.node.position.y }) }
+  dragStart = {
+    ...(store.positions[key] ?? { x: event.node.position.x, y: event.node.position.y }),
+  }
   connectorStart = {}
   const flow = store.getNodeById(event.node.id)
   if (flow?.type === 'dateTime') {
@@ -164,7 +168,6 @@ function onNodeDragStop(event: NodeDragEvent): void {
     secondary: secondary.length > 0 ? secondary : undefined,
   })
 }
-
 </script>
 
 <template>
@@ -177,7 +180,7 @@ function onNodeDragStop(event: NodeDragEvent): void {
       :nodes-draggable="true"
       :nodes-connectable="false"
       :elements-selectable="true"
-      class="h-full w-full bg-slate-50"
+      class="h-full w-full bg-background"
       @node-click="onNodeClick"
       @node-drag-start="onNodeDragStart"
       @node-drag="onNodeDrag"
@@ -199,7 +202,7 @@ function onNodeDragStop(event: NodeDragEvent): void {
         <AddCommentNode v-bind="nodeProps" />
       </template>
 
-      <Background pattern-color="#cbd5e1" :gap="20" />
+      <Background :pattern-color="backgroundPatternColor" :gap="20" />
       <MiniMap pannable zoomable class="hidden md:block" />
       <Controls />
     </VueFlow>

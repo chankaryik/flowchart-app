@@ -33,7 +33,9 @@ beforeEach(() => {
 describe('SendMessageEditor', () => {
   it('blocks submit when an attachment row has no file', async () => {
     const wrapper = mountEditor(SendMessageEditor, { node: baseNode })
-    await wrapper.find('[data-row-kind="attachment"] [data-testid="attachment-clear"]').trigger('click')
+    await wrapper
+      .find('[data-row-kind="attachment"] [data-testid="attachment-clear"]')
+      .trigger('click')
     await flushValidation()
     await wrapper.find('form').trigger('submit')
     await flushValidation()

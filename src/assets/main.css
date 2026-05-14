@@ -1,12 +1,11 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "@vue-flow/core/dist/style.css";
-@import "@vue-flow/core/dist/theme-default.css";
-@import "@vue-flow/controls/dist/style.css";
-@import "@vue-flow/minimap/dist/style.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@vue-flow/core/dist/style.css';
+@import '@vue-flow/core/dist/theme-default.css';
+@import '@vue-flow/controls/dist/style.css';
+@import '@vue-flow/minimap/dist/style.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -125,4 +124,43 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Vue Flow chrome (controls, minimap, edges) ships with light-themed CSS;
+   re-skin those bits using our semantic tokens when .dark is active so they
+   sit cleanly against the dark canvas. */
+.dark .vue-flow__controls {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.dark .vue-flow__controls-button {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  fill: var(--foreground);
+  color: var(--foreground);
+}
+.dark .vue-flow__controls-button:hover {
+  background: var(--accent);
+}
+.dark .vue-flow__minimap {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.dark .vue-flow__minimap-mask {
+  fill: oklch(0 0 0 / 40%);
+}
+.dark .vue-flow__minimap-node {
+  fill: var(--muted-foreground);
+}
+.dark .vue-flow__edge-path,
+.dark .vue-flow__connection-path {
+  stroke: var(--muted-foreground);
+}
+.dark .vue-flow__handle {
+  background: var(--muted-foreground);
+  border-color: var(--background);
+}
+.dark .vue-flow__attribution {
+  background: transparent;
+  color: var(--muted-foreground);
 }

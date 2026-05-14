@@ -234,9 +234,7 @@ const onSubmit = handleSubmit(async (values) => {
             </span>
             <label
               class="flex items-center gap-2 text-xs"
-              :class="
-                field.value.closed === true ? 'text-muted-foreground' : 'text-foreground'
-              "
+              :class="field.value.closed === true ? 'text-muted-foreground' : 'text-foreground'"
             >
               <Switch
                 :model-value="field.value.closed !== true"

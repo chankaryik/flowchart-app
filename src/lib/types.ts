@@ -12,12 +12,7 @@ export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 
 export const DAYS: readonly Day[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
-export type NodeType =
-  | 'trigger'
-  | 'sendMessage'
-  | 'dateTime'
-  | 'dateTimeConnector'
-  | 'addComment'
+export type NodeType = 'trigger' | 'sendMessage' | 'dateTime' | 'dateTimeConnector' | 'addComment'
 
 export type EditableNodeType = Exclude<NodeType, 'trigger' | 'dateTimeConnector'>
 

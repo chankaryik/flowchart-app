@@ -23,7 +23,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
   <Tooltip>
     <TooltipTrigger as-child>
       <Card
-        class="node-card relative w-[220px] gap-0 border-violet-300 bg-white py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        class="node-card relative w-55 gap-0 border-violet-300 bg-violet-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-violet-500/40 dark:bg-violet-950/40"
         data-node-type="sendMessage"
         :data-flow-node-id="id"
         tabindex="0"
@@ -31,14 +31,17 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
         <Handle v-if="hasParent" type="target" :position="Position.Top" />
         <CardHeader class="flex justify-between gap-2 px-3 pt-3 pb-2">
           <div class="flex gap-2 min-w-0">
-            <MessageSquare class="size-4 shrink-0 text-violet-700 mt-0.5" aria-hidden="true" />
+            <MessageSquare
+              class="size-4 shrink-0 text-violet-700 mt-0.5 dark:text-violet-300"
+              aria-hidden="true"
+            />
             <div class="min-w-0">
-              <CardTitle class="min-w-0 flex-1 text-sm font-medium text-slate-900">
+              <CardTitle class="min-w-0 flex-1 text-sm font-medium text-card-foreground">
                 {{ data.name }}
               </CardTitle>
               <p
                 v-if="description.length > 0"
-                class="truncate text-[11px] text-slate-500"
+                class="truncate text-[11px] text-muted-foreground"
                 data-testid="node-description"
               >
                 {{ description }}
@@ -47,7 +50,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </div>
           <CardAction v-if="attachments > 0">
             <span
-              class="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700"
+              class="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-200"
               :aria-label="`${attachments} attachment${attachments === 1 ? '' : 's'}`"
               data-testid="attachment-count"
             >
@@ -57,10 +60,10 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </CardAction>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p v-if="preview.length > 0" class="text-[11px] text-slate-500">
+          <p v-if="preview.length > 0" class="text-[11px] text-muted-foreground">
             {{ preview }}
           </p>
-          <p v-else class="truncate text-[11px] italic text-slate-400">No message yet</p>
+          <p v-else class="truncate text-[11px] italic text-muted-foreground/70">No message yet</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

@@ -3,12 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import type {
-  DateTimeConnectorNode,
-  DateTimeNode,
-  FlowNode,
-  TriggerNode,
-} from '@/lib/types'
+import type { DateTimeConnectorNode, DateTimeNode, FlowNode, TriggerNode } from '@/lib/types'
 import type { CreateNodeVars } from '@/queries/nodes'
 import { useFlowStore } from '@/stores/flow'
 

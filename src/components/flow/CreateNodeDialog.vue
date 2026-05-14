@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { toTypedSchema } from "@vee-validate/valibot";
-import { useForm } from "vee-validate";
-import * as v from "valibot";
-import { computed, watch } from "vue";
-import { useRouter } from "vue-router";
-import { toast } from "vue-sonner";
+import { toTypedSchema } from '@vee-validate/valibot'
+import { useForm } from 'vee-validate'
+import * as v from 'valibot'
+import { computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -14,206 +14,204 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { H_GAP, NODE_HEIGHT, NODE_WIDTH, V_GAP } from "@/lib/layout";
-import { createNode } from "@/lib/node-factory";
-import type { EditableNodeType, FlowNode, NodeId } from "@/lib/types";
-import { descriptionSchema, titleSchema } from "@/lib/validators";
-import { useCreateNode } from "@/queries/nodes";
-import { nodeKey, type Position, useFlowStore } from "@/stores/flow";
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { H_GAP, NODE_HEIGHT, NODE_WIDTH, V_GAP } from '@/lib/layout'
+import { createNode } from '@/lib/node-factory'
+import type { EditableNodeType, FlowNode, NodeId } from '@/lib/types'
+import { descriptionSchema, titleSchema } from '@/lib/validators'
+import { useCreateNode } from '@/queries/nodes'
+import { nodeKey, type Position, useFlowStore } from '@/stores/flow'
 
 // REQUIREMENTS.md "Create Node" lists three options for the Type select.
 // "Business Hours" is the user-facing label for the existing `dateTime` type
 // (matches payload.json's seeded node and the existing renderer).
 const TYPE_OPTIONS: { value: EditableNodeType; label: string }[] = [
-  { value: "sendMessage", label: "Send Message" },
-  { value: "addComment", label: "Add Comments" },
-  { value: "dateTime", label: "Business Hours" },
-];
+  { value: 'sendMessage', label: 'Send Message' },
+  { value: 'addComment', label: 'Add Comments' },
+  { value: 'dateTime', label: 'Business Hours' },
+]
 
 // Sentinel parent for orphan nodes (matches the seed trigger's parentId).
 // Header "Create New Node" creates standalone nodes with no parent edge;
 // only the per-node + button supplies a real parent.
-const ORPHAN_PARENT_ID: NodeId = -1;
-const ORPHAN_OFFSET = 80;
+const ORPHAN_PARENT_ID: NodeId = -1
+const ORPHAN_OFFSET = 80
 
-const props = defineProps<{ open: boolean }>();
-const emit = defineEmits<{ (e: "update:open", value: boolean): void }>();
+const props = defineProps<{ open: boolean }>()
+const emit = defineEmits<{ (e: 'update:open', value: boolean): void }>()
 
-const router = useRouter();
-const store = useFlowStore();
-const mutation = useCreateNode();
+const router = useRouter()
+const store = useFlowStore()
+const mutation = useCreateNode()
 
 const formSchema = toTypedSchema(
   v.object({
     title: titleSchema,
     description: descriptionSchema,
-    type: v.picklist(["sendMessage", "addComment", "dateTime"]),
+    type: v.picklist(['sendMessage', 'addComment', 'dateTime']),
   }),
-);
+)
 
 const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
   validationSchema: formSchema,
-  initialValues: { title: "", description: "", type: undefined as EditableNodeType | undefined },
-});
+  initialValues: { title: '', description: '', type: undefined as EditableNodeType | undefined },
+})
 
-const [title, titleAttrs] = defineField("title", { validateOnBlur: true });
-const [description, descriptionAttrs] = defineField("description", { validateOnBlur: true });
-const [type, typeAttrs] = defineField("type", { validateOnBlur: true });
+const [title, titleAttrs] = defineField('title', { validateOnBlur: true })
+const [description, descriptionAttrs] = defineField('description', { validateOnBlur: true })
+const [type, typeAttrs] = defineField('type', { validateOnBlur: true })
 
 // meta.valid reports true on mount before any validation has run, so it's not
 // enough on its own to gate the submit button. Combine with explicit checks
 // for the two required fields so the button starts disabled.
 const canSubmit = computed(
-  () => meta.value.valid && (title.value ?? "").trim().length > 0 && type.value != null,
-);
+  () => meta.value.valid && (title.value ?? '').trim().length > 0 && type.value != null,
+)
 
 const presetParent = computed<FlowNode | null>(() => {
-  const id = store.createDialog.parentId;
-  if (id == null) return null;
-  return store.getNodeById(id) ?? null;
-});
+  const id = store.createDialog.parentId
+  if (id == null) return null
+  return store.getNodeById(id) ?? null
+})
 
 const presetParentLabel = computed(() => {
-  const parent = presetParent.value;
-  if (parent == null) return null;
-  return "name" in parent ? parent.name : `Trigger #${parent.id}`;
-});
+  const parent = presetParent.value
+  if (parent == null) return null
+  return 'name' in parent ? parent.name : `Trigger #${parent.id}`
+})
 
 watch(
   () => props.open,
   (next) => {
-    if (!next) return;
+    if (!next) return
     resetForm({
-      values: { title: "", description: "", type: undefined as EditableNodeType | undefined },
-    });
+      values: { title: '', description: '', type: undefined as EditableNodeType | undefined },
+    })
   },
-);
+)
 
 function setOpen(open: boolean): void {
-  emit("update:open", open);
+  emit('update:open', open)
 }
 
 function nextOrphanPosition(): Position {
   // Stack new orphan nodes diagonally so successive creates don't overlap.
-  const orphanCount = store.nodes.filter((n) => String(n.parentId) === String(ORPHAN_PARENT_ID))
-    .length;
+  const orphanCount = store.nodes.filter(
+    (n) => String(n.parentId) === String(ORPHAN_PARENT_ID),
+  ).length
   return {
     x: ORPHAN_OFFSET + orphanCount * (NODE_WIDTH + H_GAP),
     y: ORPHAN_OFFSET + orphanCount * (NODE_HEIGHT + V_GAP),
-  };
+  }
 }
 
-function computeChildPositions(
-  newNodes: FlowNode[],
-  parentId: NodeId,
-): Record<string, Position> {
-  const parentPos = store.positions[nodeKey(parentId)] ?? { x: 0, y: 0 };
-  const result: Record<string, Position> = {};
+function computeChildPositions(newNodes: FlowNode[], parentId: NodeId): Record<string, Position> {
+  const parentPos = store.positions[nodeKey(parentId)] ?? { x: 0, y: 0 }
+  const result: Record<string, Position> = {}
   if (newNodes.length === 1) {
-    const first = newNodes[0];
-    if (first == null) return result;
-    const siblings = store.getChildren(parentId).length;
+    const first = newNodes[0]
+    if (first == null) return result
+    const siblings = store.getChildren(parentId).length
     result[nodeKey(first.id)] = {
       x: parentPos.x + siblings * (NODE_WIDTH + H_GAP),
       y: parentPos.y + NODE_HEIGHT + V_GAP,
-    };
-    return result;
+    }
+    return result
   }
-  const [dt, success, failure] = newNodes;
-  if (dt == null || success == null || failure == null) return result;
-  const dtY = parentPos.y + NODE_HEIGHT + V_GAP;
-  const connectorY = dtY + NODE_HEIGHT + V_GAP;
-  result[nodeKey(dt.id)] = { x: parentPos.x, y: dtY };
+  const [dt, success, failure] = newNodes
+  if (dt == null || success == null || failure == null) return result
+  const dtY = parentPos.y + NODE_HEIGHT + V_GAP
+  const connectorY = dtY + NODE_HEIGHT + V_GAP
+  result[nodeKey(dt.id)] = { x: parentPos.x, y: dtY }
   result[nodeKey(success.id)] = {
     x: parentPos.x - (NODE_WIDTH + H_GAP) / 2,
     y: connectorY,
-  };
+  }
   result[nodeKey(failure.id)] = {
     x: parentPos.x + (NODE_WIDTH + H_GAP) / 2,
     y: connectorY,
-  };
-  return result;
+  }
+  return result
 }
 
 function computeOrphanPositions(newNodes: FlowNode[]): Record<string, Position> {
-  const origin = nextOrphanPosition();
-  const result: Record<string, Position> = {};
+  const origin = nextOrphanPosition()
+  const result: Record<string, Position> = {}
   if (newNodes.length === 1) {
-    const first = newNodes[0];
-    if (first == null) return result;
-    result[nodeKey(first.id)] = origin;
-    return result;
+    const first = newNodes[0]
+    if (first == null) return result
+    result[nodeKey(first.id)] = origin
+    return result
   }
-  const [dt, success, failure] = newNodes;
-  if (dt == null || success == null || failure == null) return result;
-  const connectorY = origin.y + NODE_HEIGHT + V_GAP;
-  result[nodeKey(dt.id)] = origin;
+  const [dt, success, failure] = newNodes
+  if (dt == null || success == null || failure == null) return result
+  const connectorY = origin.y + NODE_HEIGHT + V_GAP
+  result[nodeKey(dt.id)] = origin
   result[nodeKey(success.id)] = {
     x: origin.x - (NODE_WIDTH + H_GAP) / 2,
     y: connectorY,
-  };
+  }
   result[nodeKey(failure.id)] = {
     x: origin.x + (NODE_WIDTH + H_GAP) / 2,
     y: connectorY,
-  };
-  return result;
+  }
+  return result
 }
 
 const onSubmit = handleSubmit(async (values) => {
-  const t = values.type;
-  if (t == null) return;
+  const t = values.type
+  if (t == null) return
 
-  const parent = presetParent.value;
-  const parentId: NodeId = parent?.id ?? ORPHAN_PARENT_ID;
+  const parent = presetParent.value
+  const parentId: NodeId = parent?.id ?? ORPHAN_PARENT_ID
 
-  const trimmedTitle = values.title.trim();
-  const trimmedDescription = values.description.trim();
+  const trimmedTitle = values.title.trim()
+  const trimmedDescription = values.description.trim()
   const partial = {
     name: trimmedTitle,
     description: trimmedDescription.length > 0 ? trimmedDescription : undefined,
-  };
+  }
 
-  let nodes: FlowNode[];
-  let primaryId: NodeId;
+  let nodes: FlowNode[]
+  let primaryId: NodeId
 
-  if (t === "dateTime") {
-    const created = createNode("dateTime", parentId, partial);
-    nodes = [created.dateTime, created.connectors[0], created.connectors[1]];
-    primaryId = created.dateTime.id;
-  } else if (t === "sendMessage") {
-    const created = createNode("sendMessage", parentId, partial);
-    nodes = [created];
-    primaryId = created.id;
+  if (t === 'dateTime') {
+    const created = createNode('dateTime', parentId, partial)
+    nodes = [created.dateTime, created.connectors[0], created.connectors[1]]
+    primaryId = created.dateTime.id
+  } else if (t === 'sendMessage') {
+    const created = createNode('sendMessage', parentId, partial)
+    nodes = [created]
+    primaryId = created.id
   } else {
-    const created = createNode("addComment", parentId, partial);
-    nodes = [created];
-    primaryId = created.id;
+    const created = createNode('addComment', parentId, partial)
+    nodes = [created]
+    primaryId = created.id
   }
 
   const positions =
-    parent != null ? computeChildPositions(nodes, parent.id) : computeOrphanPositions(nodes);
+    parent != null ? computeChildPositions(nodes, parent.id) : computeOrphanPositions(nodes)
 
   try {
-    await mutation.mutateAsync({ nodes, positions });
+    await mutation.mutateAsync({ nodes, positions })
   } catch {
-    return;
+    return
   }
 
-  setOpen(false);
-  toast.success(`${trimmedTitle} created`);
-  void router.push(`/node/${primaryId}`);
-});
+  setOpen(false)
+  toast.success(`${trimmedTitle} created`)
+  void router.push(`/node/${primaryId}`)
+})
 </script>
 
 <template>
@@ -295,7 +293,7 @@ const onSubmit = handleSubmit(async (values) => {
             :disabled="!canSubmit || mutation.isPending.value"
             data-testid="create-submit"
           >
-            {{ mutation.isPending.value ? "Creating…" : "Create" }}
+            {{ mutation.isPending.value ? 'Creating…' : 'Create' }}
           </Button>
         </DialogFooter>
       </form>

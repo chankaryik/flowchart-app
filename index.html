@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <title>Flowchart App</title>
+    <script>
+      // Apply persisted theme before Vue mounts to avoid a flash of the wrong
+      // color scheme. Mirrors useTheme()'s storage key + 'auto' initial value.
+      ;(function () {
+        try {
+          var saved = localStorage.getItem('theme-mode-v1') || 'auto'
+          var dark =
+            saved === 'dark' ||
+            (saved === 'auto' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+        } catch (_) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -31,7 +31,9 @@ vi.mock('@/lib/payload-adapter', () => ({
   loadNodes: vi.fn<() => Promise<FlowNode[]>>(),
   loadPositions: vi.fn<() => Record<string, { x: number; y: number }>>(),
   saveNodes: vi
-    .fn<(nodes: FlowNode[], positions?: Record<string, { x: number; y: number }>) => Promise<void>>()
+    .fn<
+      (nodes: FlowNode[], positions?: Record<string, { x: number; y: number }>) => Promise<void>
+    >()
     .mockResolvedValue(undefined),
   STORAGE_KEY: 'payload-v1',
   POSITIONS_STORAGE_KEY: 'payload-positions-v1',
@@ -194,12 +196,18 @@ describe('useCreateNode', () => {
       },
     }
     const ok: DateTimeConnectorNode = {
-      id: 'dt-s', parentId: 'dt-new', type: 'dateTimeConnector',
-      name: 'Success', data: { connectorType: 'success' },
+      id: 'dt-s',
+      parentId: 'dt-new',
+      type: 'dateTimeConnector',
+      name: 'Success',
+      data: { connectorType: 'success' },
     }
     const no: DateTimeConnectorNode = {
-      id: 'dt-f', parentId: 'dt-new', type: 'dateTimeConnector',
-      name: 'Failure', data: { connectorType: 'failure' },
+      id: 'dt-f',
+      parentId: 'dt-new',
+      type: 'dateTimeConnector',
+      name: 'Failure',
+      data: { connectorType: 'failure' },
     }
     await mutation.mutateAsync({
       nodes: [dt, ok, no],

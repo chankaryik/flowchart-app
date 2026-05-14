@@ -24,21 +24,24 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
   <Tooltip>
     <TooltipTrigger as-child>
       <Card
-        class="node-card w-[220px] gap-0 border-amber-300 bg-white py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        class="node-card w-55 gap-0 border-lime-300 bg-lime-50 py-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-lime-500/40 dark:bg-lime-950/40"
         data-node-type="dateTime"
         :data-flow-node-id="id"
         tabindex="0"
       >
         <Handle v-if="hasParent" type="target" :position="Position.Top" />
         <CardHeader class="flex gap-2 px-3 pt-3 pb-2">
-          <Clock class="size-4 shrink-0 text-amber-700 mt-0.5" aria-hidden="true" />
+          <Clock
+            class="size-4 shrink-0 text-lime-700 mt-0.5 dark:text-lime-300"
+            aria-hidden="true"
+          />
           <div class="min-w-0">
-            <CardTitle class="text-sm font-medium text-slate-900">
+            <CardTitle class="text-sm font-medium text-card-foreground">
               {{ data.name }}
             </CardTitle>
             <p
               v-if="description.length > 0"
-              class="truncate text-[11px] text-slate-500"
+              class="truncate text-[11px] text-muted-foreground"
               data-testid="node-description"
             >
               {{ description }}
@@ -46,7 +49,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </div>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-[11px] text-slate-500">{{ summary }}</p>
+          <p class="truncate text-[11px] text-muted-foreground">{{ summary }}</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
       </Card>

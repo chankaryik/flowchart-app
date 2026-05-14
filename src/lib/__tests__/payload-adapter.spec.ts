@@ -14,7 +14,12 @@ import {
 import type { FlowNode } from '@/lib/types'
 
 const SEED: FlowNode[] = [
-  { id: 1, parentId: -1, type: 'trigger', data: { type: 'conversationOpened', oncePerContact: false } },
+  {
+    id: 1,
+    parentId: -1,
+    type: 'trigger',
+    data: { type: 'conversationOpened', oncePerContact: false },
+  },
 ]
 
 function mockFetchOnce(body: FlowNode[], ok = true, status = 200) {

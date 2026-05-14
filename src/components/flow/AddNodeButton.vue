@@ -68,7 +68,10 @@ function onClick(event: MouseEvent): void {
   border: 1px dashed rgb(148 163 184);
   background: white;
   color: rgb(100 116 139);
-  transition: border-color 120ms ease, color 120ms ease, transform 120ms ease;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
 }
 
 .add-node-button:hover .add-node-circle,
@@ -84,6 +87,8 @@ function onClick(event: MouseEvent): void {
 }
 
 .add-node-button:focus-visible .add-node-circle {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px rgb(59 130 246 / 0.5);
+  box-shadow:
+    0 0 0 2px white,
+    0 0 0 4px rgb(59 130 246 / 0.5);
 }
 </style>
