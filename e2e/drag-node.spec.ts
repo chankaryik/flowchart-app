@@ -61,6 +61,28 @@ test('dragging a node stores its position for refreshes', async ({ page }) => {
   expect(stored?.[SEED.welcomeMessage]?.y).toEqual(expect.any(Number))
 })
 
+test('re-layout tidies dragged nodes and can be undone', async ({ page }) => {
+  await gotoCanvas(page)
+
+  const node = nodeLocator(page, SEED.welcomeMessage)
+  const before = await requireBox(node, 'welcome message before drag')
+  const { after: dragged } = await dragBy(page, SEED.welcomeMessage, 220, 80)
+
+  await page.getByTestId('relayout-button').click()
+  await expect.poll(async () => (await node.boundingBox())?.x).toBeCloseTo(before.x, -1)
+
+  const relaid = await requireBox(node, 'welcome message after re-layout')
+  expect(Math.abs(relaid.x - before.x)).toBeLessThan(5)
+  expect(Math.abs(relaid.y - before.y)).toBeLessThan(5)
+
+  await pressUndo(page)
+  await expect.poll(async () => (await node.boundingBox())?.x).toBeCloseTo(dragged.x, -1)
+
+  const undone = await requireBox(node, 'welcome message after re-layout undo')
+  expect(Math.abs(undone.x - dragged.x)).toBeLessThan(5)
+  expect(Math.abs(undone.y - dragged.y)).toBeLessThan(5)
+})
+
 test('a single Ctrl+Z reverses one drag-end, even when many drag events fired', async ({ page }) => {
   await gotoCanvas(page)
 

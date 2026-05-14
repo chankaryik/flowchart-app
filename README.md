@@ -32,12 +32,12 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 - **Vue Flow canvas** with five node types: `trigger`, `sendMessage`, `dateTime`, `dateTimeConnector` (display-only Success/Failure), and `addComment`. Edges are derived from `parentId` chains and rendered with `smoothstep`.
 - **URL-driven details drawer** at `/node/:id`. Drawer state lives in the route, so it is deep-linkable, browser-back-button friendly, and survives a refresh.
 - **Create / Edit / Delete** for every editable node type, with per-type editors (text payloads, attachments, business-hours grid, comment textarea).
-- **Drag-and-drop** with throttled position updates and a single undo entry per drag end. `dateTime` siblings move with their parent.
+- **Drag-and-drop** with throttled position updates and a single undo entry per drag end. `dateTime` siblings move with their parent, and **Re-layout** tidies the current graph on demand.
 - **Undo / Redo** via `Ctrl/Cmd+Z` and `Ctrl/Cmd+Shift+Z`, backed by a command stack. Field edits batch to blur/submit granularity so each user-visible change is a single history entry.
 - **Keyboard accessibility**: Tab and arrow keys move focus through nodes in graph order, Enter opens the drawer, Esc closes it, `?` opens a shortcut help dialog. Connector nodes are intentionally skipped.
 - **TanStack Query** for fetching and mutating `payload.json` with the exact client config required by the spec; optimistic Pinia updates plus rollback on error.
 - **Comprehensive validation** at blur and submit (title, description, attachment uploads, comment length, business-hours overlap detection).
-- **Tests**: Vitest coverage for the custom components, stores, queries, composables, and pure utilities; 8 Playwright E2E scenarios covering the golden paths across Chromium and WebKit.
+- **Tests**: Vitest coverage for the custom components, stores, queries, composables, and pure utilities; Playwright E2E coverage for the golden paths across Chromium and WebKit.
 - **Toasts, skeleton loading state, empty-state recovery**, and a tooltip-rich UI built on Shadcn Vue + Tailwind v4.
 
 ## Requirements coverage
@@ -114,12 +114,14 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. The canvas loads the seed graph from `public/payload.json`. Persistence is off by default, so refreshing re-reads the canonical payload. Turn on **Persist data** in the header to save node edits in `localStorage` under `payload-v1` (see [Persistence model](#persistence-model)).
+Open <http://localhost:5173>. The canvas loads the seed graph from `public/payload.json`. Persistence is off by default, so refreshing re-reads the canonical payload. Turn on **Persist data** in the header to save node edits and dragged layout positions in `localStorage` under `payload-v1` and `payload-positions-v1` (see [Persistence model](#persistence-model)).
 
 To reset the graph to the seed, use the **Reset** button in the header, or clear the cache in DevTools:
 
 ```js
-localStorage.removeItem('payload-v1'); location.reload();
+localStorage.removeItem('payload-v1');
+localStorage.removeItem('payload-positions-v1');
+location.reload();
 ```
 
 ### Production build & preview
@@ -222,7 +224,7 @@ Tests sit alongside the code they cover under `__tests__/` folders, mirroring th
                        │
                        ├─ onMutate: history.push({undo, redo})
                        │            store.applyPatch(...)              <-- optimistic
-                       ├─ mutationFn: payload-adapter.saveNodes(store.nodes)
+                       ├─ mutationFn: payload-adapter.saveNodes(store.nodes, store.positions)
                        └─ onError: history.lastEntry.undo()            <-- rollback
                                    toast.error(...)
 
@@ -253,7 +255,7 @@ This makes every drawer state shareable and back-button-friendly with no extra w
 
 | Decision | Choice | Reason |
 | --- | --- | --- |
-| Persistence | Optional `localStorage` cache under `payload-v1` | The spec says "data fetching and mutation updates involving payload.json" without prescribing a backend. The static file is served by Vite at `/payload.json` for the initial seed; mutations stay client-side when persistence is enabled. The adapter is a clean swap point. |
+| Persistence | Optional `localStorage` cache under `payload-v1` and `payload-positions-v1` | The spec says "data fetching and mutation updates involving payload.json" without prescribing a backend. The static file is served by Vite at `/payload.json` for the initial seed; mutations stay client-side when persistence is enabled. The adapter is a clean swap point. |
 | Trigger node | Locked: not deletable, not in Create Node | A flow needs exactly one trigger; the spec never says otherwise. The trigger's drawer is read-only. |
 | Edge style | `smoothstep` everywhere | Looks like an org chart, which makes the `dateTime → success/failure → next-action` branching legible at a glance. |
 
@@ -293,9 +295,9 @@ The discriminated union flows through every layer — components, stores, valida
 ## Persistence model
 
 - **Default mode:** `payload-adapter.loadNodes()` fetches `/payload.json` on every refresh. This keeps the take-home easy to review because a reload always returns to the canonical seed.
-- **Persist data mode:** when the header switch is on, `loadNodes()` reads `localStorage['payload-v1']` first, and node mutations write the full node list back through `saveNodes(store.nodes)`.
-- **Resetting:** the header **Reset** button clears cached nodes, re-fetches `/payload.json`, clears undo history, and recomputes layout.
-- **E2E setup:** Playwright enables the persistence flag per test so create/edit/delete scenarios can assert reload behavior inside an isolated browser context.
+- **Persist data mode:** when the header switch is on, `loadNodes()` reads `localStorage['payload-v1']` first, `loadPositions()` reads `localStorage['payload-positions-v1']`, and node/layout mutations write both caches back through `saveNodes(store.nodes, store.positions)`. Enabling the switch snapshots the current in-memory graph immediately, so edits made while persistence was off are not lost on the next refresh.
+- **Resetting:** the header **Reset** button clears cached nodes and positions, re-fetches `/payload.json`, clears undo history, and recomputes layout.
+- **E2E setup:** Playwright enables the persistence flag per test so create/edit/delete/drag scenarios can assert reload behavior inside an isolated browser context.
 
 Why localStorage and not a real backend: the spec is explicit about TanStack Query but ambiguous about where mutations land. Going through a single `payload-adapter` module means swapping to a real backend is a one-file change — the rest of the app already speaks "send a list of nodes to be saved."
 
@@ -360,9 +362,10 @@ One spec per scenario in [CLAUDE.md §8.7](CLAUDE.md):
 - `create-node.spec.ts` — open dialog, create each editable type, persists after refresh.
 - `edit-node.spec.ts` — navigate to `/node/:id` directly, edit, save, value sticks.
 - `delete-node.spec.ts` — delete with cascade; trigger has no Delete button.
-- `drag-node.spec.ts` — drag moves the node in-session; single undo reverts.
+- `drag-node.spec.ts` — drag moves the node in-session; positions persist; Re-layout tidies; single undo reverts.
 - `undo-redo.spec.ts` — create → undo → redo on every editable type.
 - `deep-link.spec.ts` — `/node/:id` opens drawer; connector/unknown ids redirect with toast.
+- `persist-toggle.spec.ts` — enabling persistence snapshots edits made while persistence was disabled.
 - `keyboard-nav.spec.ts` — Tab, Arrows, Enter, Esc, `?`; connectors skipped.
 
 Every spec starts in a fresh browser context and enables the persistence flag in `beforeEach`. Local runs use the Vite dev server; CI builds first and runs against the preview server (see `playwright.config.ts`).
@@ -392,7 +395,7 @@ A few places where I made a deliberate trade-off rather than reach for a heavier
 - **Trigger node is locked.** A workflow needs exactly one trigger; making it deletable would require a "no-trigger" empty state that the spec doesn't describe. Easy to relax later.
 - **Edge routing is `smoothstep` everywhere.** Vue Flow's `bezier` looks fine too — `smoothstep` was chosen because the `dateTime → success/failure → next-action` shape reads more like an org chart that way.
 - **History is field-level, not keystroke-level.** Per-keystroke undo would conflict with the browser's native in-field undo and explode the history stack. Blur/submit granularity is what users expect for form fields.
-- **Auto-layout fills missing positions.** Dragged positions live in Pinia for the current session; a future enhancement would persist layout or add a "re-layout" button.
+- **Manual re-layout, not continuous auto-layout.** Missing positions are auto-filled on load, and **Re-layout** can tidy the graph on demand. The app does not continuously reflow after every edit because that would fight the user's manual placement.
 - **Attachments are client-side only.** The payload stores filenames, while uploaded `File` objects live in the in-memory `stores/attachments.ts` map and would need real upload infrastructure to be production-ready.
 
 ---
