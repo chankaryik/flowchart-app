@@ -8,8 +8,8 @@ import {
   type NodeDragEvent,
 } from '@vue-flow/core'
 import { MiniMap } from '@vue-flow/minimap'
-import { useThrottleFn } from '@vueuse/core'
-import { computed, nextTick, watch, watchEffect } from 'vue'
+import { useDebounceFn, useResizeObserver, useThrottleFn } from '@vueuse/core'
+import { computed, nextTick, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { computeLayout } from '@/lib/layout'
@@ -49,6 +49,16 @@ watch(
   },
   { immediate: true },
 )
+
+// Vue Flow tracks container dimensions internally but does not refit on
+// resize — without this, shrinking the window to mobile leaves nodes at
+// their old absolute positions until the user pans or refreshes.
+const canvasRoot = ref<HTMLElement | null>(null)
+const refitOnResize = useDebounceFn(() => {
+  if (store.nodes.length === 0) return
+  fitView({ padding: 0.2 })
+}, 150)
+useResizeObserver(canvasRoot, refitOnResize)
 
 // Seed positions when nodes are present but some/all lack a layout entry.
 // Idempotent: re-runs only while at least one node is missing a position.
@@ -158,7 +168,7 @@ function onNodeDragStop(event: NodeDragEvent): void {
 </script>
 
 <template>
-  <div class="relative h-full w-full">
+  <div ref="canvasRoot" class="relative h-full w-full">
     <VueFlow
       :nodes="vueFlowNodes"
       :edges="edges"
@@ -190,7 +200,7 @@ function onNodeDragStop(event: NodeDragEvent): void {
       </template>
 
       <Background pattern-color="#cbd5e1" :gap="20" />
-      <MiniMap pannable zoomable />
+      <MiniMap pannable zoomable class="hidden md:block" />
       <Controls />
     </VueFlow>
   </div>

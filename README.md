@@ -39,6 +39,7 @@ Built as the frontend take-home for the Respondio frontend role. The spec lives 
 - **Comprehensive validation** at blur and submit (title, description, attachment uploads, comment length, business-hours overlap detection).
 - **Tests**: Vitest coverage for the custom components, stores, queries, composables, and pure utilities; Playwright E2E coverage for the golden paths across Chromium and WebKit.
 - **Toasts, skeleton loading state, empty-state recovery**, and a tooltip-rich UI built on Shadcn Vue + Tailwind v4.
+- **Responsive layout** down to phone widths: the header collapses to a hamburger menu (Persist toggle, Re-layout, Keyboard shortcuts, Reset) below the `md` breakpoint, the MiniMap is hidden on small screens, and the canvas refits to the viewport whenever the container size changes.
 
 ## Requirements coverage
 
@@ -258,6 +259,14 @@ This makes every drawer state shareable and back-button-friendly with no extra w
 | Persistence | Optional `localStorage` cache under `payload-v1` and `payload-positions-v1` | The spec says "data fetching and mutation updates involving payload.json" without prescribing a backend. The static file is served by Vite at `/payload.json` for the initial seed; mutations stay client-side when persistence is enabled. The adapter is a clean swap point. |
 | Trigger node | Locked: not deletable, not in Create Node | A flow needs exactly one trigger; the spec never says otherwise. The trigger's drawer is read-only. |
 | Edge style | `smoothstep` everywhere | Looks like an org chart, which makes the `dateTime → success/failure → next-action` branching legible at a glance. |
+
+### Responsive design
+
+The layout adapts at Tailwind's `md` breakpoint (768px), driven by `useBreakpoints(breakpointsTailwind)` from VueUse so the JS branch stays in sync with the `md:` classes in the template:
+
+- **Header.** Desktop shows the full toolbar (Persist toggle, Help, Reset, Re-layout, Create New Node). Below `md`, the toolbar collapses to a primary `+` icon button plus a hamburger that opens a left-side Shadcn `Sheet` with Persist data, Re-layout, Keyboard shortcuts, and Reset (Reset uses the same destructive red styling on both layouts so the visual weight matches the action). The mobile menu auto-closes if the viewport grows back across `md`.
+- **MiniMap.** Hidden on small screens (`hidden md:block`) to give the phone canvas its full width back.
+- **Canvas auto-refit.** Vue Flow tracks container dimensions but doesn't refit on resize, so node positions would stay where they were until a refresh. A `useResizeObserver` on the canvas wrapper calls `fitView({ padding: 0.2 })` debounced 150 ms whenever the container size changes — shrinking the window from desktop to phone (or rotating a device) recenters the graph without a reload.
 
 ### Buttery transitions
 

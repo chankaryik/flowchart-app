@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { useQueryClient } from "@tanstack/vue-query";
-import { useStorage } from "@vueuse/core";
-import { AlertTriangle, Keyboard, RefreshCw, RotateCcw, Sparkles } from "lucide-vue-next";
+import { breakpointsTailwind, useBreakpoints, useStorage } from "@vueuse/core";
+import {
+  AlertTriangle,
+  Keyboard,
+  Menu,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+} from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toast } from "vue-sonner";
@@ -22,6 +30,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useFlowHistory } from "@/composables/useFlowHistory";
@@ -57,6 +72,28 @@ const resetConfirmOpen = ref(false);
 const helpOpen = ref(false);
 const resetting = ref(false);
 const seeding = ref(false);
+const mobileMenuOpen = ref(false);
+
+const breakpoints = useBreakpoints(breakpointsTailwind);
+const isDesktop = breakpoints.greaterOrEqual("md");
+watch(isDesktop, (desktop) => {
+  if (desktop) mobileMenuOpen.value = false;
+});
+
+function openHelp(): void {
+  mobileMenuOpen.value = false;
+  helpOpen.value = true;
+}
+
+function openResetConfirm(): void {
+  mobileMenuOpen.value = false;
+  resetConfirmOpen.value = true;
+}
+
+async function onMobileRelayout(): Promise<void> {
+  mobileMenuOpen.value = false;
+  await onRelayout();
+}
 
 const createDialogOpen = computed({
   get: () => store.createDialog.open,
@@ -188,16 +225,21 @@ async function onConfirmReset(): Promise<void> {
 
 <template>
   <div class="flex h-screen flex-col bg-slate-50 text-slate-900">
-    <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
-      <div class="flex items-baseline gap-3">
-        <h1 class="text-base font-semibold tracking-tight">Flow Chart</h1>
+    <header
+      class="flex items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-3 md:px-6"
+    >
+      <div class="flex min-w-0 items-baseline gap-3">
+        <h1 class="truncate text-base font-semibold tracking-tight">Flow Chart</h1>
         <span v-if="query.isPending.value" class="text-xs text-slate-500">Loading…</span>
-        <span v-else-if="query.isError.value" class="text-xs text-red-600">
+        <span v-else-if="query.isError.value" class="hidden text-xs text-red-600 sm:inline">
           Failed to load payload
         </span>
-        <span v-else class="text-xs text-slate-500">{{ store.nodes.length }} nodes</span>
+        <span v-else class="hidden text-xs text-slate-500 sm:inline">
+          {{ store.nodes.length }} nodes
+        </span>
       </div>
-      <div class="flex items-center gap-3">
+
+      <div class="hidden items-center gap-3 md:flex">
         <div class="flex items-center gap-2">
           <Label
             for="persist-switch"
@@ -226,7 +268,7 @@ async function onConfirmReset(): Promise<void> {
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
+          class="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
           :disabled="query.isPending.value || query.isError.value || resetting"
           data-testid="reset-button"
           @click="resetConfirmOpen = true"
@@ -261,7 +303,103 @@ async function onConfirmReset(): Promise<void> {
           + Create New Node
         </button>
       </div>
+
+      <div class="flex items-center gap-2 md:hidden">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-md bg-slate-900 p-2 text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
+          :disabled="query.isPending.value || query.isError.value"
+          data-testid="create-node-button-mobile"
+          aria-label="Create new node"
+          title="Create new node"
+          @click="store.openCreateDialog()"
+        >
+          <Plus class="size-4" />
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-100"
+          data-testid="menu-button"
+          aria-label="Open menu"
+          title="Open menu"
+          @click="mobileMenuOpen = true"
+        >
+          <Menu class="size-4" />
+        </button>
+      </div>
     </header>
+
+    <Sheet :open="mobileMenuOpen" @update:open="(v) => (mobileMenuOpen = v)">
+      <SheetContent side="left" class="flex w-72 flex-col gap-0 p-0" data-testid="mobile-menu">
+        <SheetHeader class="border-b border-border px-4 py-3">
+          <SheetTitle class="text-base font-semibold">Menu</SheetTitle>
+          <SheetDescription class="text-xs">
+            {{
+              query.isPending.value
+                ? "Loading…"
+                : query.isError.value
+                  ? "Failed to load payload"
+                  : `${store.nodes.length} nodes`
+            }}
+          </SheetDescription>
+        </SheetHeader>
+
+        <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+          <div
+            class="flex items-start justify-between gap-3 rounded-md border border-slate-200 px-3 py-2.5"
+          >
+            <div class="min-w-0">
+              <Label for="persist-switch-mobile" class="text-sm font-medium text-slate-800">
+                Persist data
+              </Label>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                Save changes across page refreshes. File uploads are not persisted.
+              </p>
+            </div>
+            <Switch
+              id="persist-switch-mobile"
+              :model-value="persistEnabled"
+              @update:model-value="onPersistToggle"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex w-full items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
+            :disabled="
+              query.isPending.value ||
+              query.isError.value ||
+              resetting ||
+              store.nodes.length === 0 ||
+              relayoutMutation.isPending.value
+            "
+            @click="onMobileRelayout"
+          >
+            <RefreshCw class="size-4" />
+            Re-layout
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex w-full items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+            @click="openHelp"
+          >
+            <Keyboard class="size-4" />
+            Keyboard shortcuts
+          </button>
+
+          <button
+            type="button"
+            class="mt-auto inline-flex w-full items-center gap-2 rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
+            :disabled="query.isPending.value || query.isError.value || resetting"
+            @click="openResetConfirm"
+          >
+            <RotateCcw class="size-4" />
+            Reset flow chart
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
 
     <main class="relative flex-1 overflow-hidden">
       <FlowCanvas class="absolute inset-0" />
@@ -274,7 +412,9 @@ async function onConfirmReset(): Promise<void> {
         role="status"
         aria-live="polite"
       >
-        <div class="flex w-72 flex-col gap-3 rounded-lg border border-border bg-white p-4 shadow-sm">
+        <div
+          class="flex w-72 flex-col gap-3 rounded-lg border border-border bg-white p-4 shadow-sm"
+        >
           <Skeleton class="h-4 w-24" />
           <Skeleton class="h-16 w-full" />
           <Skeleton class="h-16 w-full" />
@@ -289,12 +429,18 @@ async function onConfirmReset(): Promise<void> {
         data-testid="canvas-error"
         role="alert"
       >
-        <div class="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-white p-6 text-center shadow-sm">
+        <div
+          class="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-white p-6 text-center shadow-sm"
+        >
           <AlertTriangle class="size-6 text-destructive" aria-hidden="true" />
           <div>
             <p class="text-sm font-semibold">Could not load the flow chart</p>
             <p class="mt-1 text-xs text-muted-foreground">
-              {{ query.error.value instanceof Error ? query.error.value.message : 'The payload failed to load.' }}
+              {{
+                query.error.value instanceof Error
+                  ? query.error.value.message
+                  : "The payload failed to load."
+              }}
             </p>
           </div>
           <Button
@@ -315,7 +461,9 @@ async function onConfirmReset(): Promise<void> {
         class="absolute inset-0 z-10 flex items-center justify-center bg-slate-50/90"
         data-testid="canvas-empty"
       >
-        <div class="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-border bg-white p-6 text-center shadow-sm">
+        <div
+          class="flex max-w-sm flex-col items-center gap-3 rounded-lg border border-border bg-white p-6 text-center shadow-sm"
+        >
           <Sparkles class="size-6 text-muted-foreground" aria-hidden="true" />
           <div>
             <p class="text-sm font-semibold">The canvas is empty</p>
@@ -361,6 +509,5 @@ async function onConfirmReset(): Promise<void> {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-
   </div>
 </template>
