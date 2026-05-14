@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
-import { SEED, STORAGE_KEY, gotoCanvas, nodeLocator, pressUndo, resetState } from './helpers'
+import { SEED, gotoCanvas, nodeLocator, pressUndo, readStoredPositions, resetState } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await resetState(page)
@@ -12,11 +12,6 @@ async function requireBox(node: Locator, label: string): Promise<Box> {
   const box = await node.boundingBox()
   if (box == null) throw new Error(`No bounding box for ${label}`)
   return box
-}
-
-async function waitForPersistedPayload(page: Page): Promise<void> {
-  // Replaces a fixed sleep: poll localStorage until saveNodes() has flushed.
-  await page.waitForFunction((key) => window.localStorage.getItem(key) !== null, STORAGE_KEY)
 }
 
 async function dragBy(
@@ -46,7 +41,7 @@ async function dragBy(
   }
 }
 
-test('dragging a node moves it and persists across refresh', async ({ page }) => {
+test('dragging a node moves it in the current session', async ({ page }) => {
   await gotoCanvas(page)
 
   const { before, after } = await dragBy(page, SEED.welcomeMessage, 180, 60)
@@ -54,16 +49,16 @@ test('dragging a node moves it and persists across refresh', async ({ page }) =>
   expect(after.x - before.x).toBeGreaterThan(40)
   expect(after.y - before.y).toBeGreaterThan(20)
 
-  // Make sure the drag has been flushed to localStorage before reloading.
-  await waitForPersistedPayload(page)
-  await page.reload()
-  const node = nodeLocator(page, SEED.welcomeMessage)
-  const reloaded = await requireBox(node, 'welcome message after reload')
-  // Refresh re-fits the viewport so we can't compare absolute coordinates,
-  // but we can compare to the trigger card as a stable reference.
-  const trigger = await requireBox(nodeLocator(page, SEED.trigger), 'trigger after reload')
-  const dxFromTrigger = reloaded.x - trigger.x
-  expect(Math.abs(dxFromTrigger)).toBeGreaterThan(50)
+})
+
+test('dragging a node stores its position for refreshes', async ({ page }) => {
+  await gotoCanvas(page)
+
+  await dragBy(page, SEED.welcomeMessage, 180, 60)
+
+  const stored = await readStoredPositions(page)
+  expect(stored?.[SEED.welcomeMessage]?.x).toEqual(expect.any(Number))
+  expect(stored?.[SEED.welcomeMessage]?.y).toEqual(expect.any(Number))
 })
 
 test('a single Ctrl+Z reverses one drag-end, even when many drag events fired', async ({ page }) => {

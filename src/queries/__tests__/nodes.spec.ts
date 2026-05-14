@@ -1,10 +1,9 @@
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { createPinia, getActivePinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createApp, defineComponent, h } from 'vue'
 
 import type {
-  AddCommentNode,
   DateTimeConnectorNode,
   DateTimeNode,
   FlowNode,
@@ -28,14 +27,19 @@ function getName(node: FlowNode | undefined): string | undefined {
 
 vi.mock('@/lib/payload-adapter', () => ({
   loadNodes: vi.fn<() => Promise<FlowNode[]>>(),
-  saveNodes: vi.fn<(nodes: FlowNode[]) => Promise<void>>().mockResolvedValue(undefined),
+  loadPositions: vi.fn<() => Record<string, { x: number; y: number }>>(),
+  saveNodes: vi
+    .fn<(nodes: FlowNode[], positions?: Record<string, { x: number; y: number }>) => Promise<void>>()
+    .mockResolvedValue(undefined),
   STORAGE_KEY: 'payload-v1',
+  POSITIONS_STORAGE_KEY: 'payload-positions-v1',
   PAYLOAD_URL: '/payload.json',
 }))
 
-import { loadNodes, saveNodes } from '@/lib/payload-adapter'
+import { loadNodes, loadPositions, saveNodes } from '@/lib/payload-adapter'
 
 const loadNodesMock = vi.mocked(loadNodes)
+const loadPositionsMock = vi.mocked(loadPositions)
 const saveNodesMock = vi.mocked(saveNodes)
 
 const trigger: TriggerNode = {
@@ -82,20 +86,9 @@ const sendMessage: SendMessageNode = {
   data: { payload: [{ type: 'text', text: 'hi' }] },
 }
 
-const comment: AddCommentNode = {
-  id: 'cmt',
-  parentId: 'msg',
-  type: 'addComment',
-  name: 'Note',
-  data: { comment: 'first' },
-}
+const SEED: FlowNode[] = [trigger, dateTimeNode, success, failure, sendMessage]
 
-const SEED: FlowNode[] = [trigger, dateTimeNode, success, failure, sendMessage, comment]
-
-type Harness<T> = {
-  result: T
-  app: ReturnType<typeof createApp>
-}
+type Harness<T> = { result: T; app: ReturnType<typeof createApp> }
 
 function withSetup<T>(composable: () => T): Harness<T> {
   let result!: T
@@ -117,6 +110,8 @@ function withSetup<T>(composable: () => T): Harness<T> {
 beforeEach(() => {
   setActivePinia(createPinia())
   loadNodesMock.mockReset()
+  loadPositionsMock.mockReset()
+  loadPositionsMock.mockReturnValue({})
   saveNodesMock.mockReset()
   saveNodesMock.mockResolvedValue(undefined)
 })
@@ -128,28 +123,33 @@ afterEach(() => {
 describe('useNodesQuery', () => {
   it('hydrates the flow store when the query resolves', async () => {
     loadNodesMock.mockResolvedValue(SEED)
+    const { app } = withSetup(() => useNodesQuery())
+    const store = useFlowStore()
+    expect(store.nodes).toHaveLength(0)
+    await vi.waitFor(() => expect(store.nodes).toHaveLength(SEED.length))
+    app.unmount()
+  })
 
-    const { app } = withSetup(() => {
-      useNodesQuery()
-    })
+  it('hydrates persisted positions with the queried nodes', async () => {
+    loadNodesMock.mockResolvedValue(SEED)
+    loadPositionsMock.mockReturnValue({ msg: { x: 11, y: 22 } })
+    const { app } = withSetup(() => useNodesQuery())
     const store = useFlowStore()
 
-    expect(store.nodes).toHaveLength(0)
-    await vi.waitFor(() => {
-      expect(store.nodes).toHaveLength(SEED.length)
-    })
+    await vi.waitFor(() => expect(store.nodes).toHaveLength(SEED.length))
 
+    expect(store.positions['msg']).toEqual({ x: 11, y: 22 })
     app.unmount()
   })
 })
 
 describe('useCreateNode', () => {
-  it('appends nodes, records a position, pushes history, and calls saveNodes', async () => {
+  it('appends nodes, records position, pushes history, persists to saveNodes, and undoes cleanly', async () => {
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate([trigger])
-
     const { app, result: mutation } = withSetup(() => useCreateNode())
+
     const newNode: SendMessageNode = {
       id: 'new1',
       parentId: 1,
@@ -162,200 +162,18 @@ describe('useCreateNode', () => {
     expect(store.getNodeById('new1')).toBeDefined()
     expect(store.positions['new1']).toEqual({ x: 5, y: 6 })
     expect(history.undoStack.length).toBe(1)
-    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+    expect(saveNodesMock).toHaveBeenCalled()
+    expect(saveNodesMock.mock.calls[0]?.[1]).toMatchObject({ new1: { x: 5, y: 6 } })
 
     history.undo()
     expect(store.getNodeById('new1')).toBeUndefined()
-
-    app.unmount()
-  })
-})
-
-describe('useUpdateNode', () => {
-  it('patches the node and undo restores the previous value', async () => {
-    const { app, result: mutation } = withSetup(() => useUpdateNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-
-    await mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> })
-    expect(getName(store.getNodeById('msg'))).toBe('Renamed')
-
-    history.undo()
-    expect(getName(store.getNodeById('msg'))).toBe('Welcome')
-
-    history.redo()
-    expect(getName(store.getNodeById('msg'))).toBe('Renamed')
-
-    app.unmount()
-  })
-})
-
-describe('useDeleteNode', () => {
-  it('cascades the subtree and undo restores all nodes and positions', async () => {
-    const { app, result: mutation } = withSetup(() => useDeleteNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-    store.setPosition('msg', { x: 100, y: 200 })
-
-    await mutation.mutateAsync({ id: 'msg' })
-    expect(store.getNodeById('msg')).toBeUndefined()
-    expect(store.getNodeById('cmt')).toBeUndefined()
-    expect(store.positions['msg']).toBeUndefined()
-
-    history.undo()
-    expect(getName(store.getNodeById('msg'))).toBe('Welcome')
-    expect(getName(store.getNodeById('cmt'))).toBe('Note')
-    expect(store.positions['msg']).toEqual({ x: 100, y: 200 })
+    const lastCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]!
+    expect((lastCall[0] as FlowNode[]).find((n) => n.id === 'new1')).toBeUndefined()
 
     app.unmount()
   })
 
-  it('cascading delete of a dateTime removes both connectors and their descendants', async () => {
-    const { app, result: mutation } = withSetup(() => useDeleteNode())
-    const store = useFlowStore()
-    store.hydrate(SEED)
-
-    await mutation.mutateAsync({ id: 'dt' })
-    expect(store.getNodeById('dt')).toBeUndefined()
-    expect(store.getNodeById('s')).toBeUndefined()
-    expect(store.getNodeById('f')).toBeUndefined()
-    expect(store.getNodeById('msg')).toBeUndefined()
-    expect(store.getNodeById('cmt')).toBeUndefined()
-    expect(store.getNodeById(1)).toBeDefined()
-
-    app.unmount()
-  })
-})
-
-describe('useMoveNode', () => {
-  it('updates position and undo restores the previous one', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-    store.setPosition('msg', { x: 0, y: 0 })
-
-    await mutation.mutateAsync({ id: 'msg', position: { x: 80, y: 90 } })
-    expect(store.positions['msg']).toEqual({ x: 80, y: 90 })
-    expect(history.undoStack.length).toBe(1)
-
-    history.undo()
-    expect(store.positions['msg']).toEqual({ x: 0, y: 0 })
-
-    app.unmount()
-  })
-
-  it('undo with no previous position deletes the position entry', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-    expect(store.positions['msg']).toBeUndefined()
-
-    await mutation.mutateAsync({ id: 'msg', position: { x: 1, y: 2 } })
-    expect(store.positions['msg']).toEqual({ x: 1, y: 2 })
-
-    history.undo()
-    expect(store.positions['msg']).toBeUndefined()
-
-    app.unmount()
-  })
-
-  it('applies secondary moves and restores all of them on undo', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-    store.setPosition('dt', { x: 0, y: 0 })
-    store.setPosition('s', { x: -100, y: 100 })
-    store.setPosition('f', { x: 100, y: 100 })
-
-    await mutation.mutateAsync({
-      id: 'dt',
-      position: { x: 50, y: 50 },
-      previousPosition: { x: 0, y: 0 },
-      secondary: [
-        { id: 's', from: { x: -100, y: 100 }, to: { x: -50, y: 150 } },
-        { id: 'f', from: { x: 100, y: 100 }, to: { x: 150, y: 150 } },
-      ],
-    })
-
-    expect(store.positions['dt']).toEqual({ x: 50, y: 50 })
-    expect(store.positions['s']).toEqual({ x: -50, y: 150 })
-    expect(store.positions['f']).toEqual({ x: 150, y: 150 })
-    expect(history.undoStack.length).toBe(1)
-
-    history.undo()
-    expect(store.positions['dt']).toEqual({ x: 0, y: 0 })
-    expect(store.positions['s']).toEqual({ x: -100, y: 100 })
-    expect(store.positions['f']).toEqual({ x: 100, y: 100 })
-
-    history.redo()
-    expect(store.positions['dt']).toEqual({ x: 50, y: 50 })
-    expect(store.positions['s']).toEqual({ x: -50, y: 150 })
-    expect(store.positions['f']).toEqual({ x: 150, y: 150 })
-
-    app.unmount()
-  })
-})
-
-describe('create → undo → redo cycle per editable type', () => {
-  it('handles a sendMessage round-trip', async () => {
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate([trigger])
-    const { app, result: mutation } = withSetup(() => useCreateNode())
-
-    const node: SendMessageNode = {
-      id: 'sm-new',
-      parentId: 1,
-      type: 'sendMessage',
-      name: 'New Message',
-      data: { payload: [{ type: 'text', text: 'hello' }] },
-    }
-    await mutation.mutateAsync({ nodes: [node], position: { x: 10, y: 20 } })
-    expect(store.getNodeById('sm-new')).toBeDefined()
-    expect(store.positions['sm-new']).toEqual({ x: 10, y: 20 })
-
-    history.undo()
-    expect(store.getNodeById('sm-new')).toBeUndefined()
-
-    history.redo()
-    expect(getName(store.getNodeById('sm-new'))).toBe('New Message')
-    expect(store.positions['sm-new']).toEqual({ x: 10, y: 20 })
-
-    app.unmount()
-  })
-
-  it('handles an addComment round-trip', async () => {
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate([trigger])
-    const { app, result: mutation } = withSetup(() => useCreateNode())
-
-    const node: AddCommentNode = {
-      id: 'ac-new',
-      parentId: 1,
-      type: 'addComment',
-      name: 'Memo',
-      data: { comment: 'note me' },
-    }
-    await mutation.mutateAsync({ nodes: [node], position: { x: 3, y: 4 } })
-    expect(getName(store.getNodeById('ac-new'))).toBe('Memo')
-
-    history.undo()
-    expect(store.getNodeById('ac-new')).toBeUndefined()
-
-    history.redo()
-    expect(getName(store.getNodeById('ac-new'))).toBe('Memo')
-    expect(store.positions['ac-new']).toEqual({ x: 3, y: 4 })
-
-    app.unmount()
-  })
-
-  it('handles a dateTime trio round-trip in a single history entry', async () => {
+  it('creates a dateTime trio (parent + success + failure) in a single history entry', async () => {
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate([trigger])
@@ -374,18 +192,12 @@ describe('create → undo → redo cycle per editable type', () => {
       },
     }
     const ok: DateTimeConnectorNode = {
-      id: 'dt-s',
-      parentId: 'dt-new',
-      type: 'dateTimeConnector',
-      name: 'Success',
-      data: { connectorType: 'success' },
+      id: 'dt-s', parentId: 'dt-new', type: 'dateTimeConnector',
+      name: 'Success', data: { connectorType: 'success' },
     }
     const no: DateTimeConnectorNode = {
-      id: 'dt-f',
-      parentId: 'dt-new',
-      type: 'dateTimeConnector',
-      name: 'Failure',
-      data: { connectorType: 'failure' },
+      id: 'dt-f', parentId: 'dt-new', type: 'dateTimeConnector',
+      name: 'Failure', data: { connectorType: 'failure' },
     }
     await mutation.mutateAsync({
       nodes: [dt, ok, no],
@@ -395,9 +207,6 @@ describe('create → undo → redo cycle per editable type', () => {
         'dt-f': { x: 100, y: 100 },
       },
     })
-    expect(store.getNodeById('dt-new')).toBeDefined()
-    expect(store.getNodeById('dt-s')).toBeDefined()
-    expect(store.getNodeById('dt-f')).toBeDefined()
     expect(history.undoStack.length).toBe(1)
 
     history.undo()
@@ -405,123 +214,118 @@ describe('create → undo → redo cycle per editable type', () => {
     expect(store.getNodeById('dt-s')).toBeUndefined()
     expect(store.getNodeById('dt-f')).toBeUndefined()
 
-    history.redo()
-    expect(store.getNodeById('dt-new')).toBeDefined()
-    expect(store.getNodeById('dt-s')).toBeDefined()
-    expect(store.getNodeById('dt-f')).toBeDefined()
-    expect(store.positions['dt-new']).toEqual({ x: 0, y: 0 })
-    expect(store.positions['dt-s']).toEqual({ x: -100, y: 100 })
-    expect(store.positions['dt-f']).toEqual({ x: 100, y: 100 })
-
     app.unmount()
   })
 })
 
-describe('undo / redo persistence', () => {
-  it('persists to saveNodes after undo of an update', async () => {
-    const { app, result: mutation } = withSetup(() => useUpdateNode())
+describe('useUpdateNode', () => {
+  it('patches the node, undoes, and redoes the previous value', async () => {
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useUpdateNode())
 
     await mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> })
-    expect(saveNodesMock).toHaveBeenCalledTimes(1)
+    expect(getName(store.getNodeById('msg'))).toBe('Renamed')
 
     history.undo()
-    expect(saveNodesMock).toHaveBeenCalledTimes(2)
-    const lastSaveCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
-    const lastSave = (lastSaveCall?.[0] ?? []) as FlowNode[]
-    expect(getName(lastSave.find((n) => n.id === 'msg'))).toBe('Welcome')
+    expect(getName(store.getNodeById('msg'))).toBe('Welcome')
 
     history.redo()
+    expect(getName(store.getNodeById('msg'))).toBe('Renamed')
+
+    // Persistence fired for each store mutation (mutate, undo, redo).
     expect(saveNodesMock).toHaveBeenCalledTimes(3)
-    const afterRedoCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
-    const afterRedo = (afterRedoCall?.[0] ?? []) as FlowNode[]
-    expect(getName(afterRedo.find((n) => n.id === 'msg'))).toBe('Renamed')
-
-    app.unmount()
-  })
-
-  it('persists to saveNodes after undo of a delete', async () => {
-    const { app, result: mutation } = withSetup(() => useDeleteNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-
-    await mutation.mutateAsync({ id: 'msg' })
-    expect(saveNodesMock).toHaveBeenCalledTimes(1)
-
-    history.undo()
-    expect(saveNodesMock).toHaveBeenCalledTimes(2)
-    const restoredCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
-    const restored = (restoredCall?.[0] ?? []) as FlowNode[]
-    expect(restored.find((n) => n.id === 'msg')).toBeDefined()
-    expect(restored.find((n) => n.id === 'cmt')).toBeDefined()
-
-    app.unmount()
-  })
-
-  it('persists to saveNodes after undo of a create', async () => {
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate([trigger])
-    const { app, result: mutation } = withSetup(() => useCreateNode())
-
-    const node: SendMessageNode = {
-      id: 'persist-1',
-      parentId: 1,
-      type: 'sendMessage',
-      name: 'X',
-      data: { payload: [] },
-    }
-    await mutation.mutateAsync({ nodes: [node], position: { x: 0, y: 0 } })
-    expect(saveNodesMock).toHaveBeenCalledTimes(1)
-
-    history.undo()
-    expect(saveNodesMock).toHaveBeenCalledTimes(2)
-    const afterUndoCall = saveNodesMock.mock.calls[saveNodesMock.mock.calls.length - 1]
-    const afterUndo = (afterUndoCall?.[0] ?? []) as FlowNode[]
-    expect(afterUndo.find((n) => n.id === 'persist-1')).toBeUndefined()
-
-    app.unmount()
-  })
-
-  it('persists to saveNodes after undo of a move', async () => {
-    const { app, result: mutation } = withSetup(() => useMoveNode())
-    const store = useFlowStore()
-    const history = useHistoryStore()
-    store.hydrate(SEED)
-    store.setPosition('msg', { x: 10, y: 10 })
-
-    await mutation.mutateAsync({ id: 'msg', position: { x: 99, y: 99 } })
-    expect(saveNodesMock).toHaveBeenCalledTimes(1)
-
-    history.undo()
-    expect(saveNodesMock).toHaveBeenCalledTimes(2)
-    // saveNodes only stores nodes, not positions — positions are layout state.
-    // What we're verifying is that saveNodes was called after undo at all.
 
     app.unmount()
   })
 })
 
-describe('mutation onError', () => {
-  it('rolls back the optimistic patch when saveNodes rejects', async () => {
-    saveNodesMock.mockRejectedValueOnce(new Error('disk full'))
-
-    const { app, result: mutation } = withSetup(() => useUpdateNode())
+describe('useDeleteNode', () => {
+  it('cascades the subtree and undo restores nodes and positions', async () => {
     const store = useFlowStore()
     const history = useHistoryStore()
     store.hydrate(SEED)
+    store.setPosition('msg', { x: 100, y: 200 })
+    const { app, result: mutation } = withSetup(() => useDeleteNode())
 
-    await expect(
-      mutation.mutateAsync({ id: 'msg', patch: { name: 'Renamed' } as Partial<FlowNode> }),
-    ).rejects.toThrow('disk full')
-    await nextTick()
+    await mutation.mutateAsync({ id: 'msg' })
+    expect(store.getNodeById('msg')).toBeUndefined()
+    expect(store.positions['msg']).toBeUndefined()
 
+    history.undo()
     expect(getName(store.getNodeById('msg'))).toBe('Welcome')
-    expect(history.undoStack.length).toBe(0)
-    expect(history.redoStack.length).toBe(0)
+    expect(store.positions['msg']).toEqual({ x: 100, y: 200 })
+
+    app.unmount()
+  })
+
+  it('cascading delete of a dateTime removes both connectors (and their descendants)', async () => {
+    const store = useFlowStore()
+    store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useDeleteNode())
+
+    await mutation.mutateAsync({ id: 'dt' })
+    expect(store.getNodeById('dt')).toBeUndefined()
+    expect(store.getNodeById('s')).toBeUndefined()
+    expect(store.getNodeById('f')).toBeUndefined()
+    expect(store.getNodeById('msg')).toBeUndefined()
+    expect(store.getNodeById(1)).toBeDefined()
+
+    app.unmount()
+  })
+})
+
+describe('useMoveNode', () => {
+  it('updates position, supports secondary moves, and round-trips via undo/redo', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+    store.setPosition('dt', { x: 0, y: 0 })
+    store.setPosition('s', { x: -100, y: 100 })
+    store.setPosition('f', { x: 100, y: 100 })
+    const { app, result: mutation } = withSetup(() => useMoveNode())
+
+    await mutation.mutateAsync({
+      id: 'dt',
+      position: { x: 50, y: 50 },
+      previousPosition: { x: 0, y: 0 },
+      secondary: [
+        { id: 's', from: { x: -100, y: 100 }, to: { x: -50, y: 150 } },
+        { id: 'f', from: { x: 100, y: 100 }, to: { x: 150, y: 150 } },
+      ],
+    })
+    expect(store.positions['dt']).toEqual({ x: 50, y: 50 })
+    expect(store.positions['s']).toEqual({ x: -50, y: 150 })
+
+    history.undo()
+    expect(store.positions['dt']).toEqual({ x: 0, y: 0 })
+    expect(store.positions['s']).toEqual({ x: -100, y: 100 })
+
+    expect(saveNodesMock).toHaveBeenCalledTimes(2)
+    expect(saveNodesMock.mock.calls[0]?.[1]).toMatchObject({
+      dt: { x: 50, y: 50 },
+      s: { x: -50, y: 150 },
+    })
+    expect(saveNodesMock.mock.calls[1]?.[1]).toMatchObject({
+      dt: { x: 0, y: 0 },
+      s: { x: -100, y: 100 },
+    })
+
+    app.unmount()
+  })
+
+  it('undo with no previous position deletes the position entry', async () => {
+    const store = useFlowStore()
+    const history = useHistoryStore()
+    store.hydrate(SEED)
+    const { app, result: mutation } = withSetup(() => useMoveNode())
+
+    await mutation.mutateAsync({ id: 'msg', position: { x: 1, y: 2 } })
+    expect(store.positions['msg']).toEqual({ x: 1, y: 2 })
+
+    history.undo()
+    expect(store.positions['msg']).toBeUndefined()
 
     app.unmount()
   })

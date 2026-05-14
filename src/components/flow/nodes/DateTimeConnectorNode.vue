@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core'
-import { CheckCircle2, XCircle } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { Handle, Position } from "@vue-flow/core";
+import { CheckCircle2, XCircle } from "lucide-vue-next";
+import { computed } from "vue";
 
-import AddNodeButton from '@/components/flow/AddNodeButton.vue'
-import type { DateTimeConnectorNode as DateTimeConnectorNodeShape } from '@/lib/types'
+import AddNodeButton from "@/components/flow/AddNodeButton.vue";
+import type { DateTimeConnectorNode as DateTimeConnectorNodeShape } from "@/lib/types";
 
 // Display-only per CLAUDE.md §8.1. Do NOT wire click/keyboard handlers, do NOT
-// route to /node/<connector-id>, do NOT expose in Create Node. Skipped by
+// route to /node/<connector-id>, do NOT expose in Create New Node. Skipped by
 // keyboard navigation (Phase 10). FlowCanvas already filters connector clicks
 // from router-push; FlowChartView's guard redirects /node/<connector-id> to /.
-const props = defineProps<{ id: string; data: DateTimeConnectorNodeShape }>()
+const props = defineProps<{ id: string; data: DateTimeConnectorNodeShape }>();
 
-const isSuccess = computed(() => props.data.data.connectorType === 'success')
+const isSuccess = computed(() => props.data.data.connectorType === "success");
 </script>
 
 <template>
@@ -31,7 +31,7 @@ const isSuccess = computed(() => props.data.data.connectorType === 'success')
     <Handle type="target" :position="Position.Top" />
     <CheckCircle2 v-if="isSuccess" class="size-3.5" aria-hidden="true" />
     <XCircle v-else class="size-3.5" aria-hidden="true" />
-    <span>{{ isSuccess ? 'Success' : 'Failure' }}</span>
+    <span>{{ isSuccess ? "Success" : "Failure" }}</span>
     <Handle type="source" :position="Position.Bottom" />
     <AddNodeButton :parent-id="data.id" />
   </div>

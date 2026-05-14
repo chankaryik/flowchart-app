@@ -2,7 +2,7 @@
 
 Project-specific guidance for Claude Code sessions working in this repo. Read this **before** touching any code; it captures the contract from [REQUIREMENTS.md](REQUIREMENTS.md) plus the directional decisions already made with the user. If anything here conflicts with REQUIREMENTS.md, REQUIREMENTS.md wins — surface the conflict and ask.
 
-> A near-identical [AGENTS.md](AGENTS.md) sits next to this file for Codex sessions. When you change one, mirror the change to the other so both agents stay in sync.
+> A near-identical [CLAUDE.md](CLAUDE.md) sits next to this file for Claude Code sessions. When you change one, mirror the change to the other so both agents stay in sync.
 
 ## 1. Project overview
 
@@ -219,7 +219,7 @@ These come from REQUIREMENTS.md and from the directional decisions agreed with t
 ## 10. Reference
 
 - Requirements: [REQUIREMENTS.md](REQUIREMENTS.md) at the repo root.
-- Codex sibling guide: [AGENTS.md](AGENTS.md) — keep in sync with this file.
+- Claude Code sibling guide: [CLAUDE.md](CLAUDE.md) — keep in sync with this file.
 - Vue Flow docs: https://vueflow.dev/
 - TanStack Query (Vue): https://tanstack.com/query/latest/docs/framework/vue/overview
 - Shadcn Vue: https://www.shadcn-vue.com/

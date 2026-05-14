@@ -1,4 +1,4 @@
-import type { FlowNode, NodeId } from '@/lib/types'
+import { idKey, type FlowNode } from '@/lib/types'
 
 export type Position = { x: number; y: number }
 
@@ -7,9 +7,7 @@ export const NODE_HEIGHT = 80
 export const H_GAP = 40
 export const V_GAP = 80
 
-export function layoutKey(id: NodeId): string {
-  return String(id)
-}
+const layoutKey = idKey
 
 export function computeLayout(nodes: FlowNode[]): Record<string, Position> {
   if (nodes.length === 0) return {}

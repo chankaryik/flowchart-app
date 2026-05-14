@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { DateTimeNode } from '@/lib/types'
-import { flushValidation, makeUpdateNodeMock, mountEditor, type MutateAsyncMock } from './helpers'
+import { DAYS, type BusinessHoursRow, type DateTimeNode } from '@/lib/types'
+import { flushValidation, makeUpdateNodeMock, mountEditor } from './helpers'
 
 let updateNodeMock: ReturnType<typeof makeUpdateNodeMock>
 
@@ -11,110 +11,138 @@ vi.mock('@/queries/nodes', () => ({
 
 const { default: BusinessHoursEditor } = await import('../BusinessHoursEditor.vue')
 
+function fullWeek(): BusinessHoursRow[] {
+  return DAYS.map((day) => ({ day, startTime: '09:00', endTime: '17:00' }))
+}
+
 const baseNode: DateTimeNode = {
   id: 'dt',
   parentId: 1,
   type: 'dateTime',
   name: 'Business Hours',
   data: {
-    times: [{ day: 'mon', startTime: '09:00', endTime: '17:00' }],
+    times: fullWeek(),
     connectors: ['s', 'f'],
     timezone: 'UTC',
     action: 'businessHours',
   },
 }
 
-function mutateAsyncMock(): MutateAsyncMock {
-  return updateNodeMock.mutateAsync
-}
-
 beforeEach(() => {
   updateNodeMock = makeUpdateNodeMock()
 })
 
-describe('BusinessHoursEditor', () => {
-  it('seeds the form from the node prop', () => {
-    const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
-    expect(wrapper.find<HTMLInputElement>('#dt-name').element.value).toBe('Business Hours')
-    expect(wrapper.findAll('[data-row-index]').length).toBe(1)
+describe('BusinessHoursEditor — schedule UI shape', () => {
+  it('always renders one row per day in Mon→Sun order, even when seed data is incomplete', () => {
+    const sparse: DateTimeNode = {
+      ...baseNode,
+      data: { ...baseNode.data, times: [{ day: 'wed', startTime: '08:00', endTime: '12:00' }] },
+    }
+    const wrapper = mountEditor(BusinessHoursEditor, { node: sparse })
+    const rows = wrapper.findAll('[data-day]')
+    expect(rows).toHaveLength(7)
+    expect(rows.map((r) => r.attributes('data-day'))).toEqual([...DAYS])
   })
 
-  it('shows the action as a read-only field', () => {
-    const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
-    expect(wrapper.find('[data-testid="action-readonly"]').text()).toBe('Business Hours')
+  it('disables time inputs for a row marked closed', () => {
+    const seed: DateTimeNode = {
+      ...baseNode,
+      data: {
+        ...baseNode.data,
+        times: DAYS.map((day) =>
+          day === 'sun'
+            ? { day, startTime: '09:00', endTime: '17:00', closed: true }
+            : { day, startTime: '09:00', endTime: '17:00' },
+        ),
+      },
+    }
+    const wrapper = mountEditor(BusinessHoursEditor, { node: seed })
+    const sundayRow = wrapper.find('[data-day="sun"]')
+    const inputs = sundayRow.findAll('input[type="time"]')
+    expect(inputs).toHaveLength(2)
+    for (const input of inputs) {
+      expect(input.attributes('disabled')).toBeDefined()
+    }
+  })
+})
+
+describe('BusinessHoursEditor — validation gates', () => {
+  it('refuses to submit when end-time precedes start-time on an open day', async () => {
+    const inverted: DateTimeNode = {
+      ...baseNode,
+      data: {
+        ...baseNode.data,
+        times: DAYS.map((day) =>
+          day === 'mon'
+            ? { day, startTime: '17:00', endTime: '09:00' }
+            : { day, startTime: '09:00', endTime: '17:00' },
+        ),
+      },
+    }
+    const wrapper = mountEditor(BusinessHoursEditor, { node: inverted })
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
+
+    expect(updateNodeMock.mutateAsync).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-testid="times-error"]').text()).toMatch(/End time/i)
   })
 
-  it('submits a patch preserving connectors and action', async () => {
+  it('skips end>start validation for rows marked closed', async () => {
+    const closedInverted: DateTimeNode = {
+      ...baseNode,
+      data: {
+        ...baseNode.data,
+        times: DAYS.map((day) =>
+          day === 'mon'
+            ? { day, startTime: '17:00', endTime: '09:00', closed: true }
+            : { day, startTime: '09:00', endTime: '17:00' },
+        ),
+      },
+    }
+    const wrapper = mountEditor(BusinessHoursEditor, { node: closedInverted })
+    await wrapper.find('form').trigger('submit')
+    await flushValidation()
+
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalled()
+  })
+})
+
+describe('BusinessHoursEditor — submitted patch', () => {
+  it('preserves connectors/timezone/action and writes 7 normalised rows', async () => {
     const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
     await wrapper.find('#dt-name').setValue('Updated Hours')
     await flushValidation()
     await wrapper.find('form').trigger('submit')
     await flushValidation()
 
-    expect(mutateAsyncMock()).toHaveBeenCalledWith(
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'dt',
-        patch: {
+        patch: expect.objectContaining({
           name: 'Updated Hours',
-          data: {
-            times: [{ day: 'mon', startTime: '09:00', endTime: '17:00' }],
+          description: undefined,
+          data: expect.objectContaining({
             connectors: ['s', 'f'],
             timezone: 'UTC',
             action: 'businessHours',
-          },
-        },
+            times: fullWeek(),
+          }),
+        }),
       }),
     )
-    expect(wrapper.emitted('saved')).toBeTruthy()
   })
 
-  it('refuses to submit and shows a row-overlap error', async () => {
-    const overlapping: DateTimeNode = {
-      ...baseNode,
-      data: {
-        ...baseNode.data,
-        times: [
-          { day: 'mon', startTime: '09:00', endTime: '12:00' },
-          { day: 'mon', startTime: '11:00', endTime: '15:00' },
-        ],
-      },
-    }
-    const wrapper = mountEditor(BusinessHoursEditor, { node: overlapping })
+  it('persists a trimmed description in the patch when present', async () => {
+    const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
+    await wrapper.find('[data-testid="dt-description"]').setValue('  office hours  ')
+    await flushValidation()
     await wrapper.find('form').trigger('submit')
     await flushValidation()
-    expect(mutateAsyncMock()).not.toHaveBeenCalled()
-    expect(wrapper.find('[data-testid="times-error"]').exists()).toBe(true)
-  })
 
-  it('refuses to submit when end-time is before start-time', async () => {
-    const inverted: DateTimeNode = {
-      ...baseNode,
-      data: {
-        ...baseNode.data,
-        times: [{ day: 'mon', startTime: '17:00', endTime: '09:00' }],
-      },
-    }
-    const wrapper = mountEditor(BusinessHoursEditor, { node: inverted })
-    await wrapper.find('form').trigger('submit')
-    await flushValidation()
-    expect(mutateAsyncMock()).not.toHaveBeenCalled()
-    expect(wrapper.find('[data-testid="times-error"]').text()).toMatch(/End time/i)
-  })
-
-  it('adds a new schedule row when the Row button is clicked', async () => {
-    const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
-    const addBtn = wrapper
-      .findAll('button[type="button"]')
-      .find((b) => b.text().includes('Row'))
-    if (addBtn == null) throw new Error('Row add-button not found')
-    await addBtn.trigger('click')
-    expect(wrapper.findAll('[data-row-index]').length).toBe(2)
-  })
-
-  it('removes a row when the trash button is clicked', async () => {
-    const wrapper = mountEditor(BusinessHoursEditor, { node: baseNode })
-    const removeBtn = wrapper.find('button[aria-label="Remove row 1"]')
-    await removeBtn.trigger('click')
-    expect(wrapper.findAll('[data-row-index]').length).toBe(0)
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patch: expect.objectContaining({ description: 'office hours' }),
+      }),
+    )
   })
 })

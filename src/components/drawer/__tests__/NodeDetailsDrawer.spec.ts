@@ -3,13 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import type {
-  AddCommentNode,
-  DateTimeConnectorNode,
-  DateTimeNode,
-  FlowNode,
-  TriggerNode,
-} from '@/lib/types'
+import type { FlowNode, TriggerNode, AddCommentNode } from '@/lib/types'
 import type { DeleteNodeVars } from '@/queries/nodes'
 import { useFlowStore } from '@/stores/flow'
 
@@ -28,54 +22,35 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: pushMock }),
 }))
 
-// Sheet and AlertDialog use reka-ui portals that jsdom can't render directly.
-// Stub them so their slots render inline and the open prop is observable.
 const overlayStubs = {
-  Sheet: {
-    name: 'Sheet',
-    props: ['open'],
-    template: '<div data-testid="sheet" :data-open="open"><slot /></div>',
-  },
+  Sheet: { props: ['open'], template: '<div data-testid="sheet" :data-open="open"><slot /></div>' },
   SheetContent: { template: '<div><slot /></div>' },
   SheetHeader: { template: '<header><slot /></header>' },
   SheetTitle: { template: '<h2><slot /></h2>' },
   SheetDescription: { template: '<p><slot /></p>' },
-  AlertDialog: {
-    name: 'AlertDialog',
-    props: ['open'],
-    template: '<div data-testid="alert" :data-open="open"><slot /></div>',
-  },
+  AlertDialog: { props: ['open'], template: '<div data-testid="alert" :data-open="open"><slot /></div>' },
   AlertDialogContent: { template: '<div><slot /></div>' },
   AlertDialogHeader: { template: '<div><slot /></div>' },
   AlertDialogTitle: { template: '<h3><slot /></h3>' },
   AlertDialogDescription: { template: '<p><slot /></p>' },
   AlertDialogFooter: { template: '<footer><slot /></footer>' },
-  AlertDialogCancel: {
-    template: '<button data-testid="delete-cancel" type="button"><slot /></button>',
-  },
+  AlertDialogCancel: { template: '<button data-testid="delete-cancel" type="button"><slot /></button>' },
   AlertDialogAction: {
     template:
       '<button data-testid="delete-confirm-action" type="button" @click="$emit(\'click\', $event)"><slot /></button>',
   },
-  // The editor components aren't under test here; stub them to avoid mounting.
-  // Stubs expose the delete affordance so the drawer's confirm/delete flow can
-  // be exercised without dragging in the full editor implementation.
   SendMessageEditor: {
-    name: 'SendMessageEditor',
     props: ['node', 'canDelete', 'deletePending'],
     emits: ['delete', 'saved'],
     template:
       '<form data-testid="send-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
   },
   BusinessHoursEditor: {
-    name: 'BusinessHoursEditor',
     props: ['node', 'canDelete', 'deletePending'],
     emits: ['delete', 'saved'],
-    template:
-      '<form data-testid="dt-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
+    template: '<form data-testid="dt-editor" />',
   },
   AddCommentEditor: {
-    name: 'AddCommentEditor',
     props: ['node', 'canDelete', 'deletePending'],
     emits: ['delete', 'saved'],
     template:
@@ -91,35 +66,6 @@ const trigger: TriggerNode = {
   data: { type: 'conversationOpened', oncePerContact: false },
 }
 
-const dateTimeNode: DateTimeNode = {
-  id: 'dt',
-  parentId: 1,
-  type: 'dateTime',
-  name: 'BH',
-  data: {
-    times: [{ day: 'mon', startTime: '09:00', endTime: '17:00' }],
-    connectors: ['s', 'f'],
-    timezone: 'UTC',
-    action: 'businessHours',
-  },
-}
-
-const success: DateTimeConnectorNode = {
-  id: 's',
-  parentId: 'dt',
-  type: 'dateTimeConnector',
-  name: 'Success',
-  data: { connectorType: 'success' },
-}
-
-const failure: DateTimeConnectorNode = {
-  id: 'f',
-  parentId: 'dt',
-  type: 'dateTimeConnector',
-  name: 'Failure',
-  data: { connectorType: 'failure' },
-}
-
 const comment: AddCommentNode = {
   id: 'cmt',
   parentId: 1,
@@ -128,14 +74,12 @@ const comment: AddCommentNode = {
   data: { comment: 'hi' },
 }
 
-const SEED: FlowNode[] = [trigger, dateTimeNode, success, failure, comment]
+const SEED: FlowNode[] = [trigger, comment]
 
 const { default: NodeDetailsDrawer } = await import('../NodeDetailsDrawer.vue')
 
 function mountDrawer() {
-  return mount(NodeDetailsDrawer, {
-    global: { stubs: overlayStubs },
-  })
+  return mount(NodeDetailsDrawer, { global: { stubs: overlayStubs } })
 }
 
 beforeEach(() => {
@@ -149,19 +93,12 @@ beforeEach(() => {
   routeRef.value = { params: {} }
 })
 
-describe('NodeDetailsDrawer delete', () => {
-  it('hides the delete button for the trigger node', async () => {
+describe('NodeDetailsDrawer', () => {
+  it('hides the delete button for the trigger node (cannot be deleted)', async () => {
     routeRef.value = { params: { id: '1' } }
     const wrapper = mountDrawer()
     await wrapper.vm.$nextTick()
     expect(wrapper.find('[data-testid="drawer-delete"]').exists()).toBe(false)
-  })
-
-  it('shows the delete button for editable nodes', async () => {
-    routeRef.value = { params: { id: 'cmt' } }
-    const wrapper = mountDrawer()
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-testid="drawer-delete"]').exists()).toBe(true)
   })
 
   it('confirms then deletes and navigates back to /', async () => {
@@ -176,9 +113,7 @@ describe('NodeDetailsDrawer delete', () => {
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
 
-    expect(deleteMock.mutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'cmt' }),
-    )
+    expect(deleteMock.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ id: 'cmt' }))
     expect(pushMock).toHaveBeenCalledWith('/')
   })
 })

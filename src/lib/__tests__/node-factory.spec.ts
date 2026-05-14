@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createNode, nextNodeId } from '@/lib/node-factory'
+import { DAYS } from '@/lib/types'
 
 const ID_PATTERN = /^[a-z0-9]{6}$/
 
@@ -38,6 +39,17 @@ describe('createNode("sendMessage")', () => {
     expect(node.name).toBe('Hi')
     expect(node.data.payload).toEqual([{ type: 'text', text: 'hello' }])
   })
+
+  it('stores a trimmed description when provided', () => {
+    const node = createNode('sendMessage', 1, { description: '  greet customers  ' })
+    expect(node.description).toBe('greet customers')
+  })
+
+  it('omits description when only whitespace or empty', () => {
+    expect(createNode('sendMessage', 1, { description: '' }).description).toBeUndefined()
+    expect(createNode('sendMessage', 1, { description: '   ' }).description).toBeUndefined()
+    expect(createNode('sendMessage', 1).description).toBeUndefined()
+  })
 })
 
 describe('createNode("addComment")', () => {
@@ -54,6 +66,11 @@ describe('createNode("addComment")', () => {
     expect(node.name).toBe('Note')
     expect(node.data.comment).toBe('hi')
   })
+
+  it('stores a trimmed description when provided', () => {
+    const node = createNode('addComment', 'parent', { description: 'internal note' })
+    expect(node.description).toBe('internal note')
+  })
 })
 
 describe('createNode("dateTime")', () => {
@@ -64,7 +81,9 @@ describe('createNode("dateTime")', () => {
     expect(dateTime.name).toBe('Date & Time')
     expect(dateTime.data.timezone).toBe('UTC')
     expect(dateTime.data.action).toBe('businessHours')
-    expect(dateTime.data.times).toEqual([{ day: 'mon', startTime: '09:00', endTime: '17:00' }])
+    expect(dateTime.data.times).toEqual(
+      DAYS.map((day) => ({ day, startTime: '09:00', endTime: '17:00' })),
+    )
 
     expect(connectors).toHaveLength(2)
     const [success, failure] = connectors
@@ -87,5 +106,13 @@ describe('createNode("dateTime")', () => {
     for (const id of ids) {
       expect(id).toMatch(ID_PATTERN)
     }
+  })
+
+  it('stores description on the dateTime node only (not on connectors)', () => {
+    const { dateTime, connectors } = createNode('dateTime', 1, { description: 'office hours' })
+    expect(dateTime.description).toBe('office hours')
+    // Connectors are display-only labels; they don't carry user descriptions.
+    expect((connectors[0] as { description?: string }).description).toBeUndefined()
+    expect((connectors[1] as { description?: string }).description).toBeUndefined()
   })
 })

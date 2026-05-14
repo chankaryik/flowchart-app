@@ -1,0 +1,148 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 7 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img:
+                    - group [ref=e13] [cursor=pointer]
+                  - img
+                  - img:
+                    - group [ref=e16] [cursor=pointer]
+                  - img:
+                    - group [ref=e19] [cursor=pointer]
+                  - img:
+                    - group [ref=e22] [cursor=pointer]
+                  - img
+                  - generic:
+                    - group [ref=e25]:
+                      - generic [ref=e26]:
+                        - generic [ref=e27]:
+                          - img [ref=e28]
+                          - heading [level=3] [ref=e30]: Trigger
+                        - generic [ref=e31]:
+                          - paragraph [ref=e32]: Conversation Opened
+                          - paragraph [ref=e33]: Every time
+                        - button [ref=e34] [cursor=pointer]:
+                          - img [ref=e37]
+                    - group [ref=e38]:
+                      - generic [ref=e39]:
+                        - generic [ref=e41]:
+                          - img [ref=e42]
+                          - heading [level=3] [ref=e44]: Send Message
+                        - generic [ref=e45]:
+                          - paragraph [ref=e46]: Away Message
+                          - paragraph [ref=e47]: Sorry, we are currently away. We will respond as soon as possible.
+                        - button [ref=e48] [cursor=pointer]:
+                          - img [ref=e51]
+                    - group [ref=e52]:
+                      - generic [ref=e53]:
+                        - generic [ref=e54]:
+                          - generic [ref=e55]:
+                            - img [ref=e56]
+                            - heading [level=3] [ref=e59]: Date / Time
+                          - generic [ref=e60]: Business Hours
+                        - generic [ref=e61]:
+                          - paragraph [ref=e62]: Business Hours
+                          - paragraph [ref=e63]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e64]:
+                      - generic [ref=e65]:
+                        - img [ref=e66]
+                        - generic [ref=e69]: Success
+                        - button [ref=e70] [cursor=pointer]:
+                          - img [ref=e73]
+                    - group [ref=e74]:
+                      - generic [ref=e75]:
+                        - img [ref=e76]
+                        - generic [ref=e80]: Failure
+                        - button [ref=e81] [cursor=pointer]:
+                          - img [ref=e84]
+                    - group [ref=e85]:
+                      - generic [ref=e86]:
+                        - generic [ref=e87]:
+                          - generic [ref=e88]:
+                            - img [ref=e89]
+                            - heading [level=3] [ref=e91]: Send Message
+                          - generic [ref=e93]:
+                            - img [ref=e94]
+                            - text: "1"
+                        - generic [ref=e96]:
+                          - paragraph [ref=e97]: Welcome Message
+                          - paragraph [ref=e98]: Hello there welcome to the chat!
+                        - button [ref=e99] [cursor=pointer]:
+                          - img [ref=e102]
+                    - group [ref=e103]:
+                      - generic [ref=e104]:
+                        - generic [ref=e105]:
+                          - img [ref=e106]
+                          - heading [level=3] [ref=e109]: Comment
+                        - generic [ref=e110]:
+                          - paragraph [ref=e111]: "Add Comment #1"
+                          - paragraph [ref=e112]: User message during off hours
+                        - button [ref=e113] [cursor=pointer]:
+                          - img [ref=e116]
+            - img
+            - img [ref=e118]
+            - generic [ref=e127]:
+              - button [ref=e128] [cursor=pointer]:
+                - img [ref=e129]
+              - button [ref=e131] [cursor=pointer]:
+                - img [ref=e132]
+              - button [ref=e134] [cursor=pointer]:
+                - img [ref=e135]
+              - button [ref=e137] [cursor=pointer]:
+                - img [ref=e138]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - dialog:
+    - generic:
+      - heading [level=2]: Create New Node
+      - paragraph: Add a new node to the canvas.
+    - generic:
+      - generic:
+        - generic: Title
+        - textbox: Smoke Test Node
+      - generic:
+        - generic: Description
+        - textbox: A quick check from manual smoke
+      - generic:
+        - generic: Type of Node
+        - combobox [expanded]:
+          - generic: Select a type…
+          - img
+      - generic:
+        - button: Cancel
+        - button [disabled]: Create
+    - button:
+      - img
+      - generic: Close
+  - listbox [ref=e159]:
+    - option "Send Message" [active] [ref=e160]:
+      - generic [ref=e162]: Send Message
+    - option "Add Comments" [ref=e163]:
+      - generic [ref=e165]: Add Comments
+    - option "Business Hours" [ref=e166]:
+      - generic [ref=e168]: Business Hours

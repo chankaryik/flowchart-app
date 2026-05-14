@@ -94,6 +94,17 @@ describe('businessHoursRowSchema', () => {
       false,
     )
   })
+
+  it('skips end>start check when the row is marked closed', () => {
+    expect(
+      ok(businessHoursRowSchema, {
+        day: 'mon',
+        startTime: '17:00',
+        endTime: '09:00',
+        closed: true,
+      }),
+    ).toBe(true)
+  })
 })
 
 describe('rangesOverlap', () => {

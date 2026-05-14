@@ -1,8 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { PAYLOAD_URL, STORAGE_KEY, loadNodes, resetNodes, saveNodes } from '@/lib/payload-adapter'
+import {
+  PAYLOAD_URL,
+  PERSIST_ENABLED_KEY,
+  POSITIONS_STORAGE_KEY,
+  STORAGE_KEY,
+  enablePersistenceWithSnapshot,
+  loadNodes,
+  loadPositions,
+  resetNodes,
+  saveNodes,
+} from '@/lib/payload-adapter'
 import type { FlowNode } from '@/lib/types'
-import { PERSIST_ENABLED_KEY } from '@/stores/settings'
 
 const SEED: FlowNode[] = [
   { id: 1, parentId: -1, type: 'trigger', data: { type: 'conversationOpened', oncePerContact: false } },
@@ -87,21 +96,72 @@ describe('payload-adapter', () => {
       expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual(SEED)
     })
 
+    it('writes positions alongside nodes when they are provided', async () => {
+      enablePersist()
+
+      await saveNodes(SEED, { '1': { x: 10, y: 20 } })
+
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual(SEED)
+      expect(JSON.parse(localStorage.getItem(POSITIONS_STORAGE_KEY) ?? '{}')).toEqual({
+        '1': { x: 10, y: 20 },
+      })
+    })
+
     it('does not write when persist is disabled', async () => {
-      await saveNodes(SEED)
+      await saveNodes(SEED, { '1': { x: 10, y: 20 } })
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+      expect(localStorage.getItem(POSITIONS_STORAGE_KEY)).toBeNull()
+    })
+  })
+
+  describe('loadPositions', () => {
+    it('returns cached positions when persist is enabled', () => {
+      enablePersist()
+      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify({ '1': { x: 10, y: 20 } }))
+
+      expect(loadPositions()).toEqual({ '1': { x: 10, y: 20 } })
+    })
+
+    it('ignores cached positions when persist is disabled', () => {
+      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify({ '1': { x: 10, y: 20 } }))
+
+      expect(loadPositions()).toEqual({})
+    })
+
+    it('drops invalid position entries from the cache', () => {
+      enablePersist()
+      localStorage.setItem(
+        POSITIONS_STORAGE_KEY,
+        JSON.stringify({ valid: { x: 1, y: 2 }, invalid: { x: '1', y: 2 } }),
+      )
+
+      expect(loadPositions()).toEqual({ valid: { x: 1, y: 2 } })
+    })
+  })
+
+  describe('enablePersistenceWithSnapshot', () => {
+    it('enables persistence and writes the current nodes and positions immediately', () => {
+      enablePersistenceWithSnapshot(SEED, { '1': { x: 10, y: 20 } })
+
+      expect(localStorage.getItem(PERSIST_ENABLED_KEY)).toBe('1')
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')).toEqual(SEED)
+      expect(JSON.parse(localStorage.getItem(POSITIONS_STORAGE_KEY) ?? '{}')).toEqual({
+        '1': { x: 10, y: 20 },
+      })
     })
   })
 
   describe('resetNodes', () => {
     it('clears localStorage and re-fetches the seed payload', async () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([{ stale: true }]))
+      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify({ stale: { x: 1, y: 2 } }))
       const fetchMock = mockFetchOnce(SEED)
 
       const result = await resetNodes()
 
       expect(fetchMock).toHaveBeenCalledWith(PAYLOAD_URL)
       expect(result).toEqual(SEED)
+      expect(localStorage.getItem(POSITIONS_STORAGE_KEY)).toBeNull()
     })
   })
 })

@@ -11,9 +11,15 @@ async function openDialog(page: Page): Promise<void> {
   await expect(page.getByTestId('create-node-dialog')).toBeVisible()
 }
 
-async function pickParent(page: Page, label: string): Promise<void> {
-  await page.locator('#create-parent').click()
-  await page.getByRole('option', { name: new RegExp(label) }).first().click()
+const TYPE_LABEL: Record<'sendMessage' | 'dateTime' | 'addComment', string> = {
+  sendMessage: 'Send Message',
+  dateTime: 'Business Hours',
+  addComment: 'Add Comments',
+}
+
+async function selectType(page: Page, label: string): Promise<void> {
+  await page.getByTestId('create-type').click()
+  await page.getByRole('option', { name: new RegExp(`^${label}$`) }).click()
 }
 
 async function createNode(
@@ -22,11 +28,8 @@ async function createNode(
   name: string,
 ): Promise<void> {
   await openDialog(page)
-  await page.locator(`[data-type-option="${type}"]`).click()
-  await page.getByTestId('create-next').click()
-  await pickParent(page, 'Trigger #1')
-  await page.getByTestId('create-next').click()
-  await page.locator('#create-name').fill(name)
+  await page.getByTestId('create-title').fill(name)
+  await selectType(page, TYPE_LABEL[type])
   await page.getByTestId('create-submit').click()
   // Wait for the drawer URL push to land — proves the create completed.
   await page.waitForURL(/\/node\/[^/]+$/)

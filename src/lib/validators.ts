@@ -41,9 +41,11 @@ export const businessHoursRowSchema = v.pipe(
     day: v.picklist(DAYS),
     startTime: timeStringSchema,
     endTime: timeStringSchema,
+    closed: v.optional(v.boolean()),
   }),
   v.check(
-    ({ startTime, endTime }) => toMinutes(endTime) > toMinutes(startTime),
+    ({ startTime, endTime, closed }) =>
+      closed === true || toMinutes(endTime) > toMinutes(startTime),
     'End time must be after start time.',
   ),
 )
@@ -85,6 +87,7 @@ export function rangesOverlap(
 function hasOverlap(rows: BusinessHoursRow[]): boolean {
   const byDay = new Map<string, BusinessHoursRow[]>()
   for (const row of rows) {
+    if (row.closed === true) continue
     const existing = byDay.get(row.day) ?? []
     existing.push(row)
     byDay.set(row.day, existing)

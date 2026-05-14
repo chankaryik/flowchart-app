@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core'
-import { StickyNote } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { Handle, Position } from "@vue-flow/core";
+import { StickyNote } from "lucide-vue-next";
+import { computed } from "vue";
 
-import AddNodeButton from '@/components/flow/AddNodeButton.vue'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import type { AddCommentNode as AddCommentNodeShape } from '@/lib/types'
+import AddNodeButton from "@/components/flow/AddNodeButton.vue";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { AddCommentNode as AddCommentNodeShape } from "@/lib/types";
+import { useFlowStore } from "@/stores/flow";
 
-const props = defineProps<{ id: string; data: AddCommentNodeShape }>()
+const props = defineProps<{ id: string; data: AddCommentNodeShape }>();
 
-const comment = computed(() => props.data.data.comment)
+const store = useFlowStore();
+const description = computed(() => props.data.description ?? "");
+const comment = computed(() => props.data.data.comment);
+const hasParent = computed(() => store.getNodeById(props.data.parentId) != null);
 </script>
 
 <template>
@@ -22,22 +26,27 @@ const comment = computed(() => props.data.data.comment)
         :data-flow-node-id="id"
         tabindex="0"
       >
-        <Handle type="target" :position="Position.Top" />
-        <CardHeader class="flex-row items-center gap-2 px-3 pt-3 pb-1">
-          <StickyNote class="size-4 text-amber-700" aria-hidden="true" />
-          <CardTitle class="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-            Comment
-          </CardTitle>
+        <Handle v-if="hasParent" type="target" :position="Position.Top" />
+        <CardHeader class="flex gap-2 px-3 pt-3 pb-2">
+          <StickyNote class="size-4 shrink-0 text-amber-700 mt-0.5" aria-hidden="true" />
+          <div class="min-w-0">
+            <CardTitle class="min-w-0 flex-1 text-sm font-medium text-amber-900">
+              {{ data.name }}
+            </CardTitle>
+            <p
+              v-if="description.length > 0"
+              class="truncate text-[11px] text-amber-800/80"
+              data-testid="node-description"
+            >
+              {{ description }}
+            </p>
+          </div>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-sm font-medium text-amber-900">{{ data.name }}</p>
-          <p
-            v-if="comment.length > 0"
-            class="mt-1 line-clamp-2 text-[11px] text-amber-800/80"
-          >
+          <p v-if="comment.length > 0" class="text-[11px] text-amber-800/80">
             {{ comment }}
           </p>
-          <p v-else class="mt-1 text-[11px] italic text-amber-700/60">No comment yet</p>
+          <p v-else class="truncate text-[11px] italic text-amber-700/60">No comment yet</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

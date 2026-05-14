@@ -37,7 +37,7 @@ test('keeps Save disabled while the title is empty', async ({ page }) => {
 
   await page.locator('#comment-name').fill('')
   await page.locator('#comment-name').blur()
-  await expect(page.getByTestId('name-error')).toBeVisible()
+  await expect(page.getByTestId('title-error')).toBeVisible()
   await expect(page.locator('button[type="submit"]')).toBeDisabled()
 })
 

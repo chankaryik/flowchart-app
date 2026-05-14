@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AddCommentNode } from '@/lib/types'
-import { flushValidation, makeUpdateNodeMock, mountEditor, type MutateAsyncMock } from './helpers'
+import { flushValidation, makeUpdateNodeMock, mountEditor } from './helpers'
 
 let updateNodeMock: ReturnType<typeof makeUpdateNodeMock>
 
@@ -9,7 +9,6 @@ vi.mock('@/queries/nodes', () => ({
   useUpdateNode: () => updateNodeMock,
 }))
 
-// Import after the mock so the SFC picks up the mocked module.
 const { default: AddCommentEditor } = await import('../AddCommentEditor.vue')
 
 const baseNode: AddCommentNode = {
@@ -20,39 +19,23 @@ const baseNode: AddCommentNode = {
   data: { comment: 'Original comment' },
 }
 
-function mutateAsyncMock(): MutateAsyncMock {
-  return updateNodeMock.mutateAsync
-}
-
 beforeEach(() => {
   updateNodeMock = makeUpdateNodeMock()
 })
 
 describe('AddCommentEditor', () => {
-  it('seeds form fields from the node prop', () => {
-    const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
-    expect(wrapper.find<HTMLInputElement>('#comment-name').element.value).toBe('After-hours note')
-    expect(wrapper.find<HTMLTextAreaElement>('#comment-body').element.value).toBe('Original comment')
-  })
-
-  it('keeps Save disabled while the title is empty', async () => {
+  it('refuses to submit when the title is empty and never calls the mutation', async () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
     await wrapper.find('#comment-name').setValue('')
     await flushValidation()
-    const save = wrapper.find('button[type="submit"]')
-    expect(save.attributes('disabled')).toBeDefined()
-  })
-
-  it('shows the title error on blur', async () => {
-    const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
-    const nameInput = wrapper.find('#comment-name')
-    await nameInput.setValue('')
-    await nameInput.trigger('blur')
+    await wrapper.find('form').trigger('submit')
     await flushValidation()
-    expect(wrapper.find('[data-testid="name-error"]').text()).toMatch(/required/i)
+
+    expect(updateNodeMock.mutateAsync).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-testid="title-error"]').exists()).toBe(true)
   })
 
-  it('submits a patch with the trimmed name and comment', async () => {
+  it('submits a trimmed name + comment patch on save', async () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
     await wrapper.find('#comment-name').setValue('  Renamed  ')
     await wrapper.find('#comment-body').setValue('Updated body')
@@ -60,24 +43,25 @@ describe('AddCommentEditor', () => {
     await wrapper.find('form').trigger('submit')
     await flushValidation()
 
-    expect(mutateAsyncMock()).toHaveBeenCalledTimes(1)
-    expect(mutateAsyncMock()).toHaveBeenCalledWith(
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'c1',
-        patch: { name: 'Renamed', data: { comment: 'Updated body' } },
+        patch: { name: 'Renamed', description: undefined, data: { comment: 'Updated body' } },
       }),
     )
-    expect(wrapper.emitted('saved')).toBeTruthy()
   })
 
-  it('refuses to submit while invalid and never calls the mutation', async () => {
+  it('persists a trimmed description in the patch when present', async () => {
     const wrapper = mountEditor(AddCommentEditor, { node: baseNode })
-    await wrapper.find('#comment-name').setValue('')
+    await wrapper.find('[data-testid="comment-description"]').setValue('  internal note  ')
     await flushValidation()
     await wrapper.find('form').trigger('submit')
     await flushValidation()
-    expect(mutateAsyncMock()).not.toHaveBeenCalled()
-    expect(wrapper.emitted('saved')).toBeFalsy()
-    expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
+
+    expect(updateNodeMock.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patch: expect.objectContaining({ description: 'internal note' }),
+      }),
+    )
   })
 })

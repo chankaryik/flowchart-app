@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vu
 import { toast } from 'vue-sonner'
 
 import { STORAGE_KEY, isPersistEnabled } from '@/lib/payload-adapter'
-import type { FlowNode, NodeId } from '@/lib/types'
+import { sameId, type FlowNode } from '@/lib/types'
 
 const FlowChartView = () => import('@/views/FlowChartView.vue')
 
@@ -59,10 +59,6 @@ function peekCachedNodes(): FlowNode[] | null {
   } catch {
     return null
   }
-}
-
-function sameId(a: NodeId, b: NodeId | string): boolean {
-  return String(a) === String(b)
 }
 
 export default router

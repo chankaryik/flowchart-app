@@ -96,7 +96,7 @@ describe('useFlowHistory (non-mac)', () => {
     harness.unmount()
   })
 
-  it('Cmd+Z does NOT trigger undo on non-mac', () => {
+  it('Cmd+Z also triggers undo (unified Ctrl/Cmd handling)', () => {
     setActivePinia(createPinia())
     const history = useHistoryStore()
     const undo = vi.spyOn(history, 'undo')
@@ -104,7 +104,7 @@ describe('useFlowHistory (non-mac)', () => {
 
     dispatchKey({ key: 'z', metaKey: true })
 
-    expect(undo).not.toHaveBeenCalled()
+    expect(undo).toHaveBeenCalledTimes(1)
     harness.unmount()
   })
 
@@ -241,7 +241,7 @@ describe('useFlowHistory (mac)', () => {
     harness.unmount()
   })
 
-  it('Ctrl+Z does NOT trigger undo on mac', () => {
+  it('Ctrl+Z also triggers undo on mac (unified Ctrl/Cmd handling)', () => {
     setActivePinia(createPinia())
     const history = useHistoryStore()
     const undo = vi.spyOn(history, 'undo')
@@ -249,7 +249,7 @@ describe('useFlowHistory (mac)', () => {
 
     dispatchKey({ key: 'z', ctrlKey: true })
 
-    expect(undo).not.toHaveBeenCalled()
+    expect(undo).toHaveBeenCalledTimes(1)
     harness.unmount()
   })
 

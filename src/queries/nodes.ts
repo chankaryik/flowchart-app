@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 import { watch } from 'vue'
 import { toast } from 'vue-sonner'
 
-import { loadNodes, saveNodes } from '@/lib/payload-adapter'
+import { loadNodes, loadPositions, saveNodes } from '@/lib/payload-adapter'
 import type { FlowNode, NodeId } from '@/lib/types'
 import { NODES_QUERY_KEY } from '@/queries/client'
 import { type Position, nodeKey, useFlowStore } from '@/stores/flow'
@@ -12,21 +12,15 @@ export type CreateNodeVars = {
   nodes: FlowNode[]
   position?: Position
   positions?: Record<string, Position>
-  label?: string
-  silent?: boolean
 }
 
 export type UpdateNodeVars = {
   id: NodeId
   patch: Partial<FlowNode>
-  label?: string
-  silent?: boolean
 }
 
 export type DeleteNodeVars = {
   id: NodeId
-  label?: string
-  silent?: boolean
 }
 
 export type SecondaryMove = {
@@ -43,8 +37,6 @@ export type MoveNodeVars = {
   // (e.g. dateTimeConnector children dragged with their dateTime parent).
   // Bundled into one history entry so undo restores them together.
   secondary?: SecondaryMove[]
-  label?: string
-  silent?: boolean
 }
 
 export function useNodesQuery() {
@@ -56,35 +48,35 @@ export function useNodesQuery() {
   watch(
     query.data,
     (data) => {
-      if (data != null) store.hydrate(data)
+      if (data != null) {
+        store.hydrate(data)
+        store.clearPositions()
+        store.setPositions(loadPositions())
+      }
     },
     { immediate: true },
   )
   return query
 }
 
-// Mutations write through the mutationFn; undo/redo run outside that lifecycle
-// and would otherwise leave localStorage holding the post-mutation state — a
-// refresh after an undo would restore what the user just reverted. Wrap each
-// history callback so the store change is persisted at the same boundary.
-function persistAfter(
-  store: ReturnType<typeof useFlowStore>,
-  fn: () => void,
-): () => void {
-  return () => {
-    fn()
-    void saveNodes([...store.nodes])
-  }
+function describeError(error: unknown): string | undefined {
+  return error instanceof Error ? error.message : undefined
 }
 
-function toastError(
-  vars: { label?: string; silent?: boolean } | undefined,
-  fallback: string,
-  error: unknown,
-): void {
-  if (vars?.silent) return
-  const description = error instanceof Error ? error.message : undefined
-  toast.error(vars?.label ?? fallback, { description })
+function clonePositions(positions: Record<string, Position>): Record<string, Position> {
+  const snapshot: Record<string, Position> = {}
+  for (const [key, value] of Object.entries(positions)) {
+    snapshot[key] = { x: value.x, y: value.y }
+  }
+  return snapshot
+}
+
+function persistFlow(store: ReturnType<typeof useFlowStore>): Promise<void> {
+  return saveNodes([...store.nodes], clonePositions(store.positions))
+}
+
+function persistFlowInBackground(store: ReturnType<typeof useFlowStore>): void {
+  void persistFlow(store).catch(() => undefined)
 }
 
 export function useCreateNode() {
@@ -92,7 +84,7 @@ export function useCreateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: CreateNodeVars) => {
       const primary = vars.nodes[0]
       if (primary == null) return
@@ -105,15 +97,21 @@ export function useCreateNode() {
       const snapshot = vars.nodes.map((node) => ({ ...node }))
       store.addNodes(snapshot, positionMap)
       history.push({
-        label: vars.label ?? `Create ${primary.type}`,
-        undo: persistAfter(store, () => store.removeNodes(snapshot.map((n) => n.id))),
-        redo: persistAfter(store, () => store.addNodes(snapshot, positionMap)),
+        label: `Create ${primary.type}`,
+        undo: () => {
+          store.removeNodes(snapshot.map((n) => n.id))
+          persistFlowInBackground(store)
+        },
+        redo: () => {
+          store.addNodes(snapshot, positionMap)
+          persistFlowInBackground(store)
+        },
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to create node', error)
+      toast.error('Failed to create node', { description: describeError(error) })
     },
   })
 }
@@ -123,7 +121,7 @@ export function useUpdateNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: UpdateNodeVars) => {
       const before = store.getNodeById(vars.id)
       if (before == null) return
@@ -133,15 +131,21 @@ export function useUpdateNode() {
       if (afterSnap == null) return
       const afterCopy = { ...afterSnap } as Record<string, unknown>
       history.push({
-        label: vars.label ?? `Update ${before.type}`,
-        undo: persistAfter(store, () => store.applyPatch(vars.id, beforeSnap)),
-        redo: persistAfter(store, () => store.applyPatch(vars.id, afterCopy)),
+        label: `Update ${before.type}`,
+        undo: () => {
+          store.applyPatch(vars.id, beforeSnap)
+          persistFlowInBackground(store)
+        },
+        redo: () => {
+          store.applyPatch(vars.id, afterCopy)
+          persistFlowInBackground(store)
+        },
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to save changes', error)
+      toast.error('Failed to save changes', { description: describeError(error) })
     },
   })
 }
@@ -151,7 +155,7 @@ export function useDeleteNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: DeleteNodeVars) => {
       const subtree = store.getDescendants(vars.id)
       if (subtree.length === 0) return
@@ -166,15 +170,21 @@ export function useDeleteNode() {
       store.removeNodes(ids)
       const root = snapshotNodes[0]
       history.push({
-        label: vars.label ?? `Delete ${root?.type ?? 'node'}`,
-        undo: persistAfter(store, () => store.addNodes(snapshotNodes, snapshotPositions)),
-        redo: persistAfter(store, () => store.removeNodes(ids)),
+        label: `Delete ${root?.type ?? 'node'}`,
+        undo: () => {
+          store.addNodes(snapshotNodes, snapshotPositions)
+          persistFlowInBackground(store)
+        },
+        redo: () => {
+          store.removeNodes(ids)
+          persistFlowInBackground(store)
+        },
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to delete node', error)
+      toast.error('Failed to delete node', { description: describeError(error) })
     },
   })
 }
@@ -184,7 +194,7 @@ export function useMoveNode() {
   const history = useHistoryStore()
 
   return useMutation({
-    mutationFn: () => saveNodes([...store.nodes]),
+    mutationFn: () => persistFlow(store),
     onMutate: (vars: MoveNodeVars) => {
       const key = nodeKey(vars.id)
       const previous = vars.previousPosition ?? store.positions[key]
@@ -196,8 +206,8 @@ export function useMoveNode() {
       }
       const node = store.getNodeById(vars.id)
       history.push({
-        label: vars.label ?? `Move ${node?.type ?? 'node'}`,
-        undo: persistAfter(store, () => {
+        label: `Move ${node?.type ?? 'node'}`,
+        undo: () => {
           if (previous != null) {
             store.setPosition(vars.id, previous)
           } else {
@@ -206,19 +216,21 @@ export function useMoveNode() {
           for (const move of secondary) {
             store.setPosition(move.id, move.from)
           }
-        }),
-        redo: persistAfter(store, () => {
+          persistFlowInBackground(store)
+        },
+        redo: () => {
           store.setPosition(vars.id, next)
           for (const move of secondary) {
             store.setPosition(move.id, move.to)
           }
-        }),
+          persistFlowInBackground(store)
+        },
       })
     },
-    onError: (error, vars) => {
+    onError: (error) => {
       const cmd = history.popLast()
       cmd?.undo()
-      toastError(vars, 'Failed to move node', error)
+      toast.error('Failed to move node', { description: describeError(error) })
     },
   })
 }

@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core'
-import { Clock } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { Handle, Position } from "@vue-flow/core";
+import { Clock } from "lucide-vue-next";
+import { computed } from "vue";
 
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { dayLabel, humanizeKey, summarizeBusinessHours } from '@/lib/format'
-import type { DateTimeNode as DateTimeNodeShape } from '@/lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { dayLabel, summarizeBusinessHours } from "@/lib/format";
+import type { DateTimeNode as DateTimeNodeShape } from "@/lib/types";
+import { useFlowStore } from "@/stores/flow";
 
-const props = defineProps<{ id: string; data: DateTimeNodeShape }>()
+const props = defineProps<{ id: string; data: DateTimeNodeShape }>();
 
+const store = useFlowStore();
+const description = computed(() => props.data.description ?? "");
 const summary = computed(() =>
   summarizeBusinessHours(props.data.data.times, props.data.data.timezone),
-)
-const actionLabel = computed(() => humanizeKey(props.data.data.action))
+);
+const openRows = computed(() => props.data.data.times.filter((row) => row.closed !== true));
+const hasParent = computed(() => store.getNodeById(props.data.parentId) != null);
 </script>
 
 <template>
@@ -25,28 +29,24 @@ const actionLabel = computed(() => humanizeKey(props.data.data.action))
         :data-flow-node-id="id"
         tabindex="0"
       >
-        <Handle type="target" :position="Position.Top" />
-        <CardHeader class="items-center gap-1 px-3 pt-3 pb-1">
-          <div class="flex items-center gap-2">
-            <Clock class="size-4 text-amber-700" aria-hidden="true" />
-            <CardTitle
-              class="text-[10px] font-semibold uppercase tracking-wide text-amber-700"
-            >
-              Date / Time
+        <Handle v-if="hasParent" type="target" :position="Position.Top" />
+        <CardHeader class="flex gap-2 px-3 pt-3 pb-2">
+          <Clock class="size-4 shrink-0 text-amber-700 mt-0.5" aria-hidden="true" />
+          <div class="min-w-0">
+            <CardTitle class="text-sm font-medium text-slate-900">
+              {{ data.name }}
             </CardTitle>
-          </div>
-          <CardAction class="self-center">
-            <span
-              class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
-              data-testid="action-badge"
+            <p
+              v-if="description.length > 0"
+              class="truncate text-[11px] text-slate-500"
+              data-testid="node-description"
             >
-              {{ actionLabel }}
-            </span>
-          </CardAction>
+              {{ description }}
+            </p>
+          </div>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-sm font-medium text-slate-900">{{ data.name }}</p>
-          <p class="mt-1 line-clamp-2 text-[11px] text-slate-500">{{ summary }}</p>
+          <p class="truncate text-[11px] text-slate-500">{{ summary }}</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
       </Card>
@@ -54,14 +54,13 @@ const actionLabel = computed(() => humanizeKey(props.data.data.action))
     <TooltipContent side="right" :side-offset="8" class="max-w-xs">
       <div class="space-y-1">
         <p class="font-medium">{{ data.name }}</p>
-        <p>Action: {{ actionLabel }}</p>
         <p>Timezone: {{ data.data.timezone }}</p>
-        <ul v-if="data.data.times.length > 0" class="space-y-0.5">
-          <li v-for="(row, index) in data.data.times" :key="index">
+        <ul v-if="openRows.length > 0" class="space-y-0.5">
+          <li v-for="(row, index) in openRows" :key="index">
             {{ dayLabel(row.day) }} {{ row.startTime }}–{{ row.endTime }}
           </li>
         </ul>
-        <p v-else class="italic opacity-70">No schedule</p>
+        <p v-else class="italic opacity-70">Closed all week</p>
       </div>
     </TooltipContent>
   </Tooltip>
