@@ -256,7 +256,11 @@ The workflow is currently manual-only through `workflow_dispatch` to avoid spend
 
 This project was built with AI coding assistance. I am including that openly because Respond.io mentioned that AI agents are already part of the team's development workflow, and I wanted the submission to reflect how I would work in that environment.
 
-The agents helped with scaffolding, implementation, tests, review, simplification, and verification. I treated their output as draft code: reviewed the diffs, questioned suspicious choices, checked the UI manually, and ran the local verification steps. Any remaining trade-offs are my responsibility.
+Claude Code with Claude Opus 4.7 and Extra High reasoning handled the main coding tasks: scaffolding features, implementing Vue components, composables, and stores, writing tests, and iterating on the requirements.
+
+Codex with GPT-5.5 and Extra High reasoning was used after the main implementation was complete for verification, code review, simplification, and optimization.
+
+I treated the AI output as draft code: reviewed the diffs, questioned suspicious choices, checked the UI manually, and ran the local verification steps. Any remaining trade-offs are my responsibility.
 
 ## Trade-Offs
 
