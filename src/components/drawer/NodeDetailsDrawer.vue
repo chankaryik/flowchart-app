@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 
 import {
   AlertDialog,
@@ -12,115 +12,115 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from "@/components/ui/alert-dialog";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
-import { humanizeKey } from '@/lib/format'
-import type { FlowNode } from '@/lib/types'
-import { useDeleteNode } from '@/queries/nodes'
-import { useFlowStore } from '@/stores/flow'
+} from "@/components/ui/sheet";
+import { humanizeKey } from "@/lib/format";
+import type { FlowNode } from "@/lib/types";
+import { useDeleteNode } from "@/queries/nodes";
+import { useFlowStore } from "@/stores/flow";
 
-import AddCommentEditor from './AddCommentEditor.vue'
-import BusinessHoursEditor from './BusinessHoursEditor.vue'
-import SendMessageEditor from './SendMessageEditor.vue'
-import TriggerDetails from './TriggerDetails.vue'
+import AddCommentEditor from "./AddCommentEditor.vue";
+import BusinessHoursEditor from "./BusinessHoursEditor.vue";
+import SendMessageEditor from "./SendMessageEditor.vue";
+import TriggerDetails from "./TriggerDetails.vue";
 
-const route = useRoute()
-const router = useRouter()
-const store = useFlowStore()
-const deleteMutation = useDeleteNode()
+const route = useRoute();
+const router = useRouter();
+const store = useFlowStore();
+const deleteMutation = useDeleteNode();
 
-const confirmOpen = ref(false)
-const unsavedConfirmOpen = ref(false)
-const editorDirty = ref(false)
+const confirmOpen = ref(false);
+const unsavedConfirmOpen = ref(false);
+const editorDirty = ref(false);
 
 const drawerId = computed(() => {
-  const raw = route.params.id
-  if (raw == null) return null
-  const value = Array.isArray(raw) ? raw[0] : raw
-  return value == null || value === '' ? null : value
-})
+  const raw = route.params.id;
+  if (raw == null) return null;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value == null || value === "" ? null : value;
+});
 
 const node = computed<FlowNode | null>(() => {
-  const id = drawerId.value
-  if (id == null) return null
-  const found = store.getNodeById(id)
-  if (found == null || found.type === 'dateTimeConnector') return null
-  return found
-})
+  const id = drawerId.value;
+  if (id == null) return null;
+  const found = store.getNodeById(id);
+  if (found == null || found.type === "dateTimeConnector") return null;
+  return found;
+});
 
-const isOpen = computed(() => node.value != null)
+const isOpen = computed(() => node.value != null);
 
 // Reset dirty tracking whenever the drawer points at a different node — each
 // editor remounts and will re-emit its dirty state on the next tick, but this
 // avoids a brief window where the prior node's dirty value leaks across.
 watch(drawerId, () => {
-  editorDirty.value = false
-  unsavedConfirmOpen.value = false
-})
+  editorDirty.value = false;
+  unsavedConfirmOpen.value = false;
+});
 
 function onUpdateOpen(open: boolean): void {
-  if (open) return
+  if (open) return;
   if (editorDirty.value) {
-    unsavedConfirmOpen.value = true
-    return
+    unsavedConfirmOpen.value = true;
+    return;
   }
-  close()
+  close();
 }
 
 function close(): void {
-  void router.push('/')
+  void router.push("/");
 }
 
 function onDiscardUnsaved(): void {
-  unsavedConfirmOpen.value = false
-  editorDirty.value = false
-  close()
+  unsavedConfirmOpen.value = false;
+  editorDirty.value = false;
+  close();
 }
 
 function nodeTitle(n: FlowNode): string {
-  return 'name' in n ? n.name : `Trigger #${n.id}`
+  return "name" in n ? n.name : `Trigger #${n.id}`;
 }
 
 function typeLabel(n: FlowNode): string {
   switch (n.type) {
-    case 'trigger':
-      return 'Trigger'
-    case 'sendMessage':
-      return 'Send Message'
-    case 'dateTime':
-      return 'Date / Time'
-    case 'addComment':
-      return 'Comment'
-    case 'dateTimeConnector':
-      return 'Connector'
+    case "trigger":
+      return "Trigger";
+    case "sendMessage":
+      return "Send Message";
+    case "dateTime":
+      return "Date / Time";
+    case "addComment":
+      return "Comment";
+    case "dateTimeConnector":
+      return "Connector";
     default:
-      return humanizeKey((n as { type: string }).type)
+      return humanizeKey((n as { type: string }).type);
   }
 }
 
-const canDelete = computed(() => node.value != null && node.value.type !== 'trigger')
+const canDelete = computed(() => node.value != null && node.value.type !== "trigger");
 
 async function onConfirmDelete(): Promise<void> {
-  const target = node.value
-  if (target == null) return
-  confirmOpen.value = false
+  const target = node.value;
+  if (target == null) return;
+  confirmOpen.value = false;
   // Await the navigation so the route's `id` param has cleared before the
   // optimistic onMutate removes the node. Without this, router.push() is
   // still in flight when the store changes, the FlowChartView watcher fires
   // with the soon-deleted ID still in the route, and "Node not found" toasts.
-  await router.push('/')
+  await router.push("/");
   try {
-    await deleteMutation.mutateAsync({ id: target.id })
+    await deleteMutation.mutateAsync({ id: target.id });
   } catch {
-    return
+    return;
   }
-  toast.success('Node deleted', { description: 'Press Ctrl/Cmd+Z to undo' })
+  toast.success("Node deleted", { description: "Press Ctrl/Cmd+Z to undo" });
 }
 </script>
 
@@ -135,7 +135,7 @@ async function onConfirmDelete(): Promise<void> {
       <template v-if="node">
         <SheetHeader class="border-b border-border px-4 py-3">
           <div class="space-y-0.5 pr-10">
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span class="text-3xs font-semibold uppercase tracking-wide text-muted-foreground">
               {{ typeLabel(node) }}
             </span>
             <SheetTitle class="text-base font-semibold">{{ nodeTitle(node) }}</SheetTitle>
@@ -194,16 +194,13 @@ async function onConfirmDelete(): Promise<void> {
           :disabled="deleteMutation.isPending.value"
           @click="onConfirmDelete"
         >
-          {{ deleteMutation.isPending.value ? 'Deleting…' : 'Delete' }}
+          {{ deleteMutation.isPending.value ? "Deleting…" : "Delete" }}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
 
-  <AlertDialog
-    :open="unsavedConfirmOpen"
-    @update:open="(v) => (unsavedConfirmOpen = v)"
-  >
+  <AlertDialog :open="unsavedConfirmOpen" @update:open="(v) => (unsavedConfirmOpen = v)">
     <AlertDialogContent data-testid="unsaved-confirm">
       <AlertDialogHeader>
         <AlertDialogTitle>Unsaved changes</AlertDialogTitle>

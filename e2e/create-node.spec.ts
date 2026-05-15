@@ -12,12 +12,11 @@ async function openCreateDialog(page: Page): Promise<void> {
 }
 
 /**
- * Reka-UI Select renders its listbox in a portal. Pick an option by its
- * accessible name (the SelectItem text) — survives styling churn.
+ * Type of Node is a native <select> (kept native so macOS Safari includes it
+ * in Tab navigation). Pick by visible label so the test mirrors the user flow.
  */
 async function selectType(page: Page, label: string): Promise<void> {
-  await page.getByTestId('create-type').click()
-  await page.getByRole('option', { name: new RegExp(`^${label}$`) }).click()
+  await page.getByTestId('create-type').selectOption({ label })
 }
 
 async function fillCreateForm(
@@ -102,8 +101,9 @@ test('creates an Add Comments node', async ({ page }) => {
 test('Type of Node lists the three REQUIREMENTS.md options in order', async ({ page }) => {
   await gotoCanvas(page)
   await openCreateDialog(page)
-  await page.getByTestId('create-type').click()
-  const labels = await page.getByRole('option').allInnerTexts()
+  const labels = await page
+    .locator('[data-testid="create-type"] option[data-type-option]')
+    .allTextContents()
   expect(labels.map((l) => l.trim())).toEqual(['Send Message', 'Add Comments', 'Business Hours'])
 })
 

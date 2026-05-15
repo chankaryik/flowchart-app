@@ -15,19 +15,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ChevronDown } from 'lucide-vue-next'
+
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { H_GAP, NODE_HEIGHT, NODE_WIDTH, V_GAP } from '@/lib/layout'
 import { createNode } from '@/lib/node-factory'
 import type { EditableNodeType, FlowNode, NodeId } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { descriptionSchema, titleSchema } from '@/lib/validators'
 import { useCreateNode } from '@/queries/nodes'
 import { nodeKey, type Position, useFlowStore } from '@/stores/flow'
@@ -58,7 +54,7 @@ const formSchema = toTypedSchema(
   v.object({
     title: titleSchema,
     description: descriptionSchema,
-    type: v.picklist(['sendMessage', 'addComment', 'dateTime']),
+    type: v.picklist(['sendMessage', 'addComment', 'dateTime'], 'Please select a type.'),
   }),
 )
 
@@ -70,6 +66,16 @@ const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
 const [title, titleAttrs] = defineField('title', { validateOnBlur: true })
 const [description, descriptionAttrs] = defineField('description', { validateOnBlur: true })
 const [type, typeAttrs] = defineField('type', { validateOnBlur: true })
+
+// Native <select v-model> shows blank when modelValue matches no option, so map
+// undefined → '' to keep the "Select a type…" placeholder option visible until
+// the user picks something. The form's source of truth stays undefined|EditableNodeType.
+const typeModel = computed<EditableNodeType | ''>({
+  get: () => type.value ?? '',
+  set: (v) => {
+    type.value = v === '' ? undefined : v
+  },
+})
 
 // meta.valid reports true on mount before any validation has run, so it's not
 // enough on its own to gate the submit button. Combine with explicit checks
@@ -230,7 +236,9 @@ const onSubmit = handleSubmit(async (values) => {
 
       <form class="space-y-4" novalidate @submit="onSubmit">
         <div class="space-y-1.5">
-          <Label for="create-title">Title</Label>
+          <Label for="create-title">
+            Title <span aria-hidden="true" class="text-destructive">*</span>
+          </Label>
           <Input
             id="create-title"
             v-model="title"
@@ -265,22 +273,42 @@ const onSubmit = handleSubmit(async (values) => {
         </div>
 
         <div class="space-y-1.5">
-          <Label for="create-type">Type of Node</Label>
-          <Select v-model="type" v-bind="typeAttrs">
-            <SelectTrigger id="create-type" class="w-full" data-testid="create-type">
-              <SelectValue placeholder="Select a type…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
+          <Label for="create-type">
+            Type of Node <span aria-hidden="true" class="text-destructive">*</span>
+          </Label>
+          <!-- Native <select> (not shadcn Select) so macOS Safari includes it in
+               Tab navigation. Safari skips button-based custom controls unless
+               the user enables Full Keyboard Access; native <select> is always
+               tabbable. Keep id/testid/data-type-option for tests. -->
+          <div class="relative">
+            <select
+              id="create-type"
+              v-model="typeModel"
+              v-bind="typeAttrs"
+              data-testid="create-type"
+              :aria-invalid="errors.type != null"
+              :class="
+                cn(
+                  'border-input bg-transparent dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 flex h-9 w-full appearance-none items-center rounded-md border px-3 py-2 pr-9 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+                  typeModel === '' && 'text-muted-foreground',
+                )
+              "
+            >
+              <option value="" disabled hidden>Select a type…</option>
+              <option
                 v-for="opt in TYPE_OPTIONS"
                 :key="opt.value"
                 :value="opt.value"
                 :data-type-option="opt.value"
+                class="text-foreground"
               >
                 {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+              </option>
+            </select>
+            <ChevronDown
+              class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground opacity-50"
+            />
+          </div>
           <p v-if="errors.type" class="text-xs text-destructive" data-testid="type-error">
             {{ errors.type }}
           </p>

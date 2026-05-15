@@ -41,7 +41,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
             </CardTitle>
             <p
               v-if="description.length > 0"
-              class="truncate text-[11px] text-muted-foreground"
+              class="truncate text-2xs text-muted-foreground"
               data-testid="node-description"
             >
               {{ description }}
@@ -49,7 +49,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </div>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-[11px] text-muted-foreground">{{ summary }}</p>
+          <p class="truncate text-2xs text-muted-foreground">{{ summary }}</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
       </Card>

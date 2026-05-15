@@ -186,7 +186,9 @@ const onSubmit = handleSubmit(async (values) => {
   <form class="flex h-full flex-col" novalidate @submit="onSubmit">
     <div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
       <div class="space-y-1.5">
-        <Label for="sm-name">Title</Label>
+        <Label for="sm-name">
+          Title <span aria-hidden="true" class="text-destructive">*</span>
+        </Label>
         <Input
           id="sm-name"
           v-model="name"
@@ -259,7 +261,7 @@ const onSubmit = handleSubmit(async (values) => {
           :data-row-index="index"
         >
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span class="text-3xs font-semibold uppercase tracking-wide text-muted-foreground">
               {{ field.value.type === "text" ? "Text" : "Attachment" }}
             </span>
             <Button
@@ -296,7 +298,7 @@ const onSubmit = handleSubmit(async (values) => {
             >
               {{ attachmentError(index) }}
             </p>
-            <p class="text-[11px] text-muted-foreground">
+            <p class="text-2xs text-muted-foreground">
               Uploaded files are kept in memory only — the data persist setting does not support
               file uploads yet, so attachments are lost on refresh.
             </p>

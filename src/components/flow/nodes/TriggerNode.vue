@@ -29,7 +29,7 @@ const oncePerContact = computed(() => props.data.data.oncePerContact);
           <CardTitle class="truncate text-sm font-medium text-foreground">Trigger</CardTitle>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p class="truncate text-[11px] text-muted-foreground">{{ eventLabel }}</p>
+          <p class="truncate text-2xs text-muted-foreground">{{ eventLabel }}</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

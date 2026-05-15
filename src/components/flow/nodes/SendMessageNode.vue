@@ -41,7 +41,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
               </CardTitle>
               <p
                 v-if="description.length > 0"
-                class="truncate text-[11px] text-muted-foreground"
+                class="truncate text-2xs text-muted-foreground"
                 data-testid="node-description"
               >
                 {{ description }}
@@ -50,7 +50,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </div>
           <CardAction v-if="attachments > 0">
             <span
-              class="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-200"
+              class="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-3xs font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-200"
               :aria-label="`${attachments} attachment${attachments === 1 ? '' : 's'}`"
               data-testid="attachment-count"
             >
@@ -60,10 +60,10 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </CardAction>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p v-if="preview.length > 0" class="text-[11px] text-muted-foreground">
+          <p v-if="preview.length > 0" class="text-2xs text-muted-foreground">
             {{ preview }}
           </p>
-          <p v-else class="truncate text-[11px] italic text-muted-foreground/70">No message yet</p>
+          <p v-else class="truncate text-2xs italic text-muted-foreground/70">No message yet</p>
         </CardContent>
         <Handle type="source" :position="Position.Bottom" />
         <AddNodeButton :parent-id="data.id" />

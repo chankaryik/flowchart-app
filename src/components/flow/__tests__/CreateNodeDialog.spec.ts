@@ -34,22 +34,7 @@ const dialogStubs = {
   DialogFooter: { template: '<footer><slot /></footer>' },
 }
 
-const selectStubs = {
-  Select: {
-    name: 'Select',
-    props: ['modelValue'],
-    emits: ['update:modelValue'],
-    template: '<div :data-value="modelValue ?? \'\'"><slot /></div>',
-  },
-  SelectTrigger: { template: '<span><slot /></span>' },
-  SelectValue: { template: '<span><slot /></span>' },
-  SelectContent: { template: '<div><slot /></div>' },
-  SelectItem: {
-    props: ['value'],
-    template:
-      '<button type="button" :data-option-value="value" :data-type-option="value"><slot /></button>',
-  },
-}
+// Type of Node uses a native <select>; no shadcn stubs needed for it.
 
 const trigger: TriggerNode = {
   id: 1,
@@ -94,7 +79,7 @@ const { default: CreateNodeDialog } = await import('../CreateNodeDialog.vue')
 function mountDialog() {
   return mount(CreateNodeDialog, {
     props: { open: true },
-    global: { stubs: { ...dialogStubs, ...selectStubs } },
+    global: { stubs: { ...dialogStubs } },
   })
 }
 
@@ -106,8 +91,7 @@ async function fillForm(
   if (values.description != null) {
     await wrapper.find('[data-testid="create-description"]').setValue(values.description)
   }
-  wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', values.type)
-  await wrapper.vm.$nextTick()
+  await wrapper.find('[data-testid="create-type"]').setValue(values.type)
   await flushValidation()
 }
 
@@ -139,7 +123,7 @@ describe('CreateNodeDialog — REQUIREMENTS.md form fields', () => {
     expect(submit.attributes('disabled')).toBeDefined()
 
     await wrapper.find('[data-testid="create-title"]').setValue('Hello')
-    wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'sendMessage')
+    await wrapper.find('[data-testid="create-type"]').setValue('sendMessage')
     await flushValidation()
 
     expect(submit.attributes('disabled')).toBeUndefined()
@@ -148,7 +132,7 @@ describe('CreateNodeDialog — REQUIREMENTS.md form fields', () => {
   it('rejects a title longer than 80 characters', async () => {
     const wrapper = mountDialog()
     await wrapper.find('[data-testid="create-title"]').setValue('x'.repeat(81))
-    wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'sendMessage')
+    await wrapper.find('[data-testid="create-type"]').setValue('sendMessage')
     await flushValidation()
 
     expect(wrapper.find('[data-testid="title-error"]').exists()).toBe(true)
@@ -159,7 +143,7 @@ describe('CreateNodeDialog — REQUIREMENTS.md form fields', () => {
     const wrapper = mountDialog()
     await wrapper.find('[data-testid="create-title"]').setValue('Greeting')
     await wrapper.find('[data-testid="create-description"]').setValue('y'.repeat(501))
-    wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'sendMessage')
+    await wrapper.find('[data-testid="create-type"]').setValue('sendMessage')
     await flushValidation()
 
     expect(wrapper.find('[data-testid="description-error"]').exists()).toBe(true)

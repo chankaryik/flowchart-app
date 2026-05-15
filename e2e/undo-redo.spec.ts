@@ -18,8 +18,7 @@ const TYPE_LABEL: Record<'sendMessage' | 'dateTime' | 'addComment', string> = {
 }
 
 async function selectType(page: Page, label: string): Promise<void> {
-  await page.getByTestId('create-type').click()
-  await page.getByRole('option', { name: new RegExp(`^${label}$`) }).click()
+  await page.getByTestId('create-type').selectOption({ label })
 }
 
 async function createNode(

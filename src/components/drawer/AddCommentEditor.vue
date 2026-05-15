@@ -86,7 +86,9 @@ const onSubmit = handleSubmit(async (values) => {
   <form class="flex h-full flex-col" novalidate @submit="onSubmit">
     <div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
       <div class="space-y-1.5">
-        <Label for="comment-name">Title</Label>
+        <Label for="comment-name">
+          Title <span aria-hidden="true" class="text-destructive">*</span>
+        </Label>
         <Input
           id="comment-name"
           v-model="name"

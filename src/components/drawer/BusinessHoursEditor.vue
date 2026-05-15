@@ -153,7 +153,9 @@ const onSubmit = handleSubmit(async (values) => {
   <form class="flex h-full flex-col" novalidate @submit="onSubmit">
     <div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
       <div class="space-y-1.5">
-        <Label for="dt-name">Title</Label>
+        <Label for="dt-name">
+          Title <span aria-hidden="true" class="text-destructive">*</span>
+        </Label>
         <Input
           id="dt-name"
           v-model="name"
@@ -207,7 +209,7 @@ const onSubmit = handleSubmit(async (values) => {
         </div>
 
         <div
-          class="hidden sm:grid sm:grid-cols-[3.5rem_6.5rem_1fr_0.5rem_1fr] items-center gap-x-3 px-3 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+          class="hidden sm:grid sm:grid-cols-[3.5rem_6.5rem_1fr_0.5rem_1fr] items-center gap-x-3 px-3 pb-1 text-3xs font-medium uppercase tracking-wide text-muted-foreground"
           aria-hidden="true"
         >
           <span>Day</span>

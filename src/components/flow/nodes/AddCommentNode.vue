@@ -40,7 +40,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
             </CardTitle>
             <p
               v-if="description.length > 0"
-              class="truncate text-[11px] text-amber-800/80 dark:text-amber-200/80"
+              class="truncate text-2xs text-amber-800/80 dark:text-amber-200/80"
               data-testid="node-description"
             >
               {{ description }}
@@ -48,10 +48,10 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
           </div>
         </CardHeader>
         <CardContent class="px-3 pb-3">
-          <p v-if="comment.length > 0" class="text-[11px] text-amber-800/80 dark:text-amber-200/80">
+          <p v-if="comment.length > 0" class="text-2xs text-amber-800/80 dark:text-amber-200/80">
             {{ comment }}
           </p>
-          <p v-else class="truncate text-[11px] italic text-amber-700/60 dark:text-amber-300/50">
+          <p v-else class="truncate text-2xs italic text-amber-700/60 dark:text-amber-300/50">
             No comment yet
           </p>
         </CardContent>
