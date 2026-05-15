@@ -11,9 +11,17 @@ import {
   Upload,
   X,
 } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { Button } from '@/components/ui/button'
+import {
+  ATTACHMENT_ACCEPT_ATTR,
+  ATTACHMENT_ALLOWED_EXTENSIONS,
+  ATTACHMENT_MAX_SIZE_LABEL,
+  formatAttachmentRejections,
+  validateAttachmentFile,
+  type AttachmentRejection,
+} from '@/lib/attachment-rules'
 
 const props = defineProps<{
   modelValue: string[]
@@ -30,11 +38,21 @@ const emit = defineEmits<{
 
 const dropRef = ref<HTMLDivElement | null>(null)
 const inputRef = ref<HTMLInputElement | null>(null)
+const rejectionError = ref<string>('')
 
 function appendFiles(incoming: File[] | FileList | null): void {
   if (incoming == null) return
   const list = Array.from(incoming)
   if (list.length === 0) return
+  const accepted: File[] = []
+  const rejected: AttachmentRejection[] = []
+  for (const file of list) {
+    const reason = validateAttachmentFile(file)
+    if (reason == null) accepted.push(file)
+    else rejected.push({ name: file.name, reason })
+  }
+  rejectionError.value = formatAttachmentRejections(rejected)
+  if (accepted.length === 0) return
   // Pad files[] up to modelValue[] before appending so newly uploaded files
   // land at indices that line up with the names appended alongside. Seed
   // payloads can contribute names (e.g. plain URL strings) without a backing
@@ -42,11 +60,18 @@ function appendFiles(incoming: File[] | FileList | null): void {
   // wrong row.
   const padded: (File | undefined)[] = [...props.files]
   while (padded.length < props.modelValue.length) padded.push(undefined)
-  const nextFiles: (File | undefined)[] = [...padded, ...list]
-  const nextNames = [...props.modelValue, ...list.map((f) => f.name)]
+  const nextFiles: (File | undefined)[] = [...padded, ...accepted]
+  const nextNames = [...props.modelValue, ...accepted.map((f) => f.name)]
   emit('update:files', nextFiles)
   emit('update:modelValue', nextNames)
 }
+
+const dropzoneError = computed<string | null>(() => {
+  if (rejectionError.value.length > 0) return rejectionError.value
+  return props.error ?? null
+})
+
+const helpText = `Up to ${ATTACHMENT_MAX_SIZE_LABEL} · ${ATTACHMENT_ALLOWED_EXTENSIONS.map((ext) => ext.toUpperCase()).join(', ')}`
 
 const { isOverDropZone } = useDropZone(dropRef, {
   onDrop: (files) => appendFiles(files),
@@ -104,6 +129,7 @@ function iconFor(name: string): typeof FileIcon {
       type="file"
       class="hidden"
       multiple
+      :accept="ATTACHMENT_ACCEPT_ATTR"
       :aria-label="ariaLabel"
       data-testid="attachment-input"
       @change="onPickerChange"
@@ -150,13 +176,14 @@ function iconFor(name: string): typeof FileIcon {
       ref="dropRef"
       role="button"
       tabindex="0"
-      :aria-invalid="error != null"
+      :aria-invalid="dropzoneError != null"
       data-testid="attachment-dropzone"
       class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed bg-card px-3 py-3 text-center text-xs text-muted-foreground transition-colors hover:border-primary"
       :class="{
         'border-primary bg-primary/5 text-primary': isOverDropZone,
-        'border-destructive': error != null && modelValue.length === 0,
-        'border-border': error == null || modelValue.length > 0,
+        'border-destructive':
+          rejectionError.length > 0 || (error != null && modelValue.length === 0),
+        'border-border': rejectionError.length === 0 && (error == null || modelValue.length > 0),
       }"
       @click="openPicker"
       @keydown.enter.prevent="openPicker"
@@ -172,5 +199,17 @@ function iconFor(name: string): typeof FileIcon {
         or drag and drop
       </span>
     </div>
+
+    <p
+      v-if="rejectionError.length > 0"
+      class="text-xs text-destructive"
+      data-testid="attachment-reject-error"
+    >
+      {{ rejectionError }}
+    </p>
+
+    <p class="text-2xs text-muted-foreground" data-testid="attachment-help">
+      {{ helpText }}
+    </p>
   </div>
 </template>
