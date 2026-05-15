@@ -37,6 +37,15 @@ const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
   },
 })
 
+const dirty = defineModel<boolean>('dirty', { default: false })
+watch(
+  () => meta.value.dirty,
+  (v) => {
+    dirty.value = v
+  },
+  { immediate: true },
+)
+
 const [name, nameProps] = defineField('name')
 const [description, descriptionProps] = defineField('description')
 const [comment, commentProps] = defineField('comment')

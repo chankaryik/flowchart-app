@@ -11,13 +11,18 @@ function makeKey(nodeId: NodeId, index: number): string {
 }
 
 export const useAttachmentsStore = defineStore('attachments', () => {
-  const files = reactive(new Map<string, File[]>())
+  // Entries may be `undefined` to preserve index alignment with the row's
+  // names array when some names (e.g. seed URLs) have no backing File.
+  const files = reactive(new Map<string, (File | undefined)[]>())
 
-  function get(nodeId: NodeId, index: number): File[] {
+  function get(nodeId: NodeId, index: number): (File | undefined)[] {
     return files.get(makeKey(nodeId, index)) ?? []
   }
 
-  function commit(nodeId: NodeId, entries: ReadonlyMap<number, File[]>): void {
+  function commit(
+    nodeId: NodeId,
+    entries: ReadonlyMap<number, (File | undefined)[]>,
+  ): void {
     // Replace this node's entries wholesale so the saved indices stay in sync
     // with the canonical payload array order.
     const prefix = `${nodeId}:`
@@ -25,7 +30,7 @@ export const useAttachmentsStore = defineStore('attachments', () => {
       if (key.startsWith(prefix)) files.delete(key)
     }
     for (const [index, list] of entries) {
-      if (list.length > 0) files.set(makeKey(nodeId, index), list.slice())
+      if (list.some((f) => f != null)) files.set(makeKey(nodeId, index), list.slice())
     }
   }
 

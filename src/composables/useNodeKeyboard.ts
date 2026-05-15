@@ -17,10 +17,13 @@ export type UseNodeKeyboardOptions = {
  *   Arrow Right / Down  -> next node in graph order
  *   Arrow Left / Up     -> previous node in graph order
  *   Enter               -> open drawer for the focused node
- *   Esc                 -> close the drawer
  *   ?                   -> open the shortcut help dialog
  *
- * dateTimeConnector nodes are excluded from navigation (display-only).
+ * Esc closes the drawer too, but that's handled by reka-ui's Sheet directly
+ * (via its DismissableLayer) so the close flows through the drawer's
+ * @update:open intercept — letting NodeDetailsDrawer block close when the
+ * editor form is dirty. dateTimeConnector nodes are excluded from navigation
+ * (display-only).
  */
 export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
   const store = useFlowStore()
@@ -90,19 +93,14 @@ export function useNodeKeyboard(options: UseNodeKeyboardOptions): void {
   }
 
   // Capture phase: reach the handler before reka-ui portals (Sheet,
-  // AlertDialog) stopPropagation inside their focus traps.
+  // AlertDialog) stopPropagation inside their focus traps. Esc is intentionally
+  // not handled here — reka-ui's DismissableLayer fires onEscapeKeyDown which
+  // routes through the drawer's @update:open intercept, so the unsaved-changes
+  // guard runs.
   useEventListener(
     window,
     'keydown',
     (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        const id = route.params.id
-        if (id != null && id !== '') {
-          event.preventDefault()
-          void router.push('/')
-        }
-        return
-      }
       if (isEditableTarget(event.target)) return
       if (event.ctrlKey || event.metaKey || event.altKey) return
 

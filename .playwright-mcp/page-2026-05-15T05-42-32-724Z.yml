@@ -1,0 +1,63 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 1 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+            - generic: "Theme: System"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - group [ref=e64]:
+                    - generic [ref=e65]:
+                      - generic [ref=e66]:
+                        - img [ref=e67]
+                        - heading [level=3] [ref=e483]: Trigger
+                      - paragraph [ref=e71]: Conversation Opened
+                      - button [ref=e484] [cursor=pointer]:
+                        - img [ref=e75]
+            - img
+            - img [ref=e485]
+            - generic [ref=e165]:
+              - button [ref=e166] [cursor=pointer]:
+                - img [ref=e167]
+              - button [ref=e169] [cursor=pointer]:
+                - img [ref=e170]
+              - button [ref=e172] [cursor=pointer]:
+                - img [ref=e173]
+              - button [ref=e175] [cursor=pointer]:
+                - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - alertdialog "Reset the flow chart?" [ref=e487]:
+    - generic [ref=e488]:
+      - heading "Reset the flow chart?" [level=2] [ref=e489]
+      - paragraph [ref=e490]: This discards every change you have made and restores the original payload.json. Undo history is cleared and cannot be recovered.
+    - generic [ref=e491]:
+      - button "Cancel" [active] [ref=e492]
+      - button "Reset" [ref=e493]

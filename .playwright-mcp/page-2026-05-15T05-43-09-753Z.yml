@@ -1,0 +1,61 @@
+- generic [active] [ref=e13]:
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - banner [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Flow Chart" [level=1] [ref=e18]
+          - generic [ref=e19]: 1 nodes
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic "When on, your changes are saved to localStorage and survive page refreshes. File uploads are never persisted." [ref=e22]: Persist data
+            - switch "Persist data" [ref=e23]
+          - button "Toggle theme" [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e32]: "Theme: System"
+          - button "Show keyboard shortcuts" [ref=e33]:
+            - img [ref=e34]
+          - button "Reset" [ref=e36]:
+            - img [ref=e37]
+            - text: Reset
+          - button "Re-layout" [ref=e40]:
+            - img [ref=e41]
+            - text: Re-layout
+          - button "+ Create New Node" [ref=e46]
+      - main [ref=e47]:
+        - generic [ref=e49]:
+          - generic [ref=e51]:
+            - generic:
+              - img
+              - group [ref=e64]:
+                - generic [ref=e65]:
+                  - generic [ref=e66]:
+                    - img [ref=e67]
+                    - heading "Trigger" [level=3] [ref=e739]
+                  - paragraph [ref=e71]: Conversation Opened
+                  - button "Add child node" [ref=e740] [cursor=pointer]:
+                    - img [ref=e75]
+          - img [ref=e153]
+          - img "Vue Flow mini map" [ref=e741]
+          - generic [ref=e165]:
+            - button [ref=e166] [cursor=pointer]:
+              - img [ref=e167]
+            - button [ref=e169] [cursor=pointer]:
+              - img [ref=e170]
+            - button [ref=e172] [cursor=pointer]:
+              - img [ref=e173]
+            - button [ref=e175] [cursor=pointer]:
+              - img [ref=e176]
+    - region "Notifications alt+T":
+      - list:
+        - listitem [ref=e742]:
+          - button "Close toast" [ref=e743] [cursor=pointer]:
+            - img [ref=e744]
+          - img [ref=e748]
+          - generic [ref=e751]:
+            - generic [ref=e752]: Node deleted
+            - generic [ref=e753]: Press Ctrl/Cmd+Z to undo
+  - generic [ref=e1]:
+    - generic "Toggle devtools panel" [ref=e2] [cursor=pointer]:
+      - img [ref=e3]
+    - generic "Toggle Component Inspector" [ref=e8] [cursor=pointer]:
+      - img [ref=e9]

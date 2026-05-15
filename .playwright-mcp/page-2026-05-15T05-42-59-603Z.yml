@@ -1,0 +1,222 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 7 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+            - generic: "Theme: System"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img:
+                    - group [ref=e606] [cursor=pointer]
+                  - img:
+                    - group [ref=e607] [cursor=pointer]
+                  - img:
+                    - group [ref=e608] [cursor=pointer]
+                  - img:
+                    - group [ref=e609] [cursor=pointer]
+                  - img:
+                    - group [ref=e610] [cursor=pointer]
+                  - img
+                  - generic:
+                    - group [ref=e64]:
+                      - generic [ref=e65]:
+                        - generic [ref=e66]:
+                          - img [ref=e67]
+                          - heading [level=3] [ref=e611]: Trigger
+                        - paragraph [ref=e71]: Conversation Opened
+                        - button [ref=e612] [cursor=pointer]:
+                          - img [ref=e75]
+                    - group [ref=e511]:
+                      - generic [ref=e512]:
+                        - generic [ref=e514]:
+                          - img [ref=e515]
+                          - heading [level=3] [ref=e613]: Away Message
+                        - paragraph [ref=e520]: Sorry, we are currently away. We will respond as soon as possible.
+                        - button [ref=e614] [cursor=pointer]:
+                          - img [ref=e524]
+                    - group [ref=e525]:
+                      - generic [ref=e526]:
+                        - generic [ref=e527]:
+                          - img [ref=e528]
+                          - heading [level=3] [ref=e615]: Business Hours
+                        - paragraph [ref=e534]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e535]:
+                      - generic [ref=e536]:
+                        - img [ref=e537]
+                        - generic [ref=e540]: Success
+                        - button [ref=e616] [cursor=pointer]:
+                          - img [ref=e544]
+                    - group [ref=e545]:
+                      - generic [ref=e546]:
+                        - img [ref=e547]
+                        - generic [ref=e551]: Failure
+                        - button [ref=e617] [cursor=pointer]:
+                          - img [ref=e555]
+                    - group [ref=e556]:
+                      - generic [ref=e557]:
+                        - generic [ref=e558]:
+                          - generic [ref=e559]:
+                            - img [ref=e560]
+                            - heading [level=3] [ref=e618]: Welcome Message
+                          - generic [ref=e619]:
+                            - img [ref=e566]
+                            - text: "1"
+                        - paragraph [ref=e569]: Hello there welcome to the chat!
+                        - button [ref=e620] [cursor=pointer]:
+                          - img [ref=e573]
+                    - group [ref=e574]:
+                      - generic [ref=e575]:
+                        - generic [ref=e576]:
+                          - img [ref=e577]
+                          - heading [level=3] [ref=e621]: "Add Comment #1"
+                        - paragraph [ref=e583]: User message during off hours
+                        - button [ref=e622] [cursor=pointer]:
+                          - img [ref=e587]
+            - img
+            - img [ref=e623]
+            - generic [ref=e165]:
+              - button [ref=e166] [cursor=pointer]:
+                - img [ref=e167]
+              - button [ref=e169] [cursor=pointer]:
+                - img [ref=e170]
+              - button [ref=e172] [cursor=pointer]:
+                - img [ref=e173]
+              - button [ref=e175] [cursor=pointer]:
+                - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - dialog "Business Hours" [ref=e625]:
+    - generic [ref=e627]:
+      - text: Date / Time
+      - heading "Business Hours" [level=2] [ref=e628]
+      - paragraph [ref=e629]:
+        - text: ID
+        - code [ref=e630]: d09c08
+    - generic [ref=e632]:
+      - generic [ref=e633]:
+        - generic [ref=e634]:
+          - generic [ref=e635]: Title
+          - textbox "Title" [active] [ref=e636]: Business Hours
+        - generic [ref=e637]:
+          - generic [ref=e638]: Description
+          - textbox "Description" [ref=e639]
+        - generic [ref=e640]:
+          - generic [ref=e641]: Timezone
+          - combobox "Timezone" [ref=e642]:
+            - generic: Coordinated Universal Time (UTC)
+            - img
+        - generic [ref=e643]:
+          - generic [ref=e644]:
+            - generic [ref=e645]: Schedule
+            - paragraph [ref=e646]: Toggle a day off to mark it as closed.
+          - generic [ref=e647]:
+            - generic [ref=e648]: Day
+            - generic [ref=e649]: Status
+            - generic [ref=e650]: Open
+            - generic [ref=e651]: Close
+          - generic [ref=e652]:
+            - generic [ref=e653]:
+              - generic [ref=e654]:
+                - generic [ref=e655]: Mon
+                - generic [ref=e656]:
+                  - switch "Mark Mon as open" [checked] [ref=e657]
+                  - generic [ref=e658]: Open
+              - generic [ref=e659]:
+                - textbox "Start time for Mon" [ref=e660]: 09:00
+                - generic [ref=e661]: –
+                - textbox "End time for Mon" [ref=e662]: 17:00
+            - generic [ref=e663]:
+              - generic [ref=e664]:
+                - generic [ref=e665]: Tue
+                - generic [ref=e666]:
+                  - switch "Mark Tue as open" [checked] [ref=e667]
+                  - generic [ref=e668]: Open
+              - generic [ref=e669]:
+                - textbox "Start time for Tue" [ref=e670]: 09:00
+                - generic [ref=e671]: –
+                - textbox "End time for Tue" [ref=e672]: 17:00
+            - generic [ref=e673]:
+              - generic [ref=e674]:
+                - generic [ref=e675]: Wed
+                - generic [ref=e676]:
+                  - switch "Mark Wed as open" [checked] [ref=e677]
+                  - generic [ref=e678]: Open
+              - generic [ref=e679]:
+                - textbox "Start time for Wed" [ref=e680]: 09:00
+                - generic [ref=e681]: –
+                - textbox "End time for Wed" [ref=e682]: 17:00
+            - generic [ref=e683]:
+              - generic [ref=e684]:
+                - generic [ref=e685]: Thu
+                - generic [ref=e686]:
+                  - switch "Mark Thu as open" [checked] [ref=e687]
+                  - generic [ref=e688]: Open
+              - generic [ref=e689]:
+                - textbox "Start time for Thu" [ref=e690]: 09:00
+                - generic [ref=e691]: –
+                - textbox "End time for Thu" [ref=e692]: 17:00
+            - generic [ref=e693]:
+              - generic [ref=e694]:
+                - generic [ref=e695]: Fri
+                - generic [ref=e696]:
+                  - switch "Mark Fri as open" [checked] [ref=e697]
+                  - generic [ref=e698]: Open
+              - generic [ref=e699]:
+                - textbox "Start time for Fri" [ref=e700]: 09:00
+                - generic [ref=e701]: –
+                - textbox "End time for Fri" [ref=e702]: 17:00
+            - generic [ref=e703]:
+              - generic [ref=e704]:
+                - generic [ref=e705]: Sat
+                - generic [ref=e706]:
+                  - switch "Mark Sat as open" [checked] [ref=e707]
+                  - generic [ref=e708]: Open
+              - generic [ref=e709]:
+                - textbox "Start time for Sat" [ref=e710]: 09:00
+                - generic [ref=e711]: –
+                - textbox "End time for Sat" [ref=e712]: 17:00
+            - generic [ref=e713]:
+              - generic [ref=e714]:
+                - generic [ref=e715]: Sun
+                - generic [ref=e716]:
+                  - switch "Mark Sun as open" [checked] [ref=e717]
+                  - generic [ref=e718]: Open
+              - generic [ref=e719]:
+                - textbox "Start time for Sun" [ref=e720]: 09:00
+                - generic [ref=e721]: –
+                - textbox "End time for Sun" [ref=e722]: 17:00
+      - contentinfo [ref=e723]:
+        - button "Delete" [ref=e724]:
+          - img
+          - text: Delete
+        - button "Save" [ref=e725]
+    - button "Close" [ref=e726]:
+      - img [ref=e727]
+      - generic [ref=e730]: Close

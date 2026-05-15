@@ -77,6 +77,15 @@ const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
   validateOnMount: false,
 });
 
+const dirty = defineModel<boolean>("dirty", { default: false });
+watch(
+  () => meta.value.dirty,
+  (v) => {
+    dirty.value = v;
+  },
+  { immediate: true },
+);
+
 const [name, nameProps] = defineField("name", { validateOnBlur: true });
 const [description, descriptionProps] = defineField("description", { validateOnBlur: true });
 const [timezone] = defineField("timezone");

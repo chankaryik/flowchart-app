@@ -1,0 +1,140 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 7 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+            - generic: "Theme: System"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img:
+                    - group [ref=e179] [cursor=pointer]
+                  - img
+                  - img:
+                    - group [ref=e180] [cursor=pointer]
+                  - img:
+                    - group [ref=e181] [cursor=pointer]
+                  - img:
+                    - group [ref=e182] [cursor=pointer]
+                  - img
+                  - generic:
+                    - group [ref=e64]:
+                      - generic [ref=e65]:
+                        - generic [ref=e66]:
+                          - img [ref=e67]
+                          - heading [level=3] [ref=e183]: Trigger
+                        - paragraph [ref=e71]: Conversation Opened
+                        - button [ref=e184] [cursor=pointer]:
+                          - img [ref=e75]
+                    - group [ref=e76]:
+                      - generic [ref=e77]:
+                        - generic [ref=e79]:
+                          - img [ref=e80]
+                          - heading [level=3] [ref=e185]: Away Message
+                        - paragraph [ref=e85]: Sorry, we are currently away. We will respond as soon as possible.
+                        - button [ref=e186] [cursor=pointer]:
+                          - img [ref=e89]
+                    - group [ref=e90]:
+                      - generic [ref=e91]:
+                        - generic [ref=e92]:
+                          - img [ref=e93]
+                          - heading [level=3] [ref=e187]: Business Hours
+                        - paragraph [ref=e99]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e100]:
+                      - generic [ref=e101]:
+                        - img [ref=e102]
+                        - generic [ref=e105]: Success
+                        - button [ref=e188] [cursor=pointer]:
+                          - img [ref=e109]
+                    - group [ref=e110]:
+                      - generic [ref=e111]:
+                        - img [ref=e112]
+                        - generic [ref=e116]: Failure
+                        - button [ref=e189] [cursor=pointer]:
+                          - img [ref=e120]
+                    - group [ref=e121]:
+                      - generic [ref=e122]:
+                        - generic [ref=e123]:
+                          - generic [ref=e124]:
+                            - img [ref=e125]
+                            - heading [level=3] [ref=e190]: Welcome Message
+                          - generic [ref=e191]:
+                            - img [ref=e131]
+                            - text: "1"
+                        - paragraph [ref=e134]: Hello there welcome to the chat!
+                        - button [ref=e192] [cursor=pointer]:
+                          - img [ref=e138]
+                    - group [ref=e139]:
+                      - generic [ref=e140]:
+                        - generic [ref=e141]:
+                          - img [ref=e142]
+                          - heading [level=3] [ref=e193]: "Add Comment #1"
+                        - paragraph [ref=e148]: User message during off hours
+                        - button [ref=e194] [cursor=pointer]:
+                          - img [ref=e152]
+            - img
+            - img [ref=e195]
+            - generic [ref=e165]:
+              - button [ref=e166] [cursor=pointer]:
+                - img [ref=e167]
+              - button [ref=e169] [cursor=pointer]:
+                - img [ref=e170]
+              - button [ref=e172] [cursor=pointer]:
+                - img [ref=e173]
+              - button [ref=e175] [cursor=pointer]:
+                - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - 'dialog "Add Comment #1" [ref=e197]':
+    - generic [ref=e199]:
+      - text: Comment
+      - 'heading "Add Comment #1" [level=2] [ref=e200]'
+      - paragraph [ref=e201]:
+        - text: ID
+        - code [ref=e202]: e879e4
+    - generic [ref=e204]:
+      - generic [ref=e205]:
+        - generic [ref=e206]:
+          - generic [ref=e207]: Title
+          - textbox "Title" [active] [ref=e208]: "Add Comment #1"
+        - generic [ref=e209]:
+          - generic [ref=e210]: Description
+          - textbox "Description" [ref=e211]
+        - generic [ref=e212]:
+          - generic [ref=e213]: Comment
+          - textbox "Comment" [ref=e214]: User message during off hours
+          - paragraph [ref=e216]: 29 / 1000
+      - contentinfo [ref=e217]:
+        - button "Delete" [ref=e218]:
+          - img
+          - text: Delete
+        - button "Save" [ref=e219]
+    - button "Close" [ref=e220]:
+      - img [ref=e221]
+      - generic [ref=e224]: Close

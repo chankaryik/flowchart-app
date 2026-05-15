@@ -1,0 +1,115 @@
+- generic [active] [ref=e13]:
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - banner [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Flow Chart" [level=1] [ref=e18]
+          - generic [ref=e19]: 6 nodes
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic "When on, your changes are saved to localStorage and survive page refreshes. File uploads are never persisted." [ref=e22]: Persist data
+            - switch "Persist data" [ref=e23]
+          - button "Toggle theme" [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e32]: "Theme: System"
+          - button "Show keyboard shortcuts" [ref=e33]:
+            - img [ref=e34]
+          - button "Reset" [ref=e36]:
+            - img [ref=e37]
+            - text: Reset
+          - button "Re-layout" [ref=e40]:
+            - img [ref=e41]
+            - text: Re-layout
+          - button "+ Create New Node" [ref=e46]
+      - main [ref=e47]:
+        - generic [ref=e49]:
+          - generic [ref=e51]:
+            - generic:
+              - img
+              - img:
+                - group "Edge from 28c4b9 to b6a0c1" [ref=e233] [cursor=pointer]
+              - img:
+                - group "Edge from 1 to d09c08"
+              - img:
+                - group "Edge from d09c08 to 161f52" [ref=e234] [cursor=pointer]
+              - img:
+                - group "Edge from d09c08 to 28c4b9" [ref=e235] [cursor=pointer]
+              - img:
+                - group "Edge from 161f52 to b0653a" [ref=e236] [cursor=pointer]
+              - generic:
+                - group [ref=e64]:
+                  - generic [ref=e65]:
+                    - generic [ref=e66]:
+                      - img [ref=e67]
+                      - heading "Trigger" [level=3] [ref=e237]
+                    - paragraph [ref=e71]: Conversation Opened
+                    - button "Add child node" [ref=e238] [cursor=pointer]:
+                      - img [ref=e75]
+                - group [ref=e76]:
+                  - generic [ref=e77]:
+                    - generic [ref=e79]:
+                      - img [ref=e80]
+                      - heading "Away Message" [level=3] [ref=e239]
+                    - paragraph [ref=e85]: Sorry, we are currently away. We will respond as soon as possible.
+                    - button "Add child node" [ref=e240] [cursor=pointer]:
+                      - img [ref=e89]
+                - group [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e92]:
+                      - img [ref=e93]
+                      - heading "Business Hours" [level=3] [ref=e241]
+                    - paragraph [ref=e99]: Daily 09:00–17:00 (UTC)
+                - group [ref=e100]:
+                  - generic [ref=e101]:
+                    - img [ref=e102]
+                    - generic [ref=e105]: Success
+                    - button "Add child node" [ref=e242] [cursor=pointer]:
+                      - img [ref=e109]
+                - group [ref=e110]:
+                  - generic [ref=e111]:
+                    - img [ref=e112]
+                    - generic [ref=e116]: Failure
+                    - button "Add child node" [ref=e243] [cursor=pointer]:
+                      - img [ref=e120]
+                - group [ref=e121]:
+                  - generic [ref=e122]:
+                    - generic [ref=e123]:
+                      - generic [ref=e124]:
+                        - img [ref=e125]
+                        - heading "Welcome Message" [level=3] [ref=e244]
+                      - generic "1 attachment" [ref=e245]:
+                        - img [ref=e131]
+                        - text: "1"
+                    - paragraph [ref=e134]: Hello there welcome to the chat!
+                    - button "Add child node" [ref=e246] [cursor=pointer]:
+                      - img [ref=e138]
+          - img [ref=e153]
+          - img "Vue Flow mini map" [ref=e247]
+          - generic [ref=e165]:
+            - button [ref=e166] [cursor=pointer]:
+              - img [ref=e167]
+            - button [ref=e169] [cursor=pointer]:
+              - img [ref=e170]
+            - button [ref=e172] [cursor=pointer]:
+              - img [ref=e173]
+            - button [ref=e175] [cursor=pointer]:
+              - img [ref=e176]
+    - region "Notifications alt+T":
+      - list:
+        - listitem [ref=e248]:
+          - button "Close toast" [ref=e249] [cursor=pointer]:
+            - img [ref=e250]
+          - img [ref=e254]
+          - generic [ref=e257]:
+            - generic [ref=e258]: Node deleted
+            - generic [ref=e259]: Press Ctrl/Cmd+Z to undo
+        - listitem [ref=e260]:
+          - button "Close toast" [ref=e261] [cursor=pointer]:
+            - img [ref=e262]
+          - img [ref=e266]
+          - generic [ref=e269]: Node "e879e4" not found
+  - generic [ref=e1]:
+    - generic "Toggle devtools panel" [ref=e2] [cursor=pointer]:
+      - img [ref=e3]
+    - generic "Toggle Component Inspector" [ref=e8] [cursor=pointer]:
+      - img [ref=e9]

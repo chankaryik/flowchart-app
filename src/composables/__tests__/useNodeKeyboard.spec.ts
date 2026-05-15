@@ -177,13 +177,10 @@ describe('useNodeKeyboard (integration)', () => {
     expect(pushMock).toHaveBeenCalledWith('/node/dt')
   })
 
-  it('Escape closes an open drawer; no-op when none is open', () => {
+  it('does not handle Escape — reka-ui Sheet dismisses through @update:open', () => {
+    // Esc handling moved out so close flows through NodeDetailsDrawer's
+    // unsaved-changes intercept instead of pushing to '/' directly.
     routeRef.value = { params: { id: 'dt' } }
-    dispatchKey({ key: 'Escape' })
-    expect(pushMock).toHaveBeenCalledWith('/')
-
-    pushMock.mockReset()
-    routeRef.value = { params: {} }
     dispatchKey({ key: 'Escape' })
     expect(pushMock).not.toHaveBeenCalled()
   })

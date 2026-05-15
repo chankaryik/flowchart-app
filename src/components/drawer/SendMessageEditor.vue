@@ -47,6 +47,15 @@ const { defineField, handleSubmit, errors, meta, resetForm, submitCount } = useF
   },
 });
 
+const dirty = defineModel<boolean>("dirty", { default: false });
+watch(
+  () => meta.value.dirty,
+  (v) => {
+    dirty.value = v;
+  },
+  { immediate: true },
+);
+
 const [name, nameProps] = defineField("name", { validateOnBlur: true });
 const [description, descriptionProps] = defineField("description", { validateOnBlur: true });
 const { fields, push, remove } = useFieldArray<SendMessagePayloadItem>("payload");
@@ -56,7 +65,10 @@ const { fields, push, remove } = useFieldArray<SendMessagePayloadItem>("payload"
 // per-field-array-key map so add/remove of rows doesn't require re-keying on
 // every keystroke; the store gets a re-keyed snapshot at submit time.
 const attachmentsStore = useAttachmentsStore();
-const filesByKey = reactive(new Map<number, File[]>());
+// Entries can be `undefined` when the row's name is a seed URL string with no
+// in-memory File — keeps files[] aligned with the names array so the download
+// button renders next to the file it represents.
+const filesByKey = reactive(new Map<number, (File | undefined)[]>());
 const touchedKeys = reactive(new Set<number>());
 
 function hydrateFilesFromStore(): void {
@@ -123,8 +135,8 @@ function setAttachmentNames(index: number, value: string[]): void {
   if (row != null && row.type === "attachment") row.attachments = value;
 }
 
-function onAttachmentFilesChange(rowKey: number, list: File[]): void {
-  if (list.length === 0) filesByKey.delete(rowKey);
+function onAttachmentFilesChange(rowKey: number, list: (File | undefined)[]): void {
+  if (list.every((f) => f == null)) filesByKey.delete(rowKey);
   else filesByKey.set(rowKey, list);
   touchedKeys.add(rowKey);
 }
@@ -158,11 +170,11 @@ const onSubmit = handleSubmit(async (values) => {
   // Commit the in-session files to the store keyed by their final payload
   // index. Done after a successful mutation so a failed save doesn't leave
   // stale entries pointing at a stale array layout.
-  const committed = new Map<number, File[]>();
+  const committed = new Map<number, (File | undefined)[]>();
   fields.value.forEach((field, index) => {
     if (field.value.type !== "attachment") return;
     const list = filesByKey.get(field.key as number);
-    if (list != null && list.length > 0) committed.set(index, list);
+    if (list != null && list.some((f) => f != null)) committed.set(index, list);
   });
   attachmentsStore.commit(props.node.id, committed);
   toast.success("Send message saved");

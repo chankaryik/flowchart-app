@@ -1,0 +1,154 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 6 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+            - generic: "Theme: System"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img:
+                    - group [ref=e260] [cursor=pointer]
+                  - img
+                  - img:
+                    - group [ref=e261] [cursor=pointer]
+                  - img:
+                    - group [ref=e262] [cursor=pointer]
+                  - img:
+                    - group [ref=e263] [cursor=pointer]
+                  - generic:
+                    - group [ref=e64]:
+                      - generic [ref=e65]:
+                        - generic [ref=e66]:
+                          - img [ref=e67]
+                          - heading [level=3] [ref=e264]: Trigger
+                        - paragraph [ref=e71]: Conversation Opened
+                        - button [ref=e265] [cursor=pointer]:
+                          - img [ref=e75]
+                    - group [ref=e76]:
+                      - generic [ref=e77]:
+                        - generic [ref=e79]:
+                          - img [ref=e80]
+                          - heading [level=3] [ref=e266]: Away Message
+                        - paragraph [ref=e85]: Sorry, we are currently away. We will respond as soon as possible.
+                        - button [ref=e267] [cursor=pointer]:
+                          - img [ref=e89]
+                    - group [ref=e90]:
+                      - generic [ref=e91]:
+                        - generic [ref=e92]:
+                          - img [ref=e93]
+                          - heading [level=3] [ref=e268]: Business Hours
+                        - paragraph [ref=e99]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e100]:
+                      - generic [ref=e101]:
+                        - img [ref=e102]
+                        - generic [ref=e105]: Success
+                        - button [ref=e269] [cursor=pointer]:
+                          - img [ref=e109]
+                    - group [ref=e110]:
+                      - generic [ref=e111]:
+                        - img [ref=e112]
+                        - generic [ref=e116]: Failure
+                        - button [ref=e270] [cursor=pointer]:
+                          - img [ref=e120]
+                    - group [ref=e121]:
+                      - generic [ref=e122]:
+                        - generic [ref=e123]:
+                          - generic [ref=e124]:
+                            - img [ref=e125]
+                            - heading [level=3] [ref=e271]: Welcome Message
+                          - generic [ref=e272]:
+                            - img [ref=e131]
+                            - text: "1"
+                        - paragraph [ref=e134]: Hello there welcome to the chat!
+                        - button [ref=e273] [cursor=pointer]:
+                          - img [ref=e138]
+            - img
+            - img [ref=e274]
+            - generic [ref=e165]:
+              - button [ref=e166] [cursor=pointer]:
+                - img [ref=e167]
+              - button [ref=e169] [cursor=pointer]:
+                - img [ref=e170]
+              - button [ref=e172] [cursor=pointer]:
+                - img [ref=e173]
+              - button [ref=e175] [cursor=pointer]:
+                - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - dialog:
+    - generic:
+      - generic:
+        - text: Send Message
+        - heading [level=2]: Away Message
+        - paragraph:
+          - text: ID
+          - code: b6a0c1
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic: Title
+            - textbox: Away Message
+          - generic:
+            - generic: Description
+            - textbox
+          - generic:
+            - generic:
+              - generic: Message
+              - generic:
+                - button [disabled]:
+                  - img
+                  - text: Text
+                - button:
+                  - img
+                  - text: Attachment
+            - generic:
+              - generic:
+                - generic: Text
+                - button:
+                  - img
+              - textbox:
+                - /placeholder: Message text
+                - text: Sorry, we are currently away. We will respond as soon as possible.
+        - contentinfo:
+          - button:
+            - img
+            - text: Delete
+          - button: Save
+    - button:
+      - img
+      - generic: Close
+  - alertdialog "Delete this node?" [ref=e310]:
+    - generic [ref=e311]:
+      - heading "Delete this node?" [level=2] [ref=e312]
+      - paragraph [ref=e313]: This removes the node and every node below it. You can undo with Ctrl+Z.
+    - generic [ref=e314]:
+      - button "Cancel" [active] [ref=e315]
+      - button "Delete" [ref=e316]

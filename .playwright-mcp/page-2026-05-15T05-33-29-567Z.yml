@@ -1,0 +1,162 @@
+- generic [ref=e13]:
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - banner [ref=e16]:
+        - generic [ref=e17]:
+          - heading [level=1] [ref=e349]: Flow Chart
+          - generic [ref=e19]: 6 nodes
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e350]: Persist data
+            - switch [ref=e351]
+          - button [ref=e352]:
+            - img [ref=e26]
+            - generic [ref=e32]: "Theme: System"
+          - button [ref=e353]:
+            - img [ref=e34]
+          - button [ref=e354]:
+            - img [ref=e37]
+            - text: Reset
+          - button [ref=e355]:
+            - img [ref=e41]
+            - text: Re-layout
+          - button [ref=e356]: + Create New Node
+      - main [ref=e47]:
+        - generic [ref=e49]:
+          - generic [ref=e51]:
+            - generic:
+              - img
+              - img:
+                - group [ref=e270] [cursor=pointer]
+              - img
+              - img:
+                - group [ref=e271] [cursor=pointer]
+              - img:
+                - group [ref=e272] [cursor=pointer]
+              - img:
+                - group [ref=e273] [cursor=pointer]
+              - generic:
+                - group [ref=e64]:
+                  - generic [ref=e65]:
+                    - generic [ref=e66]:
+                      - img [ref=e67]
+                      - heading [level=3] [ref=e274]: Trigger
+                    - paragraph [ref=e71]: Conversation Opened
+                    - button [ref=e275] [cursor=pointer]:
+                      - img [ref=e75]
+                - group [ref=e76]:
+                  - generic [ref=e77]:
+                    - generic [ref=e79]:
+                      - img [ref=e80]
+                      - heading [level=3] [ref=e276]: Away Message
+                    - paragraph [ref=e85]: Sorry, we are currently away. We will respond as soon as possible.
+                    - button [ref=e277] [cursor=pointer]:
+                      - img [ref=e89]
+                - group [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e92]:
+                      - img [ref=e93]
+                      - heading [level=3] [ref=e278]: Business Hours
+                    - paragraph [ref=e99]: Daily 09:00–17:00 (UTC)
+                - group [ref=e100]:
+                  - generic [ref=e101]:
+                    - img [ref=e102]
+                    - generic [ref=e105]: Success
+                    - button [ref=e279] [cursor=pointer]:
+                      - img [ref=e109]
+                - group [ref=e110]:
+                  - generic [ref=e111]:
+                    - img [ref=e112]
+                    - generic [ref=e116]: Failure
+                    - button [ref=e280] [cursor=pointer]:
+                      - img [ref=e120]
+                - group [ref=e121]:
+                  - generic [ref=e122]:
+                    - generic [ref=e123]:
+                      - generic [ref=e124]:
+                        - img [ref=e125]
+                        - heading [level=3] [ref=e281]: Welcome Message
+                      - generic [ref=e282]:
+                        - img [ref=e131]
+                        - text: "1"
+                    - paragraph [ref=e134]: Hello there welcome to the chat!
+                    - button [ref=e283] [cursor=pointer]:
+                      - img [ref=e138]
+          - img [ref=e153]
+          - img [ref=e284]
+          - generic [ref=e165]:
+            - button [ref=e166] [cursor=pointer]:
+              - img [ref=e167]
+            - button [ref=e169] [cursor=pointer]:
+              - img [ref=e170]
+            - button [ref=e172] [cursor=pointer]:
+              - img [ref=e173]
+            - button [ref=e175] [cursor=pointer]:
+              - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic [ref=e1]:
+    - img [ref=e3] [cursor=pointer]
+    - img [ref=e9] [cursor=pointer]
+  - dialog "Welcome Message" [ref=e286]:
+    - generic [ref=e288]:
+      - text: Send Message
+      - heading "Welcome Message" [level=2] [ref=e289]
+      - paragraph [ref=e290]:
+        - text: ID
+        - code [ref=e291]: b0653a
+    - generic [ref=e293]:
+      - generic [ref=e294]:
+        - generic [ref=e295]:
+          - generic [ref=e296]: Title
+          - textbox "Title" [ref=e297]: Welcome Message
+        - generic [ref=e298]:
+          - generic [ref=e299]: Description
+          - textbox "Description" [ref=e300]
+        - generic [ref=e301]:
+          - generic [ref=e302]:
+            - generic [ref=e303]: Message
+            - generic [ref=e304]:
+              - button "Text" [disabled]:
+                - img
+                - text: Text
+              - button "Attachment" [disabled]:
+                - img
+                - text: Attachment
+          - generic [ref=e305]:
+            - generic [ref=e306]:
+              - generic [ref=e307]: Text
+              - button "Remove row 1" [ref=e308]:
+                - img
+            - textbox "Message text" [ref=e309]: Hello there welcome to the chat!
+          - generic [ref=e310]:
+            - generic [ref=e311]:
+              - generic [ref=e312]: Attachment
+              - button "Remove row 2" [ref=e313]:
+                - img
+            - generic [ref=e314]:
+              - list [ref=e315]:
+                - listitem [ref=e316]:
+                  - img [ref=e317]
+                  - generic "https://fastly.picsum.photos/id/396/536/354.jpg?hmac=GmUosOuXb6nGkFhmTE-83i0ciQcaleMyvIyqzeFbW58" [ref=e320]
+                  - button "Remove https://fastly.picsum.photos/id/396/536/354.jpg?hmac=GmUosOuXb6nGkFhmTE-83i0ciQcaleMyvIyqzeFbW58" [ref=e321]:
+                    - img
+                - listitem [ref=e334]:
+                  - img [ref=e335]
+                  - generic "test-attach.txt" [ref=e338]
+                  - button "Download file" [ref=e339]:
+                    - img
+                  - button "Remove test-attach.txt" [ref=e340]:
+                    - img
+              - button "Add more files or drag and drop" [active] [ref=e322] [cursor=pointer]:
+                - img [ref=e323]
+                - generic [ref=e324]: Add more files or drag and drop
+            - paragraph [ref=e325]: Uploaded files are kept in memory only — the data persist setting does not support file uploads yet, so attachments are lost on refresh.
+      - contentinfo [ref=e326]:
+        - button "Delete" [ref=e327]:
+          - img
+          - text: Delete
+        - button "Save" [ref=e328]
+    - button "Close" [ref=e329]:
+      - img [ref=e330]
+      - generic [ref=e333]: Close

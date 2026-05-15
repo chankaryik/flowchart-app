@@ -17,14 +17,14 @@ import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
   modelValue: string[]
-  files: File[]
+  files: (File | undefined)[]
   ariaLabel?: string
   error?: string | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string[]): void
-  (e: 'update:files', files: File[]): void
+  (e: 'update:files', files: (File | undefined)[]): void
   (e: 'blur'): void
 }>()
 
@@ -35,7 +35,14 @@ function appendFiles(incoming: File[] | FileList | null): void {
   if (incoming == null) return
   const list = Array.from(incoming)
   if (list.length === 0) return
-  const nextFiles = [...props.files, ...list]
+  // Pad files[] up to modelValue[] before appending so newly uploaded files
+  // land at indices that line up with the names appended alongside. Seed
+  // payloads can contribute names (e.g. plain URL strings) without a backing
+  // File object — without padding, the download button renders next to the
+  // wrong row.
+  const padded: (File | undefined)[] = [...props.files]
+  while (padded.length < props.modelValue.length) padded.push(undefined)
+  const nextFiles: (File | undefined)[] = [...padded, ...list]
   const nextNames = [...props.modelValue, ...list.map((f) => f.name)]
   emit('update:files', nextFiles)
   emit('update:modelValue', nextNames)

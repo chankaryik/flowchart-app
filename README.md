@@ -262,7 +262,6 @@ The agents helped with scaffolding, implementation, tests, review, simplificatio
 
 - **Client-side persistence:** There is no backend in the assignment, so localStorage is used behind an adapter. This keeps the demo reviewable while leaving a clear path to an API.
 - **Locked trigger:** The trigger is read-only to preserve one valid workflow starting point.
-- **Display-only connectors:** Success and Failure markers clarify Business Hours branching without acting like real editable nodes.
 - **Manual re-layout:** The app provides a Re-layout button instead of continuously moving nodes after every edit, so user placement is respected.
 - **Field-level history:** Form changes enter undo history after blur/submit, not on every keystroke.
 - **Attachment files:** The payload stores filenames; uploaded `File` objects stay in memory because real file upload infrastructure is out of scope.

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -36,6 +36,8 @@ const store = useFlowStore()
 const deleteMutation = useDeleteNode()
 
 const confirmOpen = ref(false)
+const unsavedConfirmOpen = ref(false)
+const editorDirty = ref(false)
 
 const drawerId = computed(() => {
   const raw = route.params.id
@@ -54,12 +56,31 @@ const node = computed<FlowNode | null>(() => {
 
 const isOpen = computed(() => node.value != null)
 
+// Reset dirty tracking whenever the drawer points at a different node — each
+// editor remounts and will re-emit its dirty state on the next tick, but this
+// avoids a brief window where the prior node's dirty value leaks across.
+watch(drawerId, () => {
+  editorDirty.value = false
+  unsavedConfirmOpen.value = false
+})
+
 function onUpdateOpen(open: boolean): void {
-  if (!open) close()
+  if (open) return
+  if (editorDirty.value) {
+    unsavedConfirmOpen.value = true
+    return
+  }
+  close()
 }
 
 function close(): void {
   void router.push('/')
+}
+
+function onDiscardUnsaved(): void {
+  unsavedConfirmOpen.value = false
+  editorDirty.value = false
+  close()
 }
 
 function nodeTitle(n: FlowNode): string {
@@ -88,15 +109,18 @@ const canDelete = computed(() => node.value != null && node.value.type !== 'trig
 async function onConfirmDelete(): Promise<void> {
   const target = node.value
   if (target == null) return
+  confirmOpen.value = false
+  // Await the navigation so the route's `id` param has cleared before the
+  // optimistic onMutate removes the node. Without this, router.push() is
+  // still in flight when the store changes, the FlowChartView watcher fires
+  // with the soon-deleted ID still in the route, and "Node not found" toasts.
+  await router.push('/')
   try {
     await deleteMutation.mutateAsync({ id: target.id })
   } catch {
-    confirmOpen.value = false
     return
   }
-  confirmOpen.value = false
   toast.success('Node deleted', { description: 'Press Ctrl/Cmd+Z to undo' })
-  void router.push('/')
 }
 </script>
 
@@ -124,6 +148,7 @@ async function onConfirmDelete(): Promise<void> {
         <div class="min-h-0 flex-1">
           <SendMessageEditor
             v-if="node.type === 'sendMessage'"
+            v-model:dirty="editorDirty"
             :node="node"
             :can-delete="canDelete"
             :delete-pending="deleteMutation.isPending.value"
@@ -132,6 +157,7 @@ async function onConfirmDelete(): Promise<void> {
           />
           <BusinessHoursEditor
             v-else-if="node.type === 'dateTime'"
+            v-model:dirty="editorDirty"
             :node="node"
             :can-delete="canDelete"
             :delete-pending="deleteMutation.isPending.value"
@@ -140,6 +166,7 @@ async function onConfirmDelete(): Promise<void> {
           />
           <AddCommentEditor
             v-else-if="node.type === 'addComment'"
+            v-model:dirty="editorDirty"
             :node="node"
             :can-delete="canDelete"
             :delete-pending="deleteMutation.isPending.value"
@@ -168,6 +195,26 @@ async function onConfirmDelete(): Promise<void> {
           @click="onConfirmDelete"
         >
           {{ deleteMutation.isPending.value ? 'Deleting…' : 'Delete' }}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+
+  <AlertDialog
+    :open="unsavedConfirmOpen"
+    @update:open="(v) => (unsavedConfirmOpen = v)"
+  >
+    <AlertDialogContent data-testid="unsaved-confirm">
+      <AlertDialogHeader>
+        <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+        <AlertDialogDescription>
+          Your edits to this node have not been saved. Discard them?
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel data-testid="unsaved-cancel">Keep editing</AlertDialogCancel>
+        <AlertDialogAction data-testid="unsaved-confirm-action" @click="onDiscardUnsaved">
+          Discard
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

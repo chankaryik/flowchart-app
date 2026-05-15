@@ -23,7 +23,12 @@ vi.mock('vue-router', () => ({
 }))
 
 const overlayStubs = {
-  Sheet: { props: ['open'], template: '<div data-testid="sheet" :data-open="open"><slot /></div>' },
+  Sheet: {
+    props: ['open'],
+    emits: ['update:open'],
+    template:
+      '<div data-testid="sheet" :data-open="open"><button data-testid="sheet-dismiss" type="button" @click="$emit(\'update:open\', false)" />\n<slot /></div>',
+  },
   SheetContent: { template: '<div><slot /></div>' },
   SheetHeader: { template: '<header><slot /></header>' },
   SheetTitle: { template: '<h2><slot /></h2>' },
@@ -32,34 +37,35 @@ const overlayStubs = {
     props: ['open'],
     template: '<div data-testid="alert" :data-open="open"><slot /></div>',
   },
-  AlertDialogContent: { template: '<div><slot /></div>' },
+  AlertDialogContent: { inheritAttrs: true, template: '<div><slot /></div>' },
   AlertDialogHeader: { template: '<div><slot /></div>' },
   AlertDialogTitle: { template: '<h3><slot /></h3>' },
   AlertDialogDescription: { template: '<p><slot /></p>' },
   AlertDialogFooter: { template: '<footer><slot /></footer>' },
   AlertDialogCancel: {
-    template: '<button data-testid="delete-cancel" type="button"><slot /></button>',
+    inheritAttrs: true,
+    template: '<button type="button"><slot /></button>',
   },
   AlertDialogAction: {
-    template:
-      '<button data-testid="delete-confirm-action" type="button" @click="$emit(\'click\', $event)"><slot /></button>',
+    inheritAttrs: true,
+    template: '<button type="button" @click="$emit(\'click\', $event)"><slot /></button>',
   },
   SendMessageEditor: {
-    props: ['node', 'canDelete', 'deletePending'],
-    emits: ['delete', 'saved'],
+    props: ['node', 'canDelete', 'deletePending', 'dirty'],
+    emits: ['delete', 'saved', 'update:dirty'],
     template:
-      '<form data-testid="send-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
+      '<form data-testid="send-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /><button data-testid="send-mark-dirty" type="button" @click="$emit(\'update:dirty\', true)" /></form>',
   },
   BusinessHoursEditor: {
-    props: ['node', 'canDelete', 'deletePending'],
-    emits: ['delete', 'saved'],
+    props: ['node', 'canDelete', 'deletePending', 'dirty'],
+    emits: ['delete', 'saved', 'update:dirty'],
     template: '<form data-testid="dt-editor" />',
   },
   AddCommentEditor: {
-    props: ['node', 'canDelete', 'deletePending'],
-    emits: ['delete', 'saved'],
+    props: ['node', 'canDelete', 'deletePending', 'dirty'],
+    emits: ['delete', 'saved', 'update:dirty'],
     template:
-      '<form data-testid="comment-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /></form>',
+      '<form data-testid="comment-editor"><button v-if="canDelete" data-testid="drawer-delete" type="button" @click="$emit(\'delete\')" /><button data-testid="comment-mark-dirty" type="button" @click="$emit(\'update:dirty\', true)" /></form>',
   },
   TriggerDetails: { template: '<div data-testid="trigger-details" />' },
 }
@@ -112,7 +118,9 @@ describe('NodeDetailsDrawer', () => {
     await wrapper.vm.$nextTick()
 
     await wrapper.find('[data-testid="drawer-delete"]').trigger('click')
-    expect(wrapper.find('[data-testid="alert"]').attributes('data-open')).toBe('true')
+    // First alert in DOM order is the delete-confirm dialog.
+    const alerts = wrapper.findAll('[data-testid="alert"]')
+    expect(alerts[0]?.attributes('data-open')).toBe('true')
 
     await wrapper.find('[data-testid="delete-confirm-action"]').trigger('click')
     await wrapper.vm.$nextTick()
@@ -120,5 +128,46 @@ describe('NodeDetailsDrawer', () => {
 
     expect(deleteMock.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ id: 'cmt' }))
     expect(pushMock).toHaveBeenCalledWith('/')
+  })
+
+  it('closes immediately when the editor reports no unsaved changes', async () => {
+    routeRef.value = { params: { id: 'cmt' } }
+    const wrapper = mountDrawer()
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-testid="sheet-dismiss"]').trigger('click')
+    expect(pushMock).toHaveBeenCalledWith('/')
+    // Second alert in DOM order is the unsaved-confirm dialog.
+    const alerts = wrapper.findAll('[data-testid="alert"]')
+    expect(alerts[1]?.attributes('data-open')).toBe('false')
+  })
+
+  it('intercepts close with an unsaved-changes confirm when the editor is dirty', async () => {
+    routeRef.value = { params: { id: 'cmt' } }
+    const wrapper = mountDrawer()
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-testid="comment-mark-dirty"]').trigger('click')
+    await wrapper.find('[data-testid="sheet-dismiss"]').trigger('click')
+
+    // No navigation yet — the unsaved-changes dialog is up instead.
+    expect(pushMock).not.toHaveBeenCalled()
+    const alerts = wrapper.findAll('[data-testid="alert"]')
+    expect(alerts[1]?.attributes('data-open')).toBe('true')
+
+    await wrapper.find('[data-testid="unsaved-confirm-action"]').trigger('click')
+    expect(pushMock).toHaveBeenCalledWith('/')
+  })
+
+  it('keeps the drawer open when the user picks "Keep editing"', async () => {
+    routeRef.value = { params: { id: 'cmt' } }
+    const wrapper = mountDrawer()
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-testid="comment-mark-dirty"]').trigger('click')
+    await wrapper.find('[data-testid="sheet-dismiss"]').trigger('click')
+    await wrapper.find('[data-testid="unsaved-cancel"]').trigger('click')
+
+    expect(pushMock).not.toHaveBeenCalled()
   })
 })

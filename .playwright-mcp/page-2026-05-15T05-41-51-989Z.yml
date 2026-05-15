@@ -1,0 +1,202 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 5 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+            - generic: "Theme: System"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img
+                  - img:
+                    - group [ref=e341] [cursor=pointer]
+                  - img:
+                    - group [ref=e342] [cursor=pointer]
+                  - img:
+                    - group [ref=e343] [cursor=pointer]
+                  - generic:
+                    - group [ref=e64]:
+                      - generic [ref=e65]:
+                        - generic [ref=e66]:
+                          - img [ref=e67]
+                          - heading [level=3] [ref=e344]: Trigger
+                        - paragraph [ref=e71]: Conversation Opened
+                        - button [ref=e345] [cursor=pointer]:
+                          - img [ref=e75]
+                    - group [ref=e90]:
+                      - generic [ref=e91]:
+                        - generic [ref=e92]:
+                          - img [ref=e93]
+                          - heading [level=3] [ref=e346]: Business Hours
+                        - paragraph [ref=e99]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e100]:
+                      - generic [ref=e101]:
+                        - img [ref=e102]
+                        - generic [ref=e105]: Success
+                        - button [ref=e347] [cursor=pointer]:
+                          - img [ref=e109]
+                    - group [ref=e110]:
+                      - generic [ref=e111]:
+                        - img [ref=e112]
+                        - generic [ref=e116]: Failure
+                        - button [ref=e348] [cursor=pointer]:
+                          - img [ref=e120]
+                    - group [ref=e121]:
+                      - generic [ref=e122]:
+                        - generic [ref=e123]:
+                          - generic [ref=e124]:
+                            - img [ref=e125]
+                            - heading [level=3] [ref=e349]: Welcome Message
+                          - generic [ref=e350]:
+                            - img [ref=e131]
+                            - text: "1"
+                        - paragraph [ref=e134]: Hello there welcome to the chat!
+                        - button [ref=e351] [cursor=pointer]:
+                          - img [ref=e138]
+            - img
+            - img [ref=e352]
+            - generic [ref=e165]:
+              - button [ref=e166] [cursor=pointer]:
+                - img [ref=e167]
+              - button [ref=e169] [cursor=pointer]:
+                - img [ref=e170]
+              - button [ref=e172] [cursor=pointer]:
+                - img [ref=e173]
+              - button [ref=e175] [cursor=pointer]:
+                - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - dialog "Business Hours" [ref=e354]:
+    - generic [ref=e356]:
+      - text: Date / Time
+      - heading "Business Hours" [level=2] [ref=e357]
+      - paragraph [ref=e358]:
+        - text: ID
+        - code [ref=e359]: d09c08
+    - generic [ref=e361]:
+      - generic [ref=e362]:
+        - generic [ref=e363]:
+          - generic [ref=e364]: Title
+          - textbox "Title" [active] [ref=e365]: Business Hours
+        - generic [ref=e366]:
+          - generic [ref=e367]: Description
+          - textbox "Description" [ref=e368]
+        - generic [ref=e369]:
+          - generic [ref=e370]: Timezone
+          - combobox "Timezone" [ref=e371]:
+            - generic: Coordinated Universal Time (UTC)
+            - img
+        - generic [ref=e372]:
+          - generic [ref=e373]:
+            - generic [ref=e374]: Schedule
+            - paragraph [ref=e375]: Toggle a day off to mark it as closed.
+          - generic [ref=e376]:
+            - generic [ref=e377]: Day
+            - generic [ref=e378]: Status
+            - generic [ref=e379]: Open
+            - generic [ref=e380]: Close
+          - generic [ref=e381]:
+            - generic [ref=e382]:
+              - generic [ref=e383]:
+                - generic [ref=e384]: Mon
+                - generic [ref=e385]:
+                  - switch "Mark Mon as open" [checked] [ref=e386]
+                  - generic [ref=e387]: Open
+              - generic [ref=e388]:
+                - textbox "Start time for Mon" [ref=e389]: 09:00
+                - generic [ref=e390]: –
+                - textbox "End time for Mon" [ref=e391]: 17:00
+            - generic [ref=e392]:
+              - generic [ref=e393]:
+                - generic [ref=e394]: Tue
+                - generic [ref=e395]:
+                  - switch "Mark Tue as open" [checked] [ref=e396]
+                  - generic [ref=e397]: Open
+              - generic [ref=e398]:
+                - textbox "Start time for Tue" [ref=e399]: 09:00
+                - generic [ref=e400]: –
+                - textbox "End time for Tue" [ref=e401]: 17:00
+            - generic [ref=e402]:
+              - generic [ref=e403]:
+                - generic [ref=e404]: Wed
+                - generic [ref=e405]:
+                  - switch "Mark Wed as open" [checked] [ref=e406]
+                  - generic [ref=e407]: Open
+              - generic [ref=e408]:
+                - textbox "Start time for Wed" [ref=e409]: 09:00
+                - generic [ref=e410]: –
+                - textbox "End time for Wed" [ref=e411]: 17:00
+            - generic [ref=e412]:
+              - generic [ref=e413]:
+                - generic [ref=e414]: Thu
+                - generic [ref=e415]:
+                  - switch "Mark Thu as open" [checked] [ref=e416]
+                  - generic [ref=e417]: Open
+              - generic [ref=e418]:
+                - textbox "Start time for Thu" [ref=e419]: 09:00
+                - generic [ref=e420]: –
+                - textbox "End time for Thu" [ref=e421]: 17:00
+            - generic [ref=e422]:
+              - generic [ref=e423]:
+                - generic [ref=e424]: Fri
+                - generic [ref=e425]:
+                  - switch "Mark Fri as open" [checked] [ref=e426]
+                  - generic [ref=e427]: Open
+              - generic [ref=e428]:
+                - textbox "Start time for Fri" [ref=e429]: 09:00
+                - generic [ref=e430]: –
+                - textbox "End time for Fri" [ref=e431]: 17:00
+            - generic [ref=e432]:
+              - generic [ref=e433]:
+                - generic [ref=e434]: Sat
+                - generic [ref=e435]:
+                  - switch "Mark Sat as open" [checked] [ref=e436]
+                  - generic [ref=e437]: Open
+              - generic [ref=e438]:
+                - textbox "Start time for Sat" [ref=e439]: 09:00
+                - generic [ref=e440]: –
+                - textbox "End time for Sat" [ref=e441]: 17:00
+            - generic [ref=e442]:
+              - generic [ref=e443]:
+                - generic [ref=e444]: Sun
+                - generic [ref=e445]:
+                  - switch "Mark Sun as open" [checked] [ref=e446]
+                  - generic [ref=e447]: Open
+              - generic [ref=e448]:
+                - textbox "Start time for Sun" [ref=e449]: 09:00
+                - generic [ref=e450]: –
+                - textbox "End time for Sun" [ref=e451]: 17:00
+      - contentinfo [ref=e452]:
+        - button "Delete" [ref=e453]:
+          - img
+          - text: Delete
+        - button "Save" [ref=e454]
+    - button "Close" [ref=e455]:
+      - img [ref=e456]
+      - generic [ref=e459]: Close

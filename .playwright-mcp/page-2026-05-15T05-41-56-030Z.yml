@@ -1,0 +1,211 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - heading [level=1]: Flow Chart
+          - generic: 5 nodes
+        - generic:
+          - generic:
+            - generic: Persist data
+            - switch
+          - button:
+            - img
+            - generic: "Theme: System"
+          - button:
+            - img
+          - button:
+            - img
+            - text: Reset
+          - button:
+            - img
+            - text: Re-layout
+          - button: + Create New Node
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - img
+                  - img:
+                    - group [ref=e341] [cursor=pointer]
+                  - img:
+                    - group [ref=e342] [cursor=pointer]
+                  - img:
+                    - group [ref=e343] [cursor=pointer]
+                  - generic:
+                    - group [ref=e64]:
+                      - generic [ref=e65]:
+                        - generic [ref=e66]:
+                          - img [ref=e67]
+                          - heading [level=3] [ref=e344]: Trigger
+                        - paragraph [ref=e71]: Conversation Opened
+                        - button [ref=e345] [cursor=pointer]:
+                          - img [ref=e75]
+                    - group [ref=e90]:
+                      - generic [ref=e91]:
+                        - generic [ref=e92]:
+                          - img [ref=e93]
+                          - heading [level=3] [ref=e346]: Business Hours
+                        - paragraph [ref=e99]: Daily 09:00–17:00 (UTC)
+                    - group [ref=e100]:
+                      - generic [ref=e101]:
+                        - img [ref=e102]
+                        - generic [ref=e105]: Success
+                        - button [ref=e347] [cursor=pointer]:
+                          - img [ref=e109]
+                    - group [ref=e110]:
+                      - generic [ref=e111]:
+                        - img [ref=e112]
+                        - generic [ref=e116]: Failure
+                        - button [ref=e348] [cursor=pointer]:
+                          - img [ref=e120]
+                    - group [ref=e121]:
+                      - generic [ref=e122]:
+                        - generic [ref=e123]:
+                          - generic [ref=e124]:
+                            - img [ref=e125]
+                            - heading [level=3] [ref=e349]: Welcome Message
+                          - generic [ref=e350]:
+                            - img [ref=e131]
+                            - text: "1"
+                        - paragraph [ref=e134]: Hello there welcome to the chat!
+                        - button [ref=e351] [cursor=pointer]:
+                          - img [ref=e138]
+            - img
+            - img [ref=e352]
+            - generic [ref=e165]:
+              - button [ref=e166] [cursor=pointer]:
+                - img [ref=e167]
+              - button [ref=e169] [cursor=pointer]:
+                - img [ref=e170]
+              - button [ref=e172] [cursor=pointer]:
+                - img [ref=e173]
+              - button [ref=e175] [cursor=pointer]:
+                - img [ref=e176]
+    - region "Notifications alt+T":
+      - list
+  - generic:
+    - generic:
+      - img
+    - generic:
+      - img
+  - dialog:
+    - generic:
+      - generic:
+        - text: Date / Time
+        - heading [level=2]: Business Hours
+        - paragraph:
+          - text: ID
+          - code: d09c08
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic: Title
+            - textbox: Business Hours
+          - generic:
+            - generic: Description
+            - textbox
+          - generic:
+            - generic: Timezone
+            - combobox:
+              - generic: Coordinated Universal Time (UTC)
+              - img
+          - generic:
+            - generic:
+              - generic: Schedule
+              - paragraph: Toggle a day off to mark it as closed.
+            - generic:
+              - generic: Day
+              - generic: Status
+              - generic: Open
+              - generic: Close
+            - generic:
+              - generic:
+                - generic:
+                  - generic: Mon
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+              - generic:
+                - generic:
+                  - generic: Tue
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+              - generic:
+                - generic:
+                  - generic: Wed
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+              - generic:
+                - generic:
+                  - generic: Thu
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+              - generic:
+                - generic:
+                  - generic: Fri
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+              - generic:
+                - generic:
+                  - generic: Sat
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+              - generic:
+                - generic:
+                  - generic: Sun
+                  - generic:
+                    - switch [checked]
+                    - generic: Open
+                - generic:
+                  - textbox: 09:00
+                  - generic: –
+                  - textbox: 17:00
+        - contentinfo:
+          - button:
+            - img
+            - text: Delete
+          - button: Save
+    - button:
+      - img
+      - generic: Close
+  - alertdialog "Delete this node?" [ref=e461]:
+    - generic [ref=e462]:
+      - heading "Delete this node?" [level=2] [ref=e463]
+      - paragraph [ref=e464]: This removes the node and every node below it. You can undo with Ctrl+Z.
+    - generic [ref=e465]:
+      - button "Cancel" [active] [ref=e466]
+      - button "Delete" [ref=e467]
