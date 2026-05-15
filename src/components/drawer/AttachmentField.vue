@@ -99,6 +99,7 @@ function iconFor(name: string): typeof FileIcon {
 <template>
   <div class="space-y-1.5">
     <input
+      id="attachment-field"
       ref="inputRef"
       type="file"
       class="hidden"

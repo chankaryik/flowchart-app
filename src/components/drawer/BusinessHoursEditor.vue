@@ -1,46 +1,46 @@
 <script setup lang="ts">
-import { toTypedSchema } from "@vee-validate/valibot";
-import { Trash2 } from "lucide-vue-next";
-import { useFieldArray, useForm } from "vee-validate";
-import * as v from "valibot";
-import { computed, watch } from "vue";
-import { toast } from "vue-sonner";
+import { toTypedSchema } from '@vee-validate/valibot'
+import { Trash2 } from 'lucide-vue-next'
+import { useFieldArray, useForm } from 'vee-validate'
+import * as v from 'valibot'
+import { computed, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { dayLabel } from "@/lib/format";
-import { DAYS, type BusinessHoursRow, type DateTimeNode, type FlowNode } from "@/lib/types";
-import { businessHoursSchema, descriptionSchema, titleSchema } from "@/lib/validators";
-import { useUpdateNode } from "@/queries/nodes";
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import { dayLabel } from '@/lib/format'
+import { DAYS, type BusinessHoursRow, type DateTimeNode, type FlowNode } from '@/lib/types'
+import { businessHoursSchema, descriptionSchema, titleSchema } from '@/lib/validators'
+import { useUpdateNode } from '@/queries/nodes'
 
 const TIMEZONES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "UTC", label: "Coordinated Universal Time (UTC)" },
-  { value: "GMT", label: "Greenwich Mean Time (GMT)" },
-  { value: "EST", label: "Eastern Standard Time (EST)" },
-  { value: "EDT", label: "Eastern Daylight Time (EDT)" },
-  { value: "CST", label: "Central Standard Time (CST)" },
-  { value: "MST", label: "Mountain Standard Time (MST)" },
-  { value: "PST", label: "Pacific Standard Time (PST)" },
-  { value: "PDT", label: "Pacific Daylight Time (PDT)" },
-  { value: "CET", label: "Central European Time (CET)" },
-  { value: "JST", label: "Japan Standard Time (JST)" },
-];
+  { value: 'UTC', label: 'Coordinated Universal Time (UTC)' },
+  { value: 'GMT', label: 'Greenwich Mean Time (GMT)' },
+  { value: 'EST', label: 'Eastern Standard Time (EST)' },
+  { value: 'EDT', label: 'Eastern Daylight Time (EDT)' },
+  { value: 'CST', label: 'Central Standard Time (CST)' },
+  { value: 'MST', label: 'Mountain Standard Time (MST)' },
+  { value: 'PST', label: 'Pacific Standard Time (PST)' },
+  { value: 'PDT', label: 'Pacific Daylight Time (PDT)' },
+  { value: 'CET', label: 'Central European Time (CET)' },
+  { value: 'JST', label: 'Japan Standard Time (JST)' },
+]
 
 const props = withDefaults(
   defineProps<{ node: DateTimeNode; canDelete?: boolean; deletePending?: boolean }>(),
   { canDelete: false, deletePending: false },
-);
-const emit = defineEmits<{ (e: "saved"): void; (e: "delete"): void }>();
+)
+const emit = defineEmits<{ (e: 'saved'): void; (e: 'delete'): void }>()
 
 const formSchema = toTypedSchema(
   v.object({
@@ -49,48 +49,48 @@ const formSchema = toTypedSchema(
     timezone: v.string(),
     times: businessHoursSchema,
   }),
-);
+)
 
 // Always show 7 rows in canonical (Mon→Sun) order. If the stored payload is
 // missing a day or out of order, fill from defaults so the editor stays stable
 // across the type contract that allows arbitrary BusinessHoursRow[].
 function normalizeTimes(input: BusinessHoursRow[]): BusinessHoursRow[] {
-  const byDay = new Map<string, BusinessHoursRow>();
+  const byDay = new Map<string, BusinessHoursRow>()
   for (const row of input) {
-    if (!byDay.has(row.day)) byDay.set(row.day, { ...row });
+    if (!byDay.has(row.day)) byDay.set(row.day, { ...row })
   }
   return DAYS.map((day) => {
-    const existing = byDay.get(day);
-    if (existing != null) return { ...existing, day };
-    return { day, startTime: "09:00", endTime: "17:00", closed: true };
-  });
+    const existing = byDay.get(day)
+    if (existing != null) return { ...existing, day }
+    return { day, startTime: '09:00', endTime: '17:00', closed: true }
+  })
 }
 
 const { defineField, handleSubmit, errors, meta, resetForm } = useForm({
   validationSchema: formSchema,
   initialValues: {
     name: props.node.name,
-    description: props.node.description ?? "",
+    description: props.node.description ?? '',
     timezone: props.node.data.timezone,
     times: normalizeTimes(props.node.data.times),
   },
   validateOnMount: false,
-});
+})
 
-const dirty = defineModel<boolean>("dirty", { default: false });
+const dirty = defineModel<boolean>('dirty', { default: false })
 watch(
   () => meta.value.dirty,
   (v) => {
-    dirty.value = v;
+    dirty.value = v
   },
   { immediate: true },
-);
+)
 
-const [name, nameProps] = defineField("name", { validateOnBlur: true });
-const [description, descriptionProps] = defineField("description", { validateOnBlur: true });
-const [timezone] = defineField("timezone");
+const [name, nameProps] = defineField('name', { validateOnBlur: true })
+const [description, descriptionProps] = defineField('description', { validateOnBlur: true })
+const [timezone] = defineField('timezone')
 
-const { fields, update } = useFieldArray<BusinessHoursRow>("times");
+const { fields, update } = useFieldArray<BusinessHoursRow>('times')
 
 watch(
   () => props.node.id,
@@ -98,37 +98,37 @@ watch(
     resetForm({
       values: {
         name: props.node.name,
-        description: props.node.description ?? "",
+        description: props.node.description ?? '',
         timezone: props.node.data.timezone,
         times: normalizeTimes(props.node.data.times),
       },
-    });
+    })
   },
-);
+)
 
 // Row-level errors (e.g. end < start) attach to `times[N]`; array-level
 // errors (empty, overlap) attach to `times`. Surface whichever is present so
 // users see a single banner regardless of which valibot check fired.
 const timesError = computed(() => {
-  const arrayErr = errors.value.times;
-  if (arrayErr != null) return arrayErr;
+  const arrayErr = errors.value.times
+  if (arrayErr != null) return arrayErr
   for (let i = 0; i < fields.value.length; i++) {
-    const rowErr = errors.value[`times[${i}]`];
-    if (rowErr != null) return rowErr;
+    const rowErr = errors.value[`times[${i}]`]
+    if (rowErr != null) return rowErr
   }
-  return null;
-});
+  return null
+})
 
 function setRowOpen(index: number, open: boolean): void {
-  const field = fields.value[index];
-  if (field == null) return;
-  update(index, { ...field.value, closed: !open });
+  const field = fields.value[index]
+  if (field == null) return
+  update(index, { ...field.value, closed: !open })
 }
 
-const mutation = useUpdateNode();
+const mutation = useUpdateNode()
 
 const onSubmit = handleSubmit(async (values) => {
-  const trimmedDescription = (values.description ?? "").trim();
+  const trimmedDescription = (values.description ?? '').trim()
   // Preserve connectors and action — the editor only owns name/times/timezone.
   const patch: Partial<FlowNode> = {
     name: values.name.trim(),
@@ -138,15 +138,15 @@ const onSubmit = handleSubmit(async (values) => {
       times: values.times.map((row) => ({ ...row })),
       timezone: values.timezone,
     },
-  } as Partial<FlowNode>;
+  } as Partial<FlowNode>
   try {
-    await mutation.mutateAsync({ id: props.node.id, patch });
+    await mutation.mutateAsync({ id: props.node.id, patch })
   } catch {
-    return;
+    return
   }
-  toast.success("Business hours saved");
-  emit("saved");
-});
+  toast.success('Business hours saved')
+  emit('saved')
+})
 </script>
 
 <template>
@@ -255,7 +255,7 @@ const onSubmit = handleSubmit(async (values) => {
                   @update:model-value="(open) => setRowOpen(index, open)"
                 />
                 <span data-testid="day-status">
-                  {{ field.value.closed === true ? "Closed" : "Open" }}
+                  {{ field.value.closed === true ? 'Closed' : 'Open' }}
                 </span>
               </label>
             </div>
@@ -299,7 +299,7 @@ const onSubmit = handleSubmit(async (values) => {
       </Button>
       <span v-else />
       <Button type="submit" :disabled="!meta.valid || mutation.isPending.value">
-        {{ mutation.isPending.value ? "Saving…" : "Save" }}
+        {{ mutation.isPending.value ? 'Saving…' : 'Save' }}
       </Button>
     </footer>
   </form>

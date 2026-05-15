@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { Handle, Position } from "@vue-flow/core";
-import { Clock } from "lucide-vue-next";
-import { computed } from "vue";
+import { Handle, Position } from '@vue-flow/core'
+import { Clock } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { dayLabel, summarizeBusinessHours } from "@/lib/format";
-import type { DateTimeNode as DateTimeNodeShape } from "@/lib/types";
-import { useFlowStore } from "@/stores/flow";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { dayLabel, summarizeBusinessHours } from '@/lib/format'
+import type { DateTimeNode as DateTimeNodeShape } from '@/lib/types'
+import { useFlowStore } from '@/stores/flow'
 
-const props = defineProps<{ id: string; data: DateTimeNodeShape }>();
+const props = defineProps<{ id: string; data: DateTimeNodeShape }>()
 
-const store = useFlowStore();
-const description = computed(() => props.data.description ?? "");
+const store = useFlowStore()
+const description = computed(() => props.data.description ?? '')
 const summary = computed(() =>
   summarizeBusinessHours(props.data.data.times, props.data.data.timezone),
-);
-const openRows = computed(() => props.data.data.times.filter((row) => row.closed !== true));
-const hasParent = computed(() => store.getNodeById(props.data.parentId) != null);
+)
+const openRows = computed(() => props.data.data.times.filter((row) => row.closed !== true))
+const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
 </script>
 
 <template>

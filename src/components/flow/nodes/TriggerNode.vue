@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { Handle, Position } from "@vue-flow/core";
-import { Zap } from "lucide-vue-next";
-import { computed } from "vue";
+import { Handle, Position } from '@vue-flow/core'
+import { Zap } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-import AddNodeButton from "@/components/flow/AddNodeButton.vue";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { humanizeKey } from "@/lib/format";
-import type { TriggerNode as TriggerNodeShape } from "@/lib/types";
+import AddNodeButton from '@/components/flow/AddNodeButton.vue'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { humanizeKey } from '@/lib/format'
+import type { TriggerNode as TriggerNodeShape } from '@/lib/types'
 
-const props = defineProps<{ id: string; data: TriggerNodeShape }>();
+const props = defineProps<{ id: string; data: TriggerNodeShape }>()
 
-const eventLabel = computed(() => humanizeKey(props.data.data.type));
-const oncePerContact = computed(() => props.data.data.oncePerContact);
+const eventLabel = computed(() => humanizeKey(props.data.data.type))
+const oncePerContact = computed(() => props.data.data.oncePerContact)
 </script>
 
 <template>
@@ -41,7 +41,7 @@ const oncePerContact = computed(() => props.data.data.oncePerContact);
         <p>
           Event key: <code class="font-mono">{{ data.data.type }}</code>
         </p>
-        <p>Once per contact: {{ oncePerContact ? "yes" : "no" }}</p>
+        <p>Once per contact: {{ oncePerContact ? 'yes' : 'no' }}</p>
       </div>
     </TooltipContent>
   </Tooltip>

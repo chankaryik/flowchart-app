@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { Handle, Position } from "@vue-flow/core";
-import { MessageSquare, Paperclip } from "lucide-vue-next";
-import { computed } from "vue";
+import { Handle, Position } from '@vue-flow/core'
+import { MessageSquare, Paperclip } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-import AddNodeButton from "@/components/flow/AddNodeButton.vue";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { attachmentCount, firstTextPreview } from "@/lib/format";
-import type { SendMessageNode as SendMessageNodeShape } from "@/lib/types";
-import { useFlowStore } from "@/stores/flow";
+import AddNodeButton from '@/components/flow/AddNodeButton.vue'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { attachmentCount, firstTextPreview } from '@/lib/format'
+import type { SendMessageNode as SendMessageNodeShape } from '@/lib/types'
+import { useFlowStore } from '@/stores/flow'
 
-const props = defineProps<{ id: string; data: SendMessageNodeShape }>();
+const props = defineProps<{ id: string; data: SendMessageNodeShape }>()
 
-const store = useFlowStore();
-const description = computed(() => props.data.description ?? "");
-const preview = computed(() => firstTextPreview(props.data.data.payload));
-const attachments = computed(() => attachmentCount(props.data.data.payload));
-const hasParent = computed(() => store.getNodeById(props.data.parentId) != null);
+const store = useFlowStore()
+const description = computed(() => props.data.description ?? '')
+const preview = computed(() => firstTextPreview(props.data.data.payload))
+const attachments = computed(() => attachmentCount(props.data.data.payload))
+const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
 </script>
 
 <template>
@@ -74,7 +74,7 @@ const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
         <p class="font-medium">{{ data.name }}</p>
         <p v-if="preview.length > 0" class="whitespace-pre-line">{{ preview }}</p>
         <p v-else class="italic opacity-70">No message yet</p>
-        <p v-if="attachments > 0">{{ attachments }} attachment{{ attachments === 1 ? "" : "s" }}</p>
+        <p v-if="attachments > 0">{{ attachments }} attachment{{ attachments === 1 ? '' : 's' }}</p>
       </div>
     </TooltipContent>
   </Tooltip>

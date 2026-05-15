@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { Handle, Position } from "@vue-flow/core";
-import { StickyNote } from "lucide-vue-next";
-import { computed } from "vue";
+import { Handle, Position } from '@vue-flow/core'
+import { StickyNote } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-import AddNodeButton from "@/components/flow/AddNodeButton.vue";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { AddCommentNode as AddCommentNodeShape } from "@/lib/types";
-import { useFlowStore } from "@/stores/flow";
+import AddNodeButton from '@/components/flow/AddNodeButton.vue'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import type { AddCommentNode as AddCommentNodeShape } from '@/lib/types'
+import { useFlowStore } from '@/stores/flow'
 
-const props = defineProps<{ id: string; data: AddCommentNodeShape }>();
+const props = defineProps<{ id: string; data: AddCommentNodeShape }>()
 
-const store = useFlowStore();
-const description = computed(() => props.data.description ?? "");
-const comment = computed(() => props.data.data.comment);
-const hasParent = computed(() => store.getNodeById(props.data.parentId) != null);
+const store = useFlowStore()
+const description = computed(() => props.data.description ?? '')
+const comment = computed(() => props.data.data.comment)
+const hasParent = computed(() => store.getNodeById(props.data.parentId) != null)
 </script>
 
 <template>

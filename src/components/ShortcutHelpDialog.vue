@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue'
 
 import {
   Dialog,
@@ -7,40 +7,40 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 
-const props = defineProps<{ open: boolean }>();
-const emit = defineEmits<{ "update:open": [value: boolean] }>();
+const props = defineProps<{ open: boolean }>()
+const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
 function isMac(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const platform = navigator.platform ?? "";
-  if (platform !== "") return /Mac|iPod|iPhone|iPad/.test(platform);
-  return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent ?? "");
+  if (typeof navigator === 'undefined') return false
+  const platform = navigator.platform ?? ''
+  if (platform !== '') return /Mac|iPod|iPhone|iPad/.test(platform)
+  return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent ?? '')
 }
 
-const mod = computed(() => (isMac() ? "Cmd" : "Ctrl"));
+const mod = computed(() => (isMac() ? 'Cmd' : 'Ctrl'))
 
-type Shortcut = { keys: string[]; description: string };
+type Shortcut = { keys: string[]; description: string }
 
 const navigationShortcuts = computed<Shortcut[]>(() => [
-  { keys: ["Tab"], description: "Focus next node" },
-  { keys: ["Shift", "Tab"], description: "Focus previous node" },
-  { keys: ["Up", "Down", "Left", "Right"], description: "Move focus through nodes" },
-  { keys: ["Enter"], description: "Open details for the focused node" },
-  { keys: ["Esc"], description: "Close the open drawer or dialog" },
-]);
+  { keys: ['Tab'], description: 'Focus next node' },
+  { keys: ['Shift', 'Tab'], description: 'Focus previous node' },
+  { keys: ['Up', 'Down', 'Left', 'Right'], description: 'Move focus through nodes' },
+  { keys: ['Enter'], description: 'Open details for the focused node' },
+  { keys: ['Esc'], description: 'Close the open drawer or dialog' },
+])
 
 const editingShortcuts = computed<Shortcut[]>(() => [
-  { keys: [mod.value, "Z"], description: "Undo last change" },
-  { keys: [mod.value, "Shift", "Z"], description: "Redo last undone change" },
-  ...(isMac() ? [] : [{ keys: ["Ctrl", "Y"], description: "Redo (Windows alias)" }]),
-]);
+  { keys: [mod.value, 'Z'], description: 'Undo last change' },
+  { keys: [mod.value, 'Shift', 'Z'], description: 'Redo last undone change' },
+  ...(isMac() ? [] : [{ keys: ['Ctrl', 'Y'], description: 'Redo (Windows alias)' }]),
+])
 
-const helpShortcuts: Shortcut[] = [{ keys: ["?"], description: "Show this help" }];
+const helpShortcuts: Shortcut[] = [{ keys: ['?'], description: 'Show this help' }]
 
 function onUpdateOpen(value: boolean): void {
-  emit("update:open", value);
+  emit('update:open', value)
 }
 </script>
 

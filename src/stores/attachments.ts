@@ -19,10 +19,7 @@ export const useAttachmentsStore = defineStore('attachments', () => {
     return files.get(makeKey(nodeId, index)) ?? []
   }
 
-  function commit(
-    nodeId: NodeId,
-    entries: ReadonlyMap<number, (File | undefined)[]>,
-  ): void {
+  function commit(nodeId: NodeId, entries: ReadonlyMap<number, (File | undefined)[]>): void {
     // Replace this node's entries wholesale so the saved indices stay in sync
     // with the canonical payload array order.
     const prefix = `${nodeId}:`
