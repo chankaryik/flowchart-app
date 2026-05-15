@@ -1,8 +1,8 @@
 # Respond.io Flow Chart App
 
-A take-home implementation of a workflow editor for Respond.io.
+A take-home implementation of a flowchart app for Respond.io.
 
-The app loads a workflow from `public/payload.json`, shows it on a draggable canvas, and lets users create, edit, delete, move, undo, and redo workflow nodes. Node details open in a drawer whose state is stored in the URL, so a specific node can be shared or refreshed directly.
+The app loads a workflow from `public/payload.json`, shows it on a draggable canvas, and lets users create, edit, delete, move, undo, and redo flowchart nodes. Node details open in a drawer whose state is stored in the URL, so a specific node can be shared or refreshed directly.
 
 This README is written for both technical and non-technical reviewers. The first half explains what the app does and how to review it quickly. The second half gives the engineering details for anyone who wants to go deeper.
 
