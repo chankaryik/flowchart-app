@@ -5,6 +5,7 @@ import { STORAGE_KEY, isPersistEnabled } from '@/lib/payload-adapter'
 import { sameId, type FlowNode } from '@/lib/types'
 
 const FlowChartView = () => import('@/views/FlowChartView.vue')
+const NotFoundView = () => import('@/views/NotFoundView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,6 +20,11 @@ const router = createRouter({
       name: 'node-details',
       component: FlowChartView,
       beforeEnter: (to) => guardNodeRoute(to),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFoundView,
     },
   ],
 })
